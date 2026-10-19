@@ -1,0 +1,909 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}</style>
+<title>eB620 Tank Data</title>
+<meta name="theme-color" content="#0b6e7f">
+<style>
+/* Layout: one-column phone app. Sticky header, content, bottom tab bar, sheet for pickers. Tank-tag mono for tank numbers. */
+:root{
+  --bg:#edf1f2; --surface:#ffffff; --surface2:#f5f8f9; --ink:#13242c; --muted:#58696f; --line:#d2dce0;
+  --accent:#0b6e7f; --accent-ink:#ffffff; --accent-soft:#dcf0f3;
+  --warn:#9a5200; --warn-soft:#fdeccf; --bad:#b3261e; --bad-soft:#fde4e1; --good:#1b7a4b; --good-soft:#dcf3e6;
+  --shadow:0 1px 2px rgba(19,36,44,.08),0 6px 20px rgba(19,36,44,.10);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d171b; --surface:#16252b; --surface2:#1b2d34; --ink:#e5eef1; --muted:#93a7ae; --line:#2b3f47;
+  --accent:#52c6d9; --accent-ink:#06222a; --accent-soft:#17383f;
+  --warn:#f0b35a; --warn-soft:#3b2d14; --bad:#ff8f86; --bad-soft:#40201e; --good:#74d6a0; --good-soft:#163526;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.45); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d171b; --surface:#16252b; --surface2:#1b2d34; --ink:#e5eef1; --muted:#93a7ae; --line:#2b3f47;
+  --accent:#52c6d9; --accent-ink:#06222a; --accent-soft:#17383f;
+  --warn:#f0b35a; --warn-soft:#3b2d14; --bad:#ff8f86; --bad-soft:#40201e; --good:#74d6a0; --good-soft:#163526;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.45); color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.4 var(--sans);-webkit-text-size-adjust:100%;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--accent)}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+#app{max-width:44rem;margin:0 auto;padding-bottom:9rem}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px)));
+  padding:.7rem max(16px,env(safe-area-inset-right,0px)) .7rem max(16px,env(safe-area-inset-left,0px));background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;gap:.75rem}
+.top h1{margin:0;font-size:1.1rem;line-height:1.2;font-weight:700;text-wrap:balance}
+.top p{margin:0;font-size:.78rem;opacity:.85}
+.top .grow{flex:1;min-width:0}
+.top svg{flex:none}
+.hbtn{background:transparent;border:1.5px solid currentColor;color:inherit;border-radius:.6rem;min-height:2.6rem;padding:0 1rem;font-weight:700}
+.hbtn.solid{background:var(--accent-ink);color:var(--accent);border-color:var(--accent-ink)}
+.hbtn.icon{padding:0;width:2.6rem;font-size:1.3rem;line-height:1}
+main{padding-top:1rem;display:flex;flex-direction:column;gap:.9rem;min-width:0}
+.banner{border-radius:.75rem;padding:.8rem .9rem;background:var(--warn-soft);color:var(--ink);border:1px solid var(--warn);font-size:.92rem}
+.banner b{color:var(--warn)}
+.banner .row{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem}
+.btn{min-height:3rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface);padding:0 1rem;font-weight:600}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.sm{min-height:2.4rem;padding:0 .8rem;font-size:.9rem}
+.btn.block{width:100%}
+.search{position:relative}
+.search input{width:100%;min-height:3rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface);padding:0 1rem}
+.count{font-size:.82rem;color:var(--muted)}
+.list{display:flex;flex-direction:column;gap:.5rem;padding:0;margin:0;list-style:none}
+.tank{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.15rem .75rem;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:.8rem;padding:.7rem .85rem;min-height:3.6rem}
+.tank .tag{font-family:var(--mono);font-weight:700;font-size:1.02rem;letter-spacing:.01em;overflow-wrap:anywhere}
+.tank .sub{grid-column:1;font-size:.86rem;color:var(--muted);overflow-wrap:anywhere}
+.badge{align-self:start;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:.4rem;padding:.15rem .45rem;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.badge.warn{background:var(--warn-soft);color:var(--warn)}
+.badge.good{background:var(--good-soft);color:var(--good)}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;background:var(--surface);border-top:1px solid var(--line);
+  padding:0 max(8px,env(safe-area-inset-left,0px)) env(safe-area-inset-bottom,0px) max(8px,env(safe-area-inset-right,0px))}
+.tabs button{flex:1;min-height:3.4rem;border:0;background:transparent;font-weight:600;color:var(--muted);border-top:3px solid transparent}
+.tabs button[aria-current="page"]{color:var(--accent);border-top-color:var(--accent)}
+.tabs .n{display:inline-block;min-width:1.4rem;padding:0 .35rem;margin-left:.3rem;border-radius:1rem;background:var(--warn);color:var(--surface);font-size:.78rem;line-height:1.4rem}
+.fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(4.4rem + env(safe-area-inset-bottom,0px));z-index:19;min-height:3.4rem;border-radius:2rem;border:0;background:var(--accent);color:var(--accent-ink);font-weight:700;padding:0 1.4rem;box-shadow:var(--shadow)}
+.steps{position:sticky;top:calc(env(safe-area-inset-top,0px) + 3.9rem);z-index:15;display:flex;gap:.35rem;background:var(--bg);padding:.6rem 0;margin-top:-.2rem}
+.steps button{flex:1;min-height:2.7rem;border-radius:.6rem;border:1.5px solid var(--line);background:var(--surface);font-weight:600;font-size:.88rem;position:relative}
+.steps button[aria-current="step"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.steps .dot{position:absolute;top:.3rem;right:.4rem;width:.6rem;height:.6rem;border-radius:50%;background:var(--bad)}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:.9rem}
+.field{display:flex;flex-direction:column;gap:.3rem;min-width:0}
+.field label{font-size:.84rem;font-weight:600;color:var(--muted);display:flex;gap:.4rem;align-items:baseline}
+.field label .req{color:var(--bad);font-weight:700}
+.field input[type=text],.pick{width:100%;min-height:3.1rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface);padding:0 .9rem;text-align:left}
+.pick{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.pick .ph{color:var(--muted)}
+.pick .chev{color:var(--muted);flex:none}
+.field.bad input,.field.bad .pick{border-color:var(--bad);background:var(--bad-soft)}
+.field .msg{font-size:.84rem;color:var(--bad)}
+.field .note{font-size:.84rem;color:var(--warn)}
+.field .hint{font-size:.78rem;color:var(--muted)}
+.pager{display:flex;gap:.6rem;margin-top:.4rem}
+.pager .btn{flex:1}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:.9rem;padding:1rem;display:flex;flex-direction:column;gap:.7rem}
+.panel h2{margin:0;font-size:1rem}
+.panel p{margin:0;color:var(--muted);font-size:.92rem}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:.2rem .9rem;font-size:.92rem;margin:0}
+.kv dt{color:var(--muted)} .kv dd{margin:0;overflow-wrap:anywhere}
+.empty{text-align:center;color:var(--muted);padding:2rem 1rem;border:1.5px dashed var(--line);border-radius:.9rem}
+.ent{display:flex;flex-direction:column;gap:.6rem;background:var(--surface);border:1px solid var(--line);border-radius:.8rem;padding:.7rem .85rem}
+.ent .acts{display:flex;gap:.5rem;flex-wrap:wrap}
+.sendbar{display:flex;flex-direction:column;gap:.5rem}
+#sheetWrap{position:fixed;inset:0;z-index:40;background:rgba(5,15,20,.55);display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:44rem;max-height:88%;display:flex;flex-direction:column;background:var(--surface);border-radius:1.1rem 1.1rem 0 0;padding:.6rem max(16px,env(safe-area-inset-left,0px)) max(1rem,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px));gap:.7rem;box-shadow:var(--shadow)}
+.sheet .grab{width:2.6rem;height:.3rem;border-radius:1rem;background:var(--line);margin:0 auto}
+.sheet h2{margin:0;font-size:1.05rem}
+.sheet input[type=search]{width:100%;min-height:3rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface2);padding:0 .9rem}
+.plist{overflow:auto;display:flex;flex-direction:column;gap:.15rem;min-height:6rem;overscroll-behavior:contain}
+.opt{display:flex;justify-content:space-between;align-items:center;gap:.6rem;min-height:3rem;text-align:left;border:0;border-radius:.6rem;background:transparent;padding:0 .7rem}
+.opt:hover,.opt:focus-visible{background:var(--surface2)}
+.opt[aria-selected="true"]{background:var(--accent-soft);color:var(--accent);font-weight:700}
+.opt.add{color:var(--accent);font-weight:700}
+.opt .small{font-size:.78rem;color:var(--muted)}
+.grp{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:.5rem .7rem .1rem}
+.sheet textarea{width:100%;min-height:7rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface2);padding:.6rem;font:.78rem/1.35 var(--mono)}
+.sheet .row{display:flex;gap:.5rem;flex-wrap:wrap}
+.sheet .row .btn{flex:1 1 9rem}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(5rem + env(safe-area-inset-bottom,0px));z-index:50;background:var(--ink);color:var(--bg);padding:.7rem 1rem;border-radius:.7rem;max-width:90%;font-size:.92rem;box-shadow:var(--shadow)}
+.tabs[hidden],.fab[hidden],#toast[hidden],#sheetWrap[hidden]{display:none}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.4}}}
+</style>
+<style>
+.check{display:flex;align-items:center;gap:.7rem;min-height:3rem;font-weight:600}
+.check input{width:1.6rem;height:1.6rem;accent-color:var(--accent)}
+.hint{font-size:.8rem;color:var(--muted)}
+.field input[type=text]::placeholder{color:var(--muted)}
+</style>
+<style>.ro{min-height:3.1rem;display:flex;align-items:center;border-radius:.7rem;background:var(--surface2);border:1.5px dashed var(--line);padding:0 .9rem;color:var(--muted)}</style>
+<style>
+.f2item{padding:.8rem 0;border-top:1px solid var(--line)}
+.f2item:first-of-type{border-top:0}
+.f2item .tx{font-size:.95rem;line-height:1.35;margin:0 0 .55rem}
+.f2item .tx .rf{display:inline-block;margin-left:.4rem;font-size:.72rem;font-weight:700;border-radius:.4rem;padding:.1rem .4rem;background:var(--accent-soft);color:var(--accent)}
+.chips{display:flex;gap:.5rem}
+.chip{flex:1;min-height:2.9rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface);font-weight:700}
+.chip.on.y{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.chip.on.n{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.chip.on.a{background:var(--surface2);border-color:var(--muted);color:var(--ink)}
+.f2item textarea{width:100%;min-height:3.4rem;margin-top:.55rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:.6rem .8rem;font:inherit;resize:vertical}
+.f2item .lnk{margin-top:.4rem;background:none;border:0;color:var(--accent);font-weight:600;padding:.3rem 0}
+.f2h{font-size:.82rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:1rem 0 .2rem}
+.f2bar{position:sticky;top:3.6rem;z-index:3;background:var(--bg);padding:.5rem 0;display:flex;gap:.5rem;align-items:center}
+.f2bar .btn{flex:1}
+</style>
+</head><body><div id="app">
+  <header class="top" id="top"></header>
+  <main id="view"></main>
+</div>
+<button class="fab" id="fab" type="button">+ New tank</button>
+<nav class="tabs" id="tabs" aria-label="Sections"></nav>
+<div id="sheetWrap" hidden></div>
+<div id="toast" role="status" hidden></div>
+<script id="sampleData" type="application/json">{"v":1,"kind":"nurse","made":"2026-10-18 14:00","book":"","firstRow":4,"fields":[{"c":"A","label":"Location","page":1,"kind":"T","req":true,"combo":true,"open":false,"list":[]},{"c":"B","label":"Prov.","page":1,"kind":"T","req":false},{"c":"C","label":"Company or owner name","page":1,"kind":"T","req":true,"combo":true,"open":false,"list":[]},{"c":"D","label":"Tank number","page":1,"kind":"T","req":true,"val":{"t":7,"op":1,"f1":"=COUNTIF($D$4:$D$315,D4)=1","f2":"","m":""}},{"c":"E","label":"Description","page":1,"kind":"T","req":false,"combo":true,"open":true,"list":["S1000","S1200","S1450","S1750","S2000","S2400","S2500","S4000","T1000","T1200","T1450","T1750","T2000","T2400","HBT1000","HBT1200","HBT1450"]},{"c":"F","label":"Status","page":1,"kind":"T","req":false,"combo":true,"open":false,"list":["ACTIVE","Active-AIR ESV","Active-Twin","Active-T/AIR ESV","Active-Twin ESV(Rego)","Active-Twin ESV(Fisher)","Active-AIR ISC","Active-T/AIR ISC","Inactive","Out of Service","Sold","MIA","Junk/Scrap","Transferred","For Sale"]},{"c":"AB","label":"Serial number","page":1,"kind":"T","req":false,"val":{"t":7,"op":1,"f1":"=COUNTIF($AB$4:$AB$3447,AB4)=1","f2":"","m":"You have entered a duplicate number.  Please correct."}},{"c":"AC","label":"CRN or NB#","page":1,"kind":"T","req":false},{"c":"AD","label":"Size (USG or litres)","page":1,"kind":"T","req":false,"combo":true,"open":true,"list":["814 USG","1000 USG","1200 USG","1250 USG","1415 USG","1430 USG","1450 USG","1500 USG","1523 USG","1543 USG","1693.8 IMP","1750 USG","1800 USG","1900 USG","2000 USG","2400 USG","2500 USG","3000 USG","4000 USG","7650 USG","8100 USG","8350 USG","8650 USG","9150 USG","10400 USG","10500 USG","12800 USG","3785 litres","3900 litres","4540 litres","4542 litres","4550 litres","4600 litres","4731 litres","4750 litres","4900 litres","5500 litres","5525 litres","5550 litres","5570 litres","5600 litres","5750 litres","6625 litres","6500 litres","6685 litres","7570 litres","9460 litres","10500 litres","4.75 m3","4.9 m3","5.75 m3","6.64 m3","7.52 m3","133 cu.ft.","203 cu.ft.","234.5 cu.ft.","265.55 cu.ft."]},{"c":"AE","label":"Year built (yyyy)","page":1,"kind":"Y","req":false,"val":{"t":4,"op":1,"f1":"1905-05-13","f2":"=TODAY()","m":"Enter the year only and possibly you are outside of allowed date range from 1960 to the current year."}},{"c":"AF","label":"Make","page":1,"kind":"T","req":false,"combo":true,"open":true,"list":["Westeel","Western Rock Bit","Master","Trinity","RNG","Maxfield","Pro-par","Roy E Hanson","AB tank","American Tank","Anthes","Arrow Tank & Eng.","Atlas","Bearid","Buehler","Cdn. Steel","CHEM-TROL","D & T Insp.","Delta","Don Adams","Hitachi Power","James U.S. Ltd.","Lubbock Manufacturing Co.","Pittsburg","Ritter","Welk Bros","Westmor"]},{"c":"AG","label":"Tank diameter (inches)","page":1,"kind":"T","req":false,"combo":true,"open":true,"list":["41\"","46\"","49\"","53\"","54\"","66\"","73.25\"","84\"","84.8\"","85.804'","1029 mm","1169 mm","1245 mm","2235 mm","2286 mm"]},{"c":"AH","label":"ASME stamp","page":1,"kind":"T","req":false,"combo":true,"open":false,"list":["U","UR","S","SR","USR"]},{"c":"AI","label":"ASME stamp markings","page":1,"kind":"T","req":false,"combo":true,"open":false,"list":["W","RT","HT"]},{"c":"AJ","label":"Tank spec","page":1,"kind":"T","req":false,"combo":true,"open":false,"list":["NON-SPEC","TC331","TC51"]},{"c":"AK","label":"NQT or QT tank steel","page":1,"kind":"T","req":false,"combo":true,"open":false,"list":["NQT","QT"]},{"c":"AL","label":"HT markings","page":1,"kind":"T","req":false,"combo":true,"open":false,"list":["RT","RT-2","RT-3","RT-4"]},{"c":"G","label":"Last visual (mm/yy)","page":2,"kind":"M","req":false,"val":{"t":4,"op":1,"f1":"2000-01-01","f2":"=TODAY()+30","m":""}},{"c":"J","label":"Visual inspection done","page":2,"kind":"T","req":false,"combo":true,"open":false,"list":["V","VK","VP","VKP"]},{"c":"K","label":"TC reg # (visual)","page":2,"kind":"T","req":false,"val":{"t":1,"op":6,"f1":"9999","f2":"","m":"Verbal description NOT allowed, or number used was outside of range allowed.  Please try again."}},{"c":"L","label":"Post weld heat treated?","page":2,"kind":"T","req":false,"combo":true,"open":false,"list":["Yes","No","Yes(3)"]},{"c":"M","label":"Last hydro (mm/yy)","page":2,"kind":"M","req":false,"val":{"t":4,"op":1,"f1":"2000-01-01","f2":"=TODAY()+30","m":""}},{"c":"P","label":"Hydro inspection done","page":2,"kind":"T","req":false,"combo":true,"open":false,"list":["V","VK","VP","VKP"]},{"c":"Q","label":"TC reg # (hydro)","page":2,"kind":"T","req":false,"val":{"t":1,"op":6,"f1":"9999","f2":"","m":"Verbal description NOT allowed, or number used was outside of range allowed.  Please try again."}},{"c":"R","label":"PRV expires (mm/yy)","page":2,"kind":"M","req":false,"val":{"t":4,"op":1,"f1":"=TODAY()-365","f2":"=TODAY()+1880","m":"Date entered is either the wrong format, or outside of allowed date range.  Please re-enter the correct date."}},{"c":"S","label":"PRV psi @ temp","page":2,"kind":"T","req":false,"combo":true,"open":true,"list":["265 p.s.i.","250 p.s.i.","1825 kpa","1827 kpa","1723 kpa"]},{"c":"T","label":"PRV # and type","page":2,"kind":"T","req":false,"combo":true,"open":true,"list":["2 X 3/4\" ext.","1 X 3/4\" ext.","1 X 2\" Internal"]},{"c":"U","label":"Hose insp. date (mm/yy)","page":3,"kind":"M","req":false,"val":{"t":4,"op":1,"f1":"=Welcome!K16-400","f2":"=TODAY()","m":"Dates allowed is 400 days from form inspection date.  A workaround is to backdate the forms on Form1, then put hose test date in, then remove the backdate."}},{"c":"V","label":"Hose expiry year (yyyy)","page":3,"kind":"Y","req":false,"val":{"t":1,"op":1,"f1":"=YEAR(TODAY())-2","f2":"=YEAR(TODAY())+10","m":"Please call David for assistance."}},{"c":"W","label":"Hose diameter","page":3,"kind":"T","req":false,"combo":true,"open":true,"list":["1\"","1.25\"","1.5\"","2\""]},{"c":"X","label":"Hose length (ft)","page":3,"kind":"T","req":false,"val":{"t":1,"op":1,"f1":"1","f2":"50","m":"Only numbers allowed, do not use ft, feet or \" ' \".  Length allowed is from 5 to 30."}},{"c":"Y","label":"Hose MFG","page":3,"kind":"T","req":false,"combo":true,"open":true,"list":["Goodall","Dayco"]},{"c":"Z","label":"HRV exp. date (mm/yy)","page":3,"kind":"M","req":false,"val":{"t":4,"op":1,"f1":"2007-01-01","f2":"=TODAY()+3680","m":"Either entered wrong date format or date entered is outside allowed range.  Please try again."}},{"c":"AA","label":"Paint 0 - 10","page":3,"kind":"T","req":false,"val":{"t":1,"op":6,"f1":"9999","f2":"","m":"Verbal description NOT allowed, or number used was outside of range allowed.  Please try again."}},{"c":"AM","label":"Altered by","page":4,"kind":"T","req":false},{"c":"AN","label":"Altered date","page":4,"kind":"T","req":false},{"c":"AO","label":"Head material","page":4,"kind":"T","req":false},{"c":"AP","label":"Head thickness","page":4,"kind":"T","req":false},{"c":"AQ","label":"Head type","page":4,"kind":"T","req":false,"combo":true,"open":false,"list":["one piece","Elliptical","multi-piece"]},{"c":"AR","label":"Shell material","page":4,"kind":"T","req":false},{"c":"AS","label":"Shell thickness","page":4,"kind":"T","req":false},{"c":"AT","label":"Vessel length","page":4,"kind":"T","req":false},{"c":"AU","label":"Comments","page":4,"kind":"T","req":false},{"c":"AV","label":"Liquid level gauge","page":4,"kind":"T","req":false,"combo":true,"open":true,"list":["Top Jr.","Top Sr.","End Jr.","End Sr.","End 8 bolt"]},{"c":"AW","label":"Fill location","page":4,"kind":"T","req":false,"combo":true,"open":true,"list":["Top","Front","Rear","Side","Bottom Rear","Bottom front"]},{"c":"AX","label":"Mount length (in)","page":4,"kind":"T","req":false}],"tanks":[],"form2":{"sheet":"Sheet53","items":[{"row":9,"t":"INSPECT tank","h":1,"cols":""},{"row":10,"t":"Painted in light reflecting paint(6.2.2.2) (SR55d B622-20)","h":0,"cols":"WXYZ"},{"row":11,"t":"Verify Tank Markings: (6.2.6, 7.2.1.1e)","h":0,"cols":"WXYZ"},{"row":12,"t":"Wall for corrosion or abrasion (7.2.1.1a)","h":0,"cols":"WXYZ"},{"row":13,"t":"For cuts, digs, gouges (7.2.1.8a)","h":0,"cols":"WXYZ"},{"row":14,"t":"Check for dents(>12.7mm deep over a weld,  depth >10% length)(7.2.1.8b","h":0,"cols":"WXYZ"},{"row":15,"t":"Check for distortions or any structural defects(7.2.1.1a and 7.2.1.8e)","h":0,"cols":"WXYZ"},{"row":16,"t":"Inspect all vertical welds for cracks, defects or leakage(7.2.1.8d)","h":0,"cols":"WXYZ"},{"row":17,"t":"Inspect all horizontal welds for cracks, defects or leakage(7.2.1.8d)","h":0,"cols":"WXYZ"},{"row":18,"t":"INSPECT valves and plumbing (if applicable)","h":1,"cols":""},{"row":19,"t":"Verify valves and emergency devices operation: (7.2.1.1c)","h":0,"cols":"WXYZ"},{"row":20,"t":"Liquid level gauge operational and free of corrosion(6.2.8, 7.2.1.1c)","h":0,"cols":"WXYZ"},{"row":21,"t":"Verify piping and fittings are free from leaks/defects, mounts secure","h":0,"cols":"WXYZ"},{"row":22,"t":"All bolts &/or nuts, fuseible links or elements are in place and secur","h":0,"cols":"WXYZ"},{"row":23,"t":"Appurtenances and securement","h":1,"cols":""},{"row":24,"t":"Appurtenances, attachments and major connecting structures(7.2.1.1f) a","h":0,"cols":"WXYZ"},{"row":25,"t":"Tank secured by components that draw the tank down tight to the frame.","h":0,"cols":"WXYZ"},{"row":26,"t":"Manholes secure (if equipped)(7.2.1.1b)","h":0,"cols":"WXYZ"},{"row":27,"t":"Hose and Assemblies (if applicable)","h":1,"cols":""},{"row":28,"t":"Hose assembly: (7.2.1.1g), see Form 5, Inspected as per Form 5, record","h":0,"cols":"YZ"},{"row":29,"t":"Safety Relief Valves & EDC","h":1,"cols":""},{"row":30,"t":"HRV's - check for damage/corrosion.(7.2.1.1c, 7.2.1.4, 6.1.7.10.1&2)","h":0,"cols":"WXYZ"},{"row":31,"t":"PRV's - check for damage/corrosion.(7.2.1.1c & 7.2.1.4), opening of de","h":0,"cols":"WXYZ"},{"row":32,"t":"Emergency Discharge Control system shall be function tested and the re","h":0,"cols":"WXYZ"}],"comments":[35,37,38]}}</script>
+<script>
+(function(){
+'use strict';
+var VERSION='prototype 3e (Form 2, one file each)';
+var $=function(s,r){return (r||document).querySelector(s)};
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+var MEM={};
+function lsGet(k,d){try{var v=localStorage.getItem(k);if(v!==null)return JSON.parse(v)}catch(e){}return (k in MEM)?MEM[k]:d}
+function lsSet(k,v){MEM[k]=v;try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function lsDel(k){delete MEM[k];try{localStorage.removeItem(k)}catch(e){}}
+
+/* ---------- data ---------- */
+var SAMPLE=JSON.parse($('#sampleData').textContent);
+var S={tab:'tanks',q:'',form:null,sheetFn:null,
+  data:null,sample:false,entries:lsGet('ebp_entries',[]),adds:lsGet('ebp_adds',{}),draft:lsGet('ebp_draft',null)};
+S.data=lsGet('ebp_data',null);
+if(!S.data||!S.data.fields){S.data=SAMPLE;S.sample=true}
+var F={};
+function indexFields(){F={};S.data.fields.forEach(function(f){F[f.c]=f;
+  if(f.list)f.list=f.list.filter(function(x){return String(x).trim()!==''&&String(x)!=='0'})})}
+indexFields();
+var PAGES=[{n:1,t:'Tank'},{n:2,t:'Inspections'},{n:3,t:'Hose'},{n:4,t:'Other'}];
+var REQ_LABEL='Required';
+/* fields the inspection forms keep up to date: never changed from the phone for an existing tank */
+var VOL={G:1,J:1,K:1,M:1,P:1,Q:1,R:1,S:1,T:1,U:1,V:1,W:1,X:1,Y:1};
+
+/* ---------- dates and validation (same rules as the workbook form) ---------- */
+var MONTHS='janfebmaraprmayjunjulaugsepoctnovdec';
+function monthFromName(t){t=String(t).toLowerCase().slice(0,3);if(t.length<3)return 0;var p=MONTHS.indexOf(t);return(p>=0&&p%3===0)?p/3+1:0}
+function yearOf(v,d){if(d>2)return v;return v<=69?2000+v:1900+v}
+function isNum(s){return /^\d+$/.test(s)}
+function parseMY(s){
+  var t=String(s).trim();if(!t)return null;
+  t=t.replace(/[.\/\-,]/g,' ').replace(/\s+/g,' ').trim();
+  var m=0,y=0,p,i;
+  if(t.indexOf(' ')<0&&isNum(t)){
+    switch(t.length){
+      case 3:m=+t[0];y=yearOf(+t.slice(1),2);break;
+      case 4:m=+t.slice(0,2);y=yearOf(+t.slice(2),2);break;
+      case 5:m=+t[0];y=+t.slice(1);break;
+      case 6:m=+t.slice(0,2);y=+t.slice(2);break;
+      case 8:y=+t.slice(0,4);m=+t.slice(4,6);break;
+      default:return null}
+  }else{
+    p=t.split(' ');var n=p.length;if(n<2||n>3)return null;
+    var nm=0;
+    for(i=0;i<n;i++){if(!isNum(p[i])){var mm=monthFromName(p[i]);if(!mm)return null;nm=mm}}
+    if(nm){m=nm;var nums=p.filter(isNum);if(!nums.length)return null;var last=nums[nums.length-1];y=yearOf(+last,last.length)}
+    else if(n===2){if(p[0].length===4){y=+p[0];m=+p[1]}else{m=+p[0];y=yearOf(+p[1],p[1].length)}}
+    else{if(p[0].length===4){y=+p[0];m=+p[1]}else if(+p[0]<=12){m=+p[0];y=yearOf(+p[2],p[2].length)}else if(+p[1]<=12){m=+p[1];y=yearOf(+p[2],p[2].length)}else return null}
+  }
+  if(m<1||m>12||y<1900||y>2100)return null;
+  return{m:m,y:y};
+}
+function parseYear(s){var t=String(s).trim();if(!isNum(t))return null;var y;if(t.length===2)y=yearOf(+t,2);else if(t.length===4)y=+t;else return null;return(y<1900||y>2100)?null:y}
+function pad2(n){return(n<10?'0':'')+n}
+function fmtMY(o){return pad2(o.m)+'-'+o.y}
+function serial(d){return Math.round((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())-Date.UTC(1899,11,30))/864e5)}
+function todaySerial(){return serial(new Date())}
+function evalF(s){
+  if(!s)return null;s=String(s).trim();var m;
+  if((m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s)))return serial(new Date(+m[1],+m[2]-1,+m[3]));
+  if((m=/^=TODAY\(\)\s*([+-]\s*\d+)?$/i.exec(s)))return todaySerial()+(m[1]?+m[1].replace(/\s/g,''):0);
+  if((m=/^=YEAR\(TODAY\(\)\)\s*([+-]\s*\d+)?$/i.exec(s)))return new Date().getFullYear()+(m[1]?+m[1].replace(/\s/g,''):0);
+  if(/^-?\d+(\.\d+)?$/.test(s))return +s;
+  return null;
+}
+function cmp(v,op,a,b){
+  var ok=true;
+  switch(op){
+    case 1:if(a!=null&&v<a)ok=false;if(b!=null&&v>b)ok=false;break;
+    case 2:if(a!=null&&b!=null&&v>=a&&v<=b)ok=false;break;
+    case 3:if(a!=null&&v!==a)ok=false;break;
+    case 4:if(a!=null&&v===a)ok=false;break;
+    case 5:if(a!=null&&!(v>a))ok=false;break;
+    case 6:if(a!=null&&!(v<a))ok=false;break;
+    case 7:if(a!=null&&!(v>=a))ok=false;break;
+    case 8:if(a!=null&&!(v<=a))ok=false;break}
+  return ok;
+}
+function keyOf(v){return(v.A||'')+'|'+(v.C||'')+'|'+(v.D||'')}
+function allTanks(){
+  var over={},out=[];
+  var qm={};
+  S.entries.forEach(function(e){if(e.kind==='quick'){if(!qm[e.row]||!qm[e.row].sent||e.sent===0)qm[e.row]=e}else if(e.row)over[e.row]=e});
+  S.data.tanks.forEach(function(t){var e=over[t.row];out.push({row:t.row,v:e?e.v:t.v,key:keyOf(t.v),entry:e||null,q:qm[t.row]||null})});
+  S.entries.forEach(function(e){if(!e.row&&e.kind!=='quick')out.push({row:0,v:e.v,key:'',entry:e,q:null})});
+  return out;
+}
+function norm(s){return String(s||'').trim().toLowerCase()}
+/* returns {msg, value, note} for one field */
+function check(c,raw,form){
+  var f=F[c],v=String(raw==null?'':raw).trim(),res={value:v,msg:'',note:''};
+  if(!v){if(f.req)res.msg=f.label+' is needed.';return res}
+  if(form.orig&&norm(form.orig[c])===norm(v))return res;
+  var val=f.val;
+  if(f.kind==='M'){
+    var o=parseMY(v);
+    if(!o){res.msg='Could not read that date. Type it like 10-2026, 10/26 or 1026.';return res}
+    res.value=fmtMY(o);
+    if(val&&val.t===4){var sd=serial(new Date(o.y,o.m-1,1));if(!cmp(sd,val.op,evalF(val.f1),evalF(val.f2)))res.msg=val.m||(f.label+' is outside the allowed date range.')}
+    return res;
+  }
+  if(f.kind==='Y'){
+    var y=parseYear(v);
+    if(y==null){res.msg='Enter the year only, for example 2019.';return res}
+    res.value=String(y);
+    if(val){var ok=val.t===4?cmp(y,val.op,evalF(val.f1),evalF(val.f2)):cmp(y,val.op,evalF(val.f1),evalF(val.f2));if(!ok)res.msg=val.m||(f.label+' is outside the allowed range.')}
+    return res;
+  }
+  if(val&&(val.t===1||val.t===2)){
+    var okfmt=val.t===1?/^-?\d+$/.test(v):/^-?\d+(\.\d+)?$/.test(v);
+    if(!okfmt||!cmp(+v,val.op,evalF(val.f1),evalF(val.f2))){res.msg=val.m||('Number in '+f.label+' is not allowed.')}
+    return res;
+  }
+  if(c==='AB'){
+    var dup=allTanks().some(function(t){if(form.row&&t.row===form.row)return false;if(t.entry&&t.entry.id===form.id)return false;return norm(t.v.AB)===norm(v)});
+    if(dup)res.msg=(val&&val.m)||'You have entered a duplicate number.  Please correct.';
+    return res;
+  }
+  if(c==='D'){
+    var A=form.v.A,C=form.v.C;
+    var d2=allTanks().some(function(t){if(form.row&&t.row===form.row)return false;if(t.entry&&t.entry.id===form.id)return false;return norm(t.v.A)===norm(A)&&norm(t.v.C)===norm(C)&&norm(t.v.D)===norm(v)});
+    if(d2)res.note='A tank with this number is already listed for this location and company (twin or triple?). It will be added as a further tank.';
+    return res;
+  }
+  if(c==='A'&&f.combo&&!f.open){
+    var inl=(f.list||[]).some(function(x){return norm(x)===norm(v)});
+    if(!inl&&!(form.keepA&&norm(form.keepA)===norm(v)))res.msg='Pick the Location from the list. New locations are added in the workbook first.';
+    return res;
+  }
+  return res;
+}
+function validateAll(form){
+  var errs={},notes={},vals={};
+  S.data.fields.forEach(function(f){var r=check(f.c,form.v[f.c],form);if(r.value)vals[f.c]=r.value;if(r.msg)errs[f.c]=r.msg;if(r.note)notes[f.c]=r.note});
+  return{errs:errs,notes:notes,vals:vals};
+}
+
+/* ---------- rules for a new drop-down choice (same as the workbook's "+ Add new") ---------- */
+function sizeCanon(t){
+  var m=/^([0-9.,]+)\s*(.*)$/.exec(String(t).trim());if(!m||!m[1]||!m[2])return '';
+  var u=m[2].toLowerCase().trim(),map={'usg':'USG','us gal':'USG','usgal':'USG','us gallons':'USG','gal':'USG','imp':'IMP','imp gal':'IMP','imp.':'IMP',
+    'litres':'litres','litre':'litres','liters':'litres','liter':'litres','l':'litres','lt':'litres','m3':'m3','cu.ft.':'cu.ft.','cu.ft':'cu.ft.','cu ft':'cu.ft.','cuft':'cu.ft.','ft3':'cu.ft.'};
+  return map[u]?m[1]+' '+map[u]:'';
+}
+function newChoiceCheck(c,text){
+  var t=String(text).replace(/[\t\u00a0]/g,' ').replace(/[\u201c\u201d]/g,'"').replace(/[\u2018\u2019]/g,"'").replace(/\s+/g,' ').trim();
+  if(!t)return{msg:'Please type the new choice.'};
+  if(t.length>60)return{msg:'That is too long for a drop-down choice (the limit is 60 characters).'};
+  if(/^[=+\-@]/.test(t))return{msg:'A choice cannot start with '+t[0]+'. Please type it without that character.'};
+  if(/^\d{1,2}[\/\-.]\d{1,2}([\/\-.]\d{2,4})?$/.test(t))return{msg:'Excel would read that as a date. Please add its unit or an extra word, for example 3/4" instead of 3/4.'};
+  if(c==='AD'){var z=sizeCanon(t);if(!z)return{msg:'A tank size needs a number and its unit, for example 1500 USG or 4600 litres.'};t=z}
+  if(c==='AG'&&!/^[0-9]/.test(t))return{msg:'A tank diameter starts with the number, for example 41" or 1029 mm.'};
+  return{value:t};
+}
+
+/* ---------- lists ---------- */
+function listFor(c){
+  var f=F[c],base=(f.list||[]).slice(),adds=(S.adds[c]||[]).filter(function(a){return!base.some(function(b){return norm(b)===norm(a)})});
+  return{base:base,adds:adds};
+}
+function noteAdd(c,v){
+  var f=F[c];if(!f||!f.combo||!f.open||!v)return;
+  var L=listFor(c);
+  if(L.base.concat(L.adds).some(function(x){return norm(x)===norm(v)}))return;
+  S.adds[c]=(S.adds[c]||[]).concat([v]);lsSet('ebp_adds',S.adds);
+}
+function companiesAt(loc){
+  var seen={},out=[];
+  allTanks().forEach(function(t){if(norm(t.v.A)===norm(loc)&&t.v.C&&!seen[norm(t.v.C)]){seen[norm(t.v.C)]=1;out.push(t.v.C)}});
+  return out;
+}
+
+/* ---------- UI helpers ---------- */
+var toastT=0;
+function toast(msg){var t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){t.hidden=true},3200)}
+function openSheet(html,after){
+  var w=$('#sheetWrap');w.innerHTML='<div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>'+html+'</div>';
+  w.hidden=false;
+  w.onclick=function(e){if(e.target===w)closeSheet()};
+  if(after)after(w);
+}
+function closeSheet(){var w=$('#sheetWrap');w.hidden=true;w.innerHTML=''}
+function chev(){return '<svg class="chev" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
+function tankIcon(){return '<svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><rect x="2" y="9" width="28" height="14" rx="7" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 9v14M20 9v14" stroke="currentColor" stroke-width="2" opacity=".6"/><path d="M16 9V5m-3 0h6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>'}
+
+/* ---------- rendering ---------- */
+function unsent(){return S.entries.filter(function(e){return!e.sent})}
+function render(){
+  if(S.f2v){renderF2();return}
+  if(S.form){renderForm();return}
+  var top=$('#top');
+  var ts=S.data.made||'';
+  top.innerHTML=tankIcon()+'<div class="grow"><h1>eB620 Tank Data</h1><p>'+(S.sample?'Example data - ':'')+S.data.tanks.length+' tanks'+(ts?' - data from '+esc(ts):'')+'</p></div>';
+  var n=unsent().length+f2unsent().length;
+  var tabs=$('#tabs');tabs.hidden=false;
+  tabs.innerHTML=[['tanks','Tanks',0],['send','To send',n],['data','Data',0]].map(function(t){
+    return '<button type="button" data-tab="'+t[0]+'"'+(S.tab===t[0]?' aria-current="page"':'')+'>'+t[1]+(t[2]?'<span class="n">'+t[2]+'</span>':'')+'</button>'}).join('');
+  $('#fab').hidden=S.tab!=='tanks';
+  if(S.tab==='tanks')renderTanks();else if(S.tab==='send')renderSend();else renderData();
+}
+function tankRow(t){
+  var v=t.v,badge='';
+  if(t.entry){badge=t.entry.sent?'<span class="badge good">Sent</span>':(t.row?'<span class="badge warn">Changed</span>':'<span class="badge warn">New</span>')}
+  else if(t.q){badge=t.q.sent?'<span class="badge good">Update sent</span>':'<span class="badge warn">Update</span>'}
+  var sub=[v.A,v.C].filter(Boolean).join(' - ');
+  var sub2=[v.AD,v.AF,v.AE].filter(Boolean).join(' - ');
+  return '<li><button type="button" class="tank" data-open="'+(t.row?'r:'+t.row:'e:'+esc(t.entry.id))+'"><span class="tag">'+esc(v.D||'(no number)')+'</span>'+(badge||'<span></span>')+'<span class="sub">'+esc(sub)+'</span><span></span>'+(sub2?'<span class="sub">'+esc(sub2)+'</span>':'')+'</button></li>';
+}
+function matches(t,q){
+  if(!q)return true;
+  var hay=[t.v.A,t.v.C,t.v.D,t.v.AB,t.v.E,t.v.AD,t.v.AF].join(' ').toLowerCase();
+  return q.toLowerCase().split(/\s+/).every(function(w){return hay.indexOf(w)>=0});
+}
+function natural(a,b){return String(a).localeCompare(String(b),undefined,{numeric:true,sensitivity:'base'})}
+function renderTanks(){
+  var h='';
+  if(S.draft){h+='<div class="banner"><b>Unfinished entry.</b> '+esc(S.draft.mode==='quick'?'A quick update':(S.draft.v.D?('Tank '+S.draft.v.D):'A new tank'))+(S.draft.v.A?' at '+esc(S.draft.v.A):'')+' was not saved.<div class="row"><button class="btn primary sm" data-act="resume" type="button">Continue</button><button class="btn sm" data-act="dropdraft" type="button">Discard</button></div></div>'}
+  if(S.sample){h+='<div class="banner"><b>Example data.</b> These are the sample tanks from the template. Open the Data tab and load the file exported from the workbook to see your own tanks.</div>'}
+  h+='<div class="search"><input id="q" type="search" placeholder="Search location, company, tank or serial number" value="'+esc(S.q)+'" autocomplete="off" aria-label="Search tanks"></div><div class="count" id="cnt"></div><ul class="list" id="tl"></ul>';
+  $('#view').innerHTML=h;
+  fillTankList();
+  $('#q').addEventListener('input',function(e){S.q=e.target.value;fillTankList()});
+}
+function fillTankList(){
+  var all=allTanks().filter(function(t){return matches(t,S.q)});
+  all.sort(function(a,b){return natural(a.v.A||'',b.v.A||'')||natural(a.v.C||'',b.v.C||'')||natural(a.v.D||'',b.v.D||'')});
+  var cap=150,shown=all.slice(0,cap);
+  $('#cnt').textContent=all.length+(all.length===1?' tank':' tanks')+(all.length>cap?' - showing the first '+cap+', type more to narrow it down':'');
+  $('#tl').innerHTML=shown.length?shown.map(tankRow).join(''):'<li class="empty">No tank matches. Tap "+ New tank" to add one.</li>';
+}
+function entRow(e){
+  var v=e.v,d=new Date(e.ts),q=e.kind==='quick';
+  return '<div class="ent"><div><div class="tag" style="font-family:var(--mono);font-weight:700">'+esc(v.D||'(no number)')+' <span class="badge '+(e.sent?'good':'warn')+'">'+(e.sent?'Sent':(q?'Quick update':(e.row?'Changed':'New')))+'</span></div><div class="count">'+esc([v.A,v.C].filter(Boolean).join(' - '))+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'}))+'</div>'+(q?'<div class="count" style="color:var(--ink)">'+esc(quickSummary(e))+'</div>':'')+'</div><div class="acts">'+
+    (e.sent&&!e.row?'':'<button class="btn sm" data-edit="'+esc(e.id)+'" type="button">Open</button>')+
+    (e.sent?'<button class="btn sm" data-unsend="'+esc(e.id)+'" type="button">Send again</button>':'')+
+    '<button class="btn sm danger" data-del="'+esc(e.id)+'" type="button">Delete</button></div></div>';
+}
+function renderSend(){
+  var u=unsent(),s=S.entries.filter(function(e){return e.sent});
+  var h='<div class="panel"><h2>'+(u.length?u.length+(u.length===1?' entry is':' entries are')+' waiting to send':'Nothing waiting to send')+'</h2><p>'+(u.length?'Send the file to the office by email, text or any app on this phone. The office imports it with the "Import from phone" button in the workbook.':'Tanks you save on this phone appear here until you send them.')+'</p>'+(u.length?'<button class="btn primary block" id="sendBtn" type="button">Send to office</button>':'')+'</div>';
+  h+=u.map(entRow).join('');
+  if(s.length){h+='<h2 style="margin:.6rem 0 0;font-size:.95rem;color:var(--muted)">Already sent</h2>'+s.map(entRow).join('')}
+  h+=f2sendPanel();
+  $('#view').innerHTML=h;
+}
+function renderData(){
+  var D=S.data;
+  var h='<div class="panel"><h2>Tank and drop-down data</h2><dl class="kv"><dt>Source</dt><dd>'+(S.sample?'Example data built into this page':esc(D.book||'Workbook'))+'</dd><dt>Exported</dt><dd>'+esc(D.made||'-')+'</dd><dt>Tanks</dt><dd>'+D.tanks.length+'</dd><dt>Fields</dt><dd>'+D.fields.length+'</dd></dl>'+
+    '<p>In the workbook, open the Nurse tank form and click "Export for phone". Send the file it saves to this phone, then load it here. Loading new data does not delete tanks that are waiting to send.</p>'+
+    '<input type="file" id="fileIn" accept=".json,application/json,text/plain" hidden><button class="btn primary block" id="loadBtn" type="button">Load data file</button></div>';
+  h+='<div class="panel"><h2>On this phone</h2><dl class="kv"><dt>Waiting to send</dt><dd>'+unsent().length+'</dd><dt>Sent</dt><dd>'+S.entries.filter(function(e){return e.sent}).length+'</dd><dt>Version</dt><dd>'+VERSION+'</dd></dl><p>Everything on this page works with no signal. Entries stay on the phone until you delete them.</p>'+
+    '<button class="btn danger block" id="clearSent" type="button">Remove sent tanks from this phone</button></div>';
+  $('#view').innerHTML=h;
+}
+
+/* ---------- form ---------- */
+function newId(){return 'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function openForm(opts){
+  var orig=null;
+  if(opts.row){S.data.tanks.forEach(function(t){if(t.row===opts.row)orig=t.v})}
+  S.form={orig:orig,id:opts.id||newId(),row:opts.row||0,key:opts.key||'',v:Object.assign({},opts.v||{}),isNew:!opts.row,page:1,errs:{},notes:{},show:false,dirty:!!opts.dirty,keepA:(opts.v&&opts.v.A)||''};
+  window.scrollTo(0,0);render();
+}
+function saveDraft(){
+  var f=S.form;if(!f)return;
+  S.draft={id:f.id,row:f.row,key:f.key,v:f.v,mode:f.mode||'',hose:!!f.hose};lsSet('ebp_draft',S.draft);
+}
+function dropDraft(){S.draft=null;lsDel('ebp_draft')}
+function renderForm(){
+  if(S.form.mode==='quick'){renderQuick();return}
+  var f=S.form,t=$('#top');
+  $('#tabs').hidden=true;$('#fab').hidden=true;
+  var title=f.v.D?('Tank '+f.v.D):(f.isNew?'New tank':'Tank');
+  t.innerHTML='<button class="hbtn icon" id="backBtn" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>'+esc(title)+'</h1><p>'+esc([f.v.A,f.v.C].filter(Boolean).join(' - ')||(f.isNew?'Not saved yet':''))+'</p></div><button class="hbtn solid" id="saveBtn" type="button">Save</button>';
+  var steps='<div class="steps" role="tablist">'+PAGES.map(function(p){
+    var bad=S.data.fields.some(function(x){return x.page===p.n&&f.errs[x.c]});
+    return '<button type="button" role="tab" data-page="'+p.n+'"'+(f.page===p.n?' aria-current="step"':'')+'>'+p.t+(bad?'<span class="dot" aria-label="needs attention"></span>':'')+'</button>'}).join('')+'</div>';
+  var fields=S.data.fields.filter(function(x){return x.page===f.page}).map(fieldHtml).join('');
+  var last=f.page===PAGES.length;
+  var pager='<div class="pager">'+(f.page>1?'<button class="btn" data-go="'+(f.page-1)+'" type="button">&#8592; '+PAGES[f.page-2].t+'</button>':'')+
+    (last?'<button class="btn primary" id="saveBtn2" type="button">Save tank</button>':'<button class="btn primary" data-go="'+(f.page+1)+'" type="button">'+PAGES[f.page].t+' &#8594;</button>')+'</div>';
+  var ronote=(f.row&&(f.page===2||f.page===3))?'<div class="banner" style="background:var(--surface);border-color:var(--line)">Greyed fields are kept up to date by the inspection forms, so the phone does not change them. To note a PRV or hose finding, go back and use <b>Quick update</b>.</div>':'';
+  $('#view').innerHTML=steps+ronote+'<div class="fields">'+fields+'</div>'+pager;
+}
+function fieldHtml(x){
+  var f=S.form,c=x.c,v=f.v[c]||'',err=f.errs[c],note=f.notes[c];
+  var lab='<label for="f_'+c+'">'+esc((f.mode==='quick'&&QLAB[c])||x.label)+(x.req?' <span class="req">'+REQ_LABEL+'</span>':'')+'</label>';
+  var ctl;
+  if(x.combo){
+    ctl='<button type="button" class="pick" id="f_'+c+'" data-pick="'+c+'"><span class="'+(v?'':'ph')+'">'+esc(v||'Choose')+'</span>'+chev()+'</button>';
+  }else{
+    var im=x.kind==='M'||x.kind==='Y'?'numeric':(x.val&&x.val.t===1?'numeric':(x.val&&x.val.t===2?'decimal':'text'));
+    ctl='<input type="text" id="f_'+c+'" data-in="'+c+'" value="'+esc(v)+'" inputmode="'+im+'" autocomplete="off" autocapitalize="off" enterkeyhint="next"'+(x.kind==='M'?' placeholder="mm-yyyy, e.g. 1026"':(x.kind==='Y'?' placeholder="yyyy"':''))+'>';
+  }
+  var hint='';
+  if(f.row&&f.mode!=='quick'&&VOL[c]){
+    return '<div class="field" id="w_'+c+'"><label>'+esc(x.label)+'</label><div class="ro">'+esc(v||'-')+'</div></div>';
+  }
+  if(f.mode==='quick'){var ov=f.orig[c];hint='<div class="hint">On the sheet: '+esc(ov||'nothing')+'</div>'}
+  return '<div class="field'+(err?' bad':'')+'" id="w_'+c+'">'+lab+ctl+hint+(err?'<div class="msg" role="alert">'+esc(err)+'</div>':'')+(note&&!err?'<div class="note">'+esc(note)+'</div>':'')+'</div>';
+}
+function setField(c,val,rerender){
+  var f=S.form;f.v[c]=val;f.dirty=true;saveDraft();
+  if(rerender)renderForm();
+}
+function refreshField(c){
+  var f=S.form,w=$('#w_'+c);if(!w)return;
+  var x=F[c],h=fieldHtml(x);
+  var tmp=document.createElement('div');tmp.innerHTML=h;
+  w.className=tmp.firstChild.className;
+  var m=w.querySelectorAll('.msg,.note');for(var i=0;i<m.length;i++)m[i].remove();
+  var add=tmp.firstChild.querySelectorAll('.msg,.note');for(i=0;i<add.length;i++)w.appendChild(add[i]);
+}
+function blurField(c){
+  var f=S.form,x=F[c];if(!x)return;
+  var r=check(c,f.v[c],f);
+  if(x.kind==='M'||x.kind==='Y')f.v[c]=r.value;
+  if(r.msg)f.errs[c]=r.msg;else delete f.errs[c];
+  if(r.note)f.notes[c]=r.note;else delete f.notes[c];
+  var el=$('#f_'+c);if(el&&el.tagName==='INPUT')el.value=f.v[c]||'';
+  saveDraft();refreshField(c);
+  if(c==='D'||c==='A'||c==='C'){var d=check('D',f.v.D,f);if(d.note)f.notes.D=d.note;else delete f.notes.D;refreshField('D')}
+}
+/* picker */
+function openPicker(c){
+  var f=S.form,x=F[c],cur=f.v[c]||'';
+  var L=listFor(c),items=[],grpAt=[];
+  if(c==='C'&&f.v.A){var here=companiesAt(f.v.A);
+    var top=here.filter(function(h){return L.base.concat(L.adds).some(function(b){return norm(b)===norm(h)})||true});
+    var seen={};top.forEach(function(t){seen[norm(t)]=1});
+    items=[{g:'At '+f.v.A}].concat(top.map(function(t){return{v:t}}));
+    var rest=L.adds.concat(L.base).filter(function(b){return!seen[norm(b)]});
+    if(rest.length)items=items.concat([{g:'All companies'}]).concat(rest.map(function(t){return{v:t}}));
+    if(!top.length)items=rest.map(function(t){return{v:t}});
+  }else{
+    items=L.adds.map(function(t){return{v:t,s:'added on this phone'}}).concat(L.base.map(function(t){return{v:t}}));
+  }
+  function draw(q){
+    var ql=q.trim().toLowerCase(),html='',exact=false,any=0,pending='';
+    items.forEach(function(it){
+      if(it.g){pending='<div class="grp">'+esc(it.g)+'</div>';return}
+      if(ql&&it.v.toLowerCase().indexOf(ql)<0)return;
+      if(norm(it.v)===ql)exact=true;
+      if(pending){html+=pending;pending=''}
+      any++;
+      html+='<button type="button" class="opt" role="option" data-val="'+esc(it.v)+'" aria-selected="'+(norm(it.v)===norm(cur))+'"><span>'+esc(it.v)+'</span>'+(it.s?'<span class="small">'+esc(it.s)+'</span>':'')+'</button>';
+    });
+    if(x.open&&ql&&!exact)html='<button type="button" class="opt add" data-add="'+esc(q.trim())+'"><span>+ Add &#8220;'+esc(q.trim())+'&#8221; to the list</span></button>'+html;
+    if(!any&&!(x.open&&ql))html+='<div class="empty">'+(x.open?'Nothing in the list yet. Type the new choice above.':'No match. '+(c==='A'?'New locations are added in the workbook first.':'Pick from the list.'))+'</div>';
+    if(cur)html+='<button type="button" class="opt" data-val="" style="color:var(--bad)"><span>Clear this field</span></button>';
+    $('#plist').innerHTML=html;
+  }
+  openSheet('<h2>'+esc(x.label)+'</h2><input type="search" id="pq" placeholder="'+(x.open?'Search, or type a new choice':'Search')+'" autocomplete="off" autocapitalize="off"><div class="plist" id="plist" role="listbox"></div>',function(){
+    draw('');
+    $('#pq').addEventListener('input',function(e){draw(e.target.value)});
+    $('#pq').addEventListener('keydown',function(e){if(e.key==='Enter'){var a=$('#plist .opt.add')||$('#plist .opt[data-val]');if(a)a.click()}});
+    $('#plist').addEventListener('click',function(e){
+      var b=e.target.closest('.opt');if(!b)return;
+      var val=b.hasAttribute('data-add')?b.getAttribute('data-add'):b.getAttribute('data-val');
+      if(b.hasAttribute('data-add')){
+        var nc=newChoiceCheck(c,val);
+        if(nc.msg){var old=$('#pmsg');if(old)old.remove();$('#plist').insertAdjacentHTML('beforebegin','<div class="msg" id="pmsg" role="alert" style="color:var(--bad);font-size:.88rem">'+esc(nc.msg)+'</div>');return}
+        val=nc.value;
+        var ex=listFor(c);var hit=ex.base.concat(ex.adds).filter(function(x){return norm(x)===norm(val)})[0];if(hit)val=hit;
+      }
+      closeSheet();pickValue(c,val);
+    });
+    if(window.matchMedia&&window.matchMedia('(pointer:fine)').matches)$('#pq').focus();
+  });
+}
+function pickValue(c,val){
+  var f=S.form,x=F[c];
+  if(val&&x.open)noteAdd(c,val);
+  f.v[c]=val;f.dirty=true;
+  if(c==='A'&&val&&f.isNew){
+    var first=allTanks().filter(function(t){return norm(t.v.A)===norm(val)})[0];
+    if(first){if(!f.v.B&&first.v.B)f.v.B=first.v.B;if(!f.v.C&&first.v.C)f.v.C=first.v.C}
+  }
+  saveDraft();
+  var r=check(c,val,f);if(r.msg)f.errs[c]=r.msg;else delete f.errs[c];
+  renderForm();
+  setTimeout(function(){var b=$('#f_'+c);if(b&&b.focus)b.focus()},0);
+}
+function saveForm(){
+  var f=S.form,r=validateAll(f);
+  f.errs=r.errs;f.notes=r.notes;
+  var keys=Object.keys(r.errs);
+  if(keys.length){
+    var first=S.data.fields.filter(function(x){return r.errs[x.c]})[0];
+    f.page=first.page;renderForm();
+    toast(keys.length+(keys.length===1?' field needs':' fields need')+' attention before saving.');
+    setTimeout(function(){var el=$('#w_'+first.c);if(el&&el.scrollIntoView)el.scrollIntoView({block:'center'})},30);
+    return;
+  }
+  var ent={id:f.id,row:f.row,key:f.key,v:r.vals,ts:Date.now(),sent:0};
+  S.data.fields.forEach(function(x){if(x.combo&&x.open&&r.vals[x.c])noteAdd(x.c,r.vals[x.c])});
+  var i=S.entries.map(function(e){return e.id}).indexOf(ent.id);
+  if(i<0&&ent.row)i=S.entries.map(function(e){return e.row}).indexOf(ent.row);
+  if(i>=0)S.entries[i]=ent;else S.entries.push(ent);
+  lsSet('ebp_entries',S.entries);dropDraft();S.form=null;S.tab='tanks';
+  render();toast('Saved. It is waiting on the To send tab.');
+}
+function leaveForm(){
+  var f=S.form;
+  if(!f.dirty){S.form=null;dropDraft();render();return}
+  openSheet('<h2>Leave this tank?</h2><p style="margin:0;color:var(--muted)">Nothing has been saved yet.</p><div class="row"><button class="btn primary" id="lvKeep" type="button">Keep working</button><button class="btn" id="lvDraft" type="button">Leave, keep a draft</button><button class="btn danger" id="lvDrop" type="button">Discard</button></div>',function(){
+    $('#lvKeep').onclick=closeSheet;
+    $('#lvDraft').onclick=function(){saveDraft();closeSheet();S.form=null;render()};
+    $('#lvDrop').onclick=function(){closeSheet();dropDraft();S.form=null;render()};
+  });
+}
+
+/* ---------- quick update ---------- */
+function qfield(c){var x=Object.assign({},F[c]);return fieldHtml(x)}
+function renderQuick(){
+  var f=S.form,t=$('#top'),o=f.orig;
+  $('#tabs').hidden=true;$('#fab').hidden=true;
+  t.innerHTML='<button class="hbtn icon" id="backBtn" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Tank '+esc(o.D||'')+'</h1><p>'+esc([o.A,o.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="saveBtn" type="button">Save</button>';
+  var hs=[o.V&&('expires '+o.V),o.X&&(o.X+' ft'),o.W,o.Y].filter(Boolean).join(', ');
+  var h='<div class="panel"><h2>Quick update</h2><p>Type only what you found or changed. The sheet keeps the old values for the inspection forms, and your entries are listed beside them in the workbook.</p></div>';
+  h+='<div class="panel"><h2>Form 2 - visual inspection</h2><p>Fill in the Form 2 checklist for this tank now, with no signal needed.</p><button class="btn primary block" id="f2Open" type="button">'+(S.f2.some(function(r){return r.key===S.form.key&&!r.sent})?'Continue Form 2':'Start Form 2')+'</button></div>';
+  h+='<div class="panel"><h2>PRV</h2><div class="fields">'+qfield('R')+qfield('S')+'</div></div>';
+  h+='<div class="panel"><h2>Hose</h2><p>On the sheet: '+esc(hs||'no hose recorded')+'</p><label class="check"><input type="checkbox" id="hoseNew"'+(f.hose?' checked':'')+'> New hose fitted</label>'+(f.hose?'<div class="fields">'+qfield('V')+qfield('X')+qfield('Y')+'</div>':'')+'</div>';
+  h+='<div class="panel"><h2>HRV and paint</h2><div class="fields">'+qfield('Z')+qfield('AA')+'</div></div>';
+  h+='<div class="panel"><h2>Short note</h2><div class="field"><label for="f_note">Decals replaced, weld cracks, findings (100 characters)</label><input type="text" id="f_note" data-in="note" maxlength="100" value="'+esc(f.v.note||'')+'" autocomplete="off"></div></div>';
+  h+='<div class="pager"><button class="btn" id="allBtn" type="button">All details</button><button class="btn primary" id="saveBtn2" type="button">Save update</button></div>';
+  $('#view').innerHTML=h;
+}
+function saveQuick(){
+  var f=S.form,vals={},errs={},n=0;
+  ['R','S','Z','AA','V','X','Y'].forEach(function(c){
+    var v=String(f.v[c]||'').trim();if(!v)return;
+    if((c==='V'||c==='X'||c==='Y')&&!f.hose)return;
+    var r=check(c,v,f);
+    if(r.msg){errs[c]=r.msg;return}
+    if(norm(r.value)!==norm(f.orig[c])){vals[c]=r.value}
+  });
+  f.errs=errs;
+  if(Object.keys(errs).length){renderForm();toast(Object.keys(errs).length+' fields need attention before saving.');return}
+  var note=String(f.v.note||'').trim().slice(0,100);
+  if(!Object.keys(vals).length&&!note&&!f.hose){toast('Nothing to save yet. Type what you found or changed.');return}
+  var o=f.orig,ent={id:f.id,kind:'quick',row:f.row,key:f.key,q:vals,hose:f.hose&&(vals.V||vals.X||vals.Y)?1:0,note:note,v:{A:o.A,C:o.C,D:o.D},ts:Date.now(),sent:0};
+  var i=S.entries.map(function(e){return e.id}).indexOf(ent.id);
+  if(i>=0)S.entries[i]=ent;else S.entries.push(ent);
+  lsSet('ebp_entries',S.entries);dropDraft();S.form=null;S.tab='tanks';
+  render();toast('Update saved. It is waiting on the To send tab.');
+}
+
+/* ---------- new tank chooser ---------- */
+function newTankSheet(){
+  openSheet('<h2>New tank</h2><div class="row"><button class="btn primary" id="ntBlank" type="button">Blank tank</button><button class="btn" id="ntCopy" type="button">Copy details from a tank</button></div><p style="margin:0;color:var(--muted);font-size:.9rem">Copying keeps the location, company, size, make and spec. The tank number, serial number and CRN stay empty.</p>',function(){
+    $('#ntBlank').onclick=function(){closeSheet();openForm({v:{},dirty:false})};
+    $('#ntCopy').onclick=function(){copyPicker()};
+  });
+}
+function copyPicker(){
+  function draw(q){
+    var all=allTanks().filter(function(t){return matches(t,q)});
+    all.sort(function(a,b){return natural(a.v.A||'',b.v.A||'')||natural(a.v.C||'',b.v.C||'')||natural(a.v.D||'',b.v.D||'')});
+    $('#plist').innerHTML=all.slice(0,60).map(function(t,i){return '<button type="button" class="opt" data-i="'+all.indexOf(t)+'"><span><b style="font-family:var(--mono)">'+esc(t.v.D||'')+'</b><br><span class="small">'+esc([t.v.A,t.v.C,t.v.AD,t.v.AF].filter(Boolean).join(' - '))+'</span></span></button>'}).join('')||'<div class="empty">No match.</div>';
+    copyPicker.cur=all;
+  }
+  openSheet('<h2>Copy details from</h2><input type="search" id="pq" placeholder="Search tanks" autocomplete="off"><div class="plist" id="plist"></div>',function(){
+    draw('');
+    $('#pq').addEventListener('input',function(e){draw(e.target.value)});
+    $('#plist').addEventListener('click',function(e){
+      var b=e.target.closest('.opt');if(!b)return;
+      var t=copyPicker.cur[+b.getAttribute('data-i')];closeSheet();
+      var v={};S.data.fields.forEach(function(x){if(x.page===1&&x.c!=='D'&&x.c!=='AB'&&x.c!=='AC'&&t.v[x.c])v[x.c]=t.v[x.c]});
+      openForm({v:v,dirty:true});
+      toast('Details copied. Enter the tank number and serial number.');
+    });
+  });
+}
+
+/* ---------- send ---------- */
+function clean(x){return String(x==null?'':x).replace(/[\t\r\n]+/g,' ').trim()}
+function buildTSV(list){
+  var cols=S.data.fields.map(function(f){return f.c});
+  var lines=['eB620-phone-2\t'+new Date().toISOString()+'\t'+clean(S.data.book),['_id','_row','_key','_kind','_hose','_note'].concat(cols).join('\t')];
+  list.forEach(function(e){
+    var q=e.kind==='quick',src=q?(e.q||{}):e.v;
+    lines.push([e.id,e.row||'',clean(e.key),q?'quick':'full',q&&e.hose?'1':'',q?clean(e.note):''].concat(cols.map(function(c){return clean(src[c])})).join('\t'))});
+  return lines.join('\r\n')+'\r\n';
+}
+function stamp(){var d=new Date();return d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate())+'_'+pad2(d.getHours())+pad2(d.getMinutes())}
+function sendNow(){
+  var list=unsent();if(!list.length)return;
+  var text=buildTSV(list),name='eB620_phone_entries_'+stamp()+'.txt',ids=list.map(function(e){return e.id});
+  shareFile(text,name,'eB620 tank entries',list.length+(list.length===1?' tank':' tanks'),function(){S.entries.forEach(function(e){if(ids.indexOf(e.id)>=0){e.sent=Date.now()}});lsSet('ebp_entries',S.entries)});
+}
+try{if(window.claude&&claude.use){claude.use('downloads').then(function(d){window.__dl=d||null},function(){})}}catch(e){}
+function shareFile(text,name,title,countLabel,onSent){
+  var DL=window.__dl||null;
+  function doShare(){
+    try{
+      var file=new File([text],name,{type:'text/plain'});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){return navigator.share({files:[file],title:title}).then(function(){return true},function(){return false})}
+    }catch(e){}
+    return Promise.resolve(null);
+  }
+  function doDownload(){
+    try{var bl=new Blob([text],{type:'text/plain'}),u=URL.createObjectURL(bl),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000)}catch(e){}
+  }
+  openSheet('<h2>File ready</h2><p style="margin:0;color:var(--muted);font-size:.92rem">'+countLabel+' in <b>'+esc(name)+'</b>. Share it with the office. When you are sure it went out, tap "Mark as sent".</p><div class="row"><button class="btn primary" id="shBtn" type="button">Share file</button><button class="btn" id="dlBtn" type="button">Save to phone</button><button class="btn" id="cpBtn" type="button">Copy text</button></div><textarea id="tsvBox" readonly aria-label="File contents"></textarea><div class="row"><button class="btn" id="okBtn" type="button">Mark as sent</button><button class="btn" id="clBtn" type="button">Close</button></div>',function(){
+    $('#tsvBox').value=text;
+    if(DL){
+      $('#shBtn').textContent='Save file';$('#dlBtn').style.display='none';
+      $('#shBtn').onclick=function(){DL.save({filename:name,data:text}).then(function(){toast('File handed to your phone. Choose where to put it (for example OneDrive).')},function(e){var c=e&&e.code;if(c==='declined')toast('Not saved.');else if(c==='rate_limited')toast('Wait a moment and try again.');else toast('Saving is not available here. Use Copy text below.')})};
+    }else
+    $('#shBtn').onclick=function(){doShare().then(function(r){if(r===null){doDownload();toast('Sharing is not available here. The file was saved instead, or copy the text below.')}})};
+    $('#dlBtn').onclick=function(){doDownload();toast('Saving the file. If nothing downloads, use Copy text.')};
+    $('#cpBtn').onclick=function(){var box=$('#tsvBox');var done=function(){toast('Copied. Paste it into an email or a text file ending in .txt.')};
+      try{navigator.clipboard.writeText(text).then(done,function(){box.select();document.execCommand&&document.execCommand('copy');done()})}catch(e){box.select();try{document.execCommand('copy')}catch(_){}done()}};
+    $('#okBtn').onclick=function(){onSent();closeSheet();render();toast('Marked as sent.')};
+    $('#clBtn').onclick=closeSheet;
+  });
+}
+
+/* ---------- loading data ---------- */
+function loadDataText(txt,name){
+  var d;try{d=JSON.parse(txt.replace(/^﻿/,''))}catch(e){toast('That file could not be read. Use the file saved by "Export for phone".');return}
+  if(!d||d.kind!=='nurse'||!d.fields||!d.tanks){toast('That is not an eB620 phone data file.');return}
+  var keep=S.entries.filter(function(e){return!e.sent});
+  S.data=d;S.sample=false;indexFields();S.entries=keep;lsSet('ebp_data',d);lsSet('ebp_entries',keep);
+  S.adds={};lsSet('ebp_adds',{});
+  toast(d.tanks.length+' tanks loaded'+(keep.length?'. '+keep.length+' unsent '+(keep.length===1?'tank was':'tanks were')+' kept.':'.'));
+  render();
+}
+
+/* ---------- Form 2 (visual inspection) ---------- */
+S.f2=lsGet('ebp_f2',[]);S.f2v=null;
+function f2def(){return (S.data&&S.data.form2)||SAMPLE.form2}
+function f2unsent(){return S.f2.filter(function(r){return!r.sent})}
+function f2hasYes(i){return !!i.cols&&i.cols.indexOf('W')>=0}
+function f2items(){return f2def().items.filter(function(i){return!i.h&&f2hasYes(i)})}
+function f2refs(items){
+  var m={},k=0;
+  f2def().items.forEach(function(i){var a=items[i.row];if(a&&a.c&&String(a.c).trim()){k++;m[i.row]=k}});
+  return m;
+}
+function f2answered(rec){var n=0;f2items().forEach(function(i){var a=rec.items[i.row];if(a&&a.r)n++});return n}
+function f2save(){
+  var v=S.f2v;if(!v)return;
+  var any=Object.keys(v.items).some(function(r){var a=v.items[r];return a&&(a.r||(a.c&&a.c.trim()))});
+  var i=S.f2.map(function(x){return x.id}).indexOf(v.id);
+  if(!any){if(i>=0){S.f2.splice(i,1);lsSet('ebp_f2',S.f2)}return}
+  var rec={id:v.id,key:v.key,v:v.v,serial:v.serial,items:v.items,ts:Date.now(),sent:0};
+  if(i>=0)S.f2[i]=rec;else S.f2.push(rec);
+  lsSet('ebp_f2',S.f2);
+}
+function openF2(o){
+  var key=keyOf(o),ex=S.f2.filter(function(r){return r.key===key&&!r.sent})[0];
+  var sent=S.f2.filter(function(r){return r.key===key&&r.sent})[0];
+  var src=ex||sent;
+  S.f2v={id:ex?ex.id:newId(),key:key,v:{A:o.A||'',C:o.C||'',D:o.D||''},serial:o.AB||'',items:src?JSON.parse(JSON.stringify(src.items)):{}};
+  S.form=null;window.scrollTo(0,0);render();
+}
+function renderF2(){
+  var v=S.f2v,def=f2def(),refs=f2refs(v.items);
+  $('#tabs').hidden=true;$('#fab').hidden=true;
+  var its=f2items(),n=f2answered(v);
+  $('#top').innerHTML='<button class="hbtn icon" id="f2Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 2 - Tank '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f2Done" type="button">Done</button>';
+  var h='<div class="panel"><h2>Visual inspection (external)</h2><p>Tap Yes, No or N/A for each item. Add a comment where something needs one; it gets the next Ref # and is printed on the form beside the item. Changes are saved on this phone as you go.</p></div>';
+  h+='<div class="f2bar"><span class="count" style="flex:1;margin:0" id="f2cnt">'+n+' of '+its.length+' answered</span><button class="btn sm" id="f2AllYes" type="button">Mark the rest Yes</button></div>';
+  var open=false;
+  def.items.forEach(function(it){
+    if(it.h){if(open)h+='</div>';h+='<div class="panel"><div class="f2h">'+esc(it.t)+'</div>';open=true;return}
+    if(!it.cols)return;
+    var a=v.items[it.row]||{},ch='',cols=it.cols;
+    function chip(col,lab,cls,val){return cols.indexOf(col)>=0?'<button type="button" class="chip '+cls+(a.r===val?' on':'')+'" data-f2r="'+it.row+'" data-v="'+val+'">'+lab+'</button>':''}
+    ch=f2hasYes(it)?chip('W','Yes','y','Y')+chip('X','No','n','N')+chip('Z','N/A','a','A'):'';
+    var hasC=a.c!=null&&(a.c!==''||a.cOpen);
+    h+='<div class="f2item"><p class="tx">'+esc(it.t)+(refs[it.row]?'<span class="rf">Ref '+refs[it.row]+'</span>':'')+'</p><div class="chips">'+ch+'</div>'+(f2hasYes(it)?'':'<p class="count" style="margin:.2rem 0">Recorded on Form 5. Add a comment here only if there is one.</p>');
+    if(cols.indexOf('Y')>=0){
+      if(hasC||a.r==='N')h+='<textarea data-f2c="'+it.row+'" maxlength="110" placeholder="Comment (short - one line on the form)">'+esc(a.c||'')+'</textarea>';
+      else h+='<button type="button" class="lnk" data-f2add="'+it.row+'">+ Add comment</button>';
+    }
+    h+='</div>';
+  });
+  if(open)h+='</div>';
+  var nc=Object.keys(refs).length,mx=def.comments.length;
+  h+='<div class="panel"><p style="margin:0;color:'+(nc>mx?'var(--bad)':'var(--muted)')+'">'+nc+' of '+mx+' comment lines used on the form.'+(nc>mx?' There is only room for '+mx+'. Shorten or remove some comments before sending.':'')+'</p></div>';
+  $('#view').innerHTML=h;
+}
+function f2closeCheck(){
+  var v=S.f2v;f2save();S.f2v=null;S.tab='tanks';render();
+  var its=f2items(),rec=S.f2.filter(function(r){return r.id===v.id})[0];
+  toast(rec?('Form 2 saved ('+f2answered(rec)+' of '+its.length+' answered). It is on the To send tab.'):'Nothing entered, so nothing was saved.');
+}
+function f2set(row,val){
+  var v=S.f2v,a=v.items[row]||(v.items[row]={});
+  a.r=(a.r===val)?'':val;
+  if(a.r==='N'&&a.c==null)a.c='';
+  f2save();renderF2KeepScroll();
+}
+function renderF2KeepScroll(){var y=window.scrollY;renderF2();window.scrollTo(0,y)}
+function f2click(t){
+  var r=t.closest('[data-f2r]');if(r){f2set(+r.getAttribute('data-f2r'),r.getAttribute('data-v'));return true}
+  var ad=t.closest('[data-f2add]');
+  if(ad){var row=+ad.getAttribute('data-f2add'),a=S.f2v.items[row]||(S.f2v.items[row]={});a.c=a.c||'';a.cOpen=1;renderF2KeepScroll();setTimeout(function(){var el=$('[data-f2c="'+row+'"]');if(el)el.focus()},30);return true}
+  if(t.closest('#f2AllYes')){
+    f2items().forEach(function(it){if(it.cols.indexOf('W')>=0){var a=S.f2v.items[it.row]||(S.f2v.items[it.row]={});if(!a.r)a.r='Y'}});
+    f2save();renderF2KeepScroll();return true}
+  if(t.closest('#f2Done')||t.closest('#f2Back')){f2closeCheck();return true}
+  return false;
+}
+function f2c(x){return clean(x).replace(/\|/g,'/')}
+function buildF2(list){
+  var lines=['eB620-form2-1|'+new Date().toISOString()+'|'+f2c(S.data.book)];
+  list.forEach(function(rec){
+    lines.push(['T',f2c(rec.v.A),f2c(rec.v.C),f2c(rec.v.D),f2c(rec.serial),new Date(rec.ts).toISOString().slice(0,10)].join('|'));
+    var refs=f2refs(rec.items),cm=[];
+    f2def().items.forEach(function(it){
+      var a=rec.items[it.row];if(!a||it.h)return;
+      var ref=refs[it.row]||'';
+      if(a.r||ref)lines.push(['I',it.row,a.r||'',ref].join('|'));
+      if(ref)cm.push([ref,f2c(a.c)]);
+    });
+    cm.forEach(function(c){lines.push(['C',c[0],c[1]].join('|'))});
+  });
+  return lines.join('\r\n')+'\r\n';
+}
+function f2row(rec){
+  var d=new Date(rec.ts),its=f2items();
+  return '<div class="ent"><div><div class="tag" style="font-family:var(--mono);font-weight:700">'+esc(rec.v.D||'(no number)')+' <span class="badge '+(rec.sent?'good':'warn')+'">Form 2'+(rec.sent?' - sent':'')+'</span></div><div class="count">'+esc([rec.v.A,rec.v.C].filter(Boolean).join(' - '))+' - '+f2answered(rec)+' of '+its.length+' answered - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'}))+'</div></div><div class="row">'+
+    (rec.sent?'':'<button class="btn sm primary" data-f2send="'+esc(rec.id)+'" type="button">Send</button>')+'<button class="btn sm" data-f2edit="'+esc(rec.id)+'" type="button">Open</button>'+(rec.sent?'<button class="btn sm" data-f2unsend="'+esc(rec.id)+'" type="button">Send again</button>':'')+'<button class="btn sm danger" data-f2del="'+esc(rec.id)+'" type="button">Delete</button></div></div>';
+}
+function f2sendPanel(){
+  var u=f2unsent(),s=S.f2.filter(function(r){return r.sent});
+  if(!S.f2.length)return '';
+  var h='<div class="panel"><h2>Form 2 inspections</h2><p>'+(u.length?u.length+(u.length===1?' inspection is':' inspections are')+' waiting to send. Tap Send on each one; every inspection goes in its own file and the office imports them one at a time.':'Nothing waiting to send.')+'</p></div>';
+  h+=f2unsent().map(f2row).join('');
+  if(s.length)h+='<h2 style="margin:.6rem 0 0;font-size:.95rem;color:var(--muted)">Form 2 already sent</h2>'+s.map(f2row).join('');
+  return h;
+}
+function sendF2(id){
+  var list=f2unsent().filter(function(r){return r.id===id});if(!list.length)return;
+  var nc=0;list.forEach(function(r){nc=Math.max(nc,Object.keys(f2refs(r.items)).length)});
+  if(nc>f2def().comments.length){toast('A Form 2 has more comments than the form has lines. Shorten them first.');return}
+  var text=buildF2(list),name='eB620_form2_'+String(list[0].v.D||'tank').replace(/[^A-Za-z0-9_-]+/g,'')+'_'+stamp()+'.txt',ids=list.map(function(r){return r.id});
+  shareFile(text,name,'eB620 Form 2',list.length+(list.length===1?' inspection':' inspections'),function(){S.f2.forEach(function(r){if(ids.indexOf(r.id)>=0)r.sent=Date.now()});lsSet('ebp_f2',S.f2)});
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',function(e){
+  var t=e.target;
+  if(S.f2v){f2click(t);return}
+  if(t.closest('#f2Open')&&S.form){var o=S.form.orig;if(S.form.dirty)saveDraft();openF2(Object.assign({},o));return}
+  var fe=t.closest('[data-f2edit]');if(fe){var rc=S.f2.filter(function(r){return r.id===fe.getAttribute('data-f2edit')})[0];if(rc){S.f2v={id:rc.id,key:rc.key,v:rc.v,serial:rc.serial,items:JSON.parse(JSON.stringify(rc.items))};window.scrollTo(0,0);render()}return}
+  var fu=t.closest('[data-f2unsend]');if(fu){S.f2.forEach(function(r){if(r.id===fu.getAttribute('data-f2unsend'))r.sent=0});lsSet('ebp_f2',S.f2);render();return}
+  var fd=t.closest('[data-f2del]');
+  if(fd){if(fd.getAttribute('data-armed')){S.f2=S.f2.filter(function(r){return r.id!==fd.getAttribute('data-f2del')});lsSet('ebp_f2',S.f2);render();toast('Deleted from this phone.')}else{fd.setAttribute('data-armed','1');fd.textContent='Tap again to delete';setTimeout(function(){if(fd.isConnected){fd.removeAttribute('data-armed');fd.textContent='Delete'}},3000)}return}
+  var fs=t.closest('[data-f2send]');if(fs){sendF2(fs.getAttribute('data-f2send'));return}
+  if(S.form){
+    var pk=t.closest('[data-pick]');if(pk){openPicker(pk.getAttribute('data-pick'));return}
+    if(t.closest('#allBtn')){var rr=S.form.row;S.form=null;dropDraft();openFull(rr);return}
+    if(t.closest('#backBtn')){leaveForm();return}
+    if(t.closest('#saveBtn')||t.closest('#saveBtn2')){if(S.form.mode==='quick')saveQuick();else saveForm();return}
+    var pg=t.closest('[data-page],[data-go]');
+    if(pg){S.form.page=+(pg.getAttribute('data-page')||pg.getAttribute('data-go'));renderForm();window.scrollTo(0,0);return}
+    return;
+  }
+  var tb=t.closest('[data-tab]');if(tb){S.tab=tb.getAttribute('data-tab');render();window.scrollTo(0,0);return}
+  if(t.closest('#fab')){newTankSheet();return}
+  var op=t.closest('[data-open]');
+  if(op){
+    var k=op.getAttribute('data-open');
+    if(k.indexOf('e:')===0)openEntry(k.slice(2));else openRow(+k.slice(2));
+    return;
+  }
+  var ed=t.closest('[data-edit]');if(ed){openEntry(ed.getAttribute('data-edit'));return}
+  var de=t.closest('[data-del]');
+  if(de){
+    var id=de.getAttribute('data-del');
+    if(de.getAttribute('data-armed')){S.entries=S.entries.filter(function(x){return x.id!==id});lsSet('ebp_entries',S.entries);render();toast('Deleted from this phone.')}
+    else{de.setAttribute('data-armed','1');de.textContent='Tap again to delete';setTimeout(function(){if(de.isConnected){de.removeAttribute('data-armed');de.textContent='Delete'}},3000)}
+    return;
+  }
+  var us=t.closest('[data-unsend]');if(us){var id2=us.getAttribute('data-unsend');S.entries.forEach(function(x){if(x.id===id2)x.sent=0});lsSet('ebp_entries',S.entries);render();return}
+  var ac=t.closest('[data-act]');
+  if(ac){
+    var a=ac.getAttribute('data-act');
+    if(a==='resume'){
+      if(S.draft.mode==='quick'){var bt=baseTank(S.draft.row);if(bt){openQuick(bt,null);Object.assign(S.form,{id:S.draft.id,v:S.draft.v,hose:!!S.draft.hose,dirty:true});renderForm()}}
+      else openForm({id:S.draft.id,row:S.draft.row,key:S.draft.key,v:S.draft.v,dirty:true})}
+    if(a==='dropdraft'){dropDraft();render()}
+    return;
+  }
+  if(t.closest('#sendBtn')){sendNow();return}
+  if(t.closest('#loadBtn')){$('#fileIn').click();return}
+  if(t.closest('#clearSent')){
+    var b=t.closest('#clearSent');
+    if(b.getAttribute('data-armed')){S.entries=S.entries.filter(function(x){return!x.sent});lsSet('ebp_entries',S.entries);render();toast('Sent tanks removed.')}
+    else{b.setAttribute('data-armed','1');b.textContent='Tap again to remove';setTimeout(function(){if(b.isConnected){b.removeAttribute('data-armed');b.textContent='Remove sent tanks from this phone'}},3000)}
+  }
+});
+document.addEventListener('change',function(e){
+  if(e.target.id==='hoseNew'&&S.form){S.form.hose=e.target.checked;S.form.dirty=true;saveDraft();renderForm();return}
+  if(e.target.id==='fileIn'&&e.target.files&&e.target.files[0]){
+    var file=e.target.files[0],r=new FileReader();
+    r.onload=function(){loadDataText(String(r.result),file.name)};
+    r.onerror=function(){toast('That file could not be opened.')};
+    r.readAsText(file);e.target.value='';
+  }
+});
+document.addEventListener('input',function(e){
+  var fc=e.target.getAttribute&&e.target.getAttribute('data-f2c');
+  if(fc&&S.f2v){var a=S.f2v.items[+fc]||(S.f2v.items[+fc]={});a.c=e.target.value;f2save();var rf=f2refs(S.f2v.items);return}
+  var c=e.target.getAttribute&&e.target.getAttribute('data-in');
+  if(c&&S.form){S.form.v[c]=e.target.value;S.form.dirty=true;saveDraft()}
+});
+document.addEventListener('focusout',function(e){
+  var c=e.target.getAttribute&&e.target.getAttribute('data-in');
+  if(c&&S.form)blurField(c);
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&e.target.getAttribute&&e.target.getAttribute('data-in')&&S.form){
+    e.preventDefault();var els=[].slice.call(document.querySelectorAll('.fields input,.fields .pick'));var i=els.indexOf(e.target);
+    if(i>=0&&els[i+1])els[i+1].focus();else e.target.blur();return}
+  if(e.key==='Escape'&&!$('#sheetWrap').hidden)closeSheet();
+});
+function baseTank(row){return S.data.tanks.filter(function(x){return x.row===row})[0]}
+function openRow(row){
+  var t=baseTank(row);if(!t)return;
+  var q=S.entries.filter(function(e){return e.kind==='quick'&&e.row===row&&!e.sent})[0];
+  openQuick(t,q);
+}
+function openFull(row){
+  var t=baseTank(row);if(!t)return;
+  var e=S.entries.filter(function(x){return x.kind!=='quick'&&x.row===row})[0];
+  openForm({id:e?e.id:null,row:t.row,key:keyOf(t.v),v:e?e.v:t.v});
+}
+function openQuick(t,q){
+  var v=q?Object.assign({},q.q,{note:q.note||''}):{};
+  S.form={mode:'quick',orig:t.v,id:q?q.id:newId(),row:t.row,key:keyOf(t.v),v:v,hose:q?!!q.hose:false,errs:{},notes:{},dirty:false,page:1,keepA:t.v.A};
+  window.scrollTo(0,0);render();
+}
+var QLAB={R:'PRV expires',S:'PRV psi @ temp',V:'Hose expiry year',X:'Hose length (ft)',Y:'Hose MFG',Z:'HRV expires',AA:'Paint rating (0 - 10)'};
+function quickSummary(e){
+  var q=e.q||{},p=[];
+  ['R','S','Z','AA'].forEach(function(c){if(q[c])p.push(QLAB[c]+' '+q[c])});
+  if(e.hose){var h=['V','X','Y'].map(function(c){return q[c]}).filter(Boolean);p.push('New hose'+(h.length?' ('+h.join(', ')+')':''))}
+  if(e.note)p.push('Note: '+e.note);
+  return p.join(' - ')||'No changes';
+}
+function openEntry(id){
+  var e=S.entries.filter(function(x){return x.id===id})[0];if(!e)return;
+  if(e.kind==='quick'){var bt=baseTank(e.row);if(bt)openQuick(bt,e);return}
+  if(e.sent&&!e.row){toast('This tank was already sent. Change it in the workbook.');return}
+  openForm({id:e.id,row:e.row,key:e.key,v:e.v});
+}
+render();
+/* works offline when the page is hosted: the service worker keeps a copy */
+try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&document.querySelector('link[rel=manifest]')){navigator.serviceWorker.register('sw.js').catch(function(){})}}catch(e){}
+window.__ebp={S:S,buildTSV:buildTSV,parseMY:parseMY,check:check};
+})();
+</script>
+</body></html>
