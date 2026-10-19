@@ -650,7 +650,7 @@ function shareFile(text,name,title,countLabel,onSent){
     return Promise.resolve(null);
   }
   function doDownload(){
-    try{var bl=new Blob([text],{type:'text/plain'}),u=URL.createObjectURL(bl),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000)}catch(e){}
+    try{var bl=new Blob([text],{type:'application/octet-stream'}),u=URL.createObjectURL(bl),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000)}catch(e){}
   }
   openSheet('<h2>File ready</h2><p style="margin:0;color:var(--muted);font-size:.92rem">'+countLabel+' in <b>'+esc(name)+'</b>. Share it with the office. When you are sure it went out, tap "Mark as sent".</p><div class="row"><button class="btn primary" id="shBtn" type="button">Share file</button><button class="btn" id="dlBtn" type="button">Save to phone</button><button class="btn" id="cpBtn" type="button">Copy text</button></div><textarea id="tsvBox" readonly aria-label="File contents"></textarea><div class="row"><button class="btn" id="okBtn" type="button">Mark as sent</button><button class="btn" id="clBtn" type="button">Close</button></div>',function(){
     $('#tsvBox').value=text;
