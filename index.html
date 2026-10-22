@@ -131,6 +131,7 @@ main{padding-top:1rem;display:flex;flex-direction:column;gap:.9rem;min-width:0}
 .chip.on.y{background:var(--good-soft);border-color:var(--good);color:var(--good)}
 .chip.on.n{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
 .chip.on.a{background:var(--surface2);border-color:var(--muted);color:var(--ink)}
+.chip.on.s{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 .f2item textarea{width:100%;min-height:3.4rem;margin-top:.55rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:.6rem .8rem;font:inherit;resize:vertical}
 .f2item .lnk{margin-top:.4rem;background:none;border:0;color:var(--accent);font-weight:600;padding:.3rem 0}
 .f2h{font-size:.82rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:1rem 0 .2rem}
@@ -149,7 +150,7 @@ main{padding-top:1rem;display:flex;flex-direction:column;gap:.9rem;min-width:0}
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 3g (Form 2, Email to office)';
+var VERSION='prototype 4a (Form 1, Form 2, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -336,7 +337,7 @@ function tankIcon(){return '<svg width="30" height="30" viewBox="0 0 32 32" aria
 /* ---------- rendering ---------- */
 function unsent(){return S.entries.filter(function(e){return!e.sent})}
 function render(){
-  if(S.f2v){renderF2();return}
+  if(S.f2v){if(S.f2v.view==='f2')renderF2();else renderRep();return}
   if(S.form){renderForm();return}
   var top=$('#top');
   var ts=S.data.made||'';
@@ -567,8 +568,9 @@ function renderQuick(){
   $('#tabs').hidden=true;$('#fab').hidden=true;
   t.innerHTML='<button class="hbtn icon" id="backBtn" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Tank '+esc(o.D||'')+'</h1><p>'+esc([o.A,o.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="saveBtn" type="button">Save</button>';
   var hs=[o.V&&('expires '+o.V),o.X&&(o.X+' ft'),o.W,o.Y].filter(Boolean).join(', ');
-  var h='<div class="panel"><h2>Quick update</h2><p>Type only what you found or changed. The sheet keeps the old values for the inspection forms, and your entries are listed beside them in the workbook.</p></div>';
-  h+='<div class="panel"><h2>Form 2 - visual inspection</h2><p>Fill in the Form 2 checklist for this tank now, with no signal needed.</p><button class="btn primary block" id="f2Open" type="button">'+(S.f2.some(function(r){return r.key===S.form.key&&!r.sent})?'Continue Form 2':'Start Form 2')+'</button></div>';
+  var h='';
+  h+='<div class="panel"><h2>Inspection report</h2><p>Start the report for this tank: unit type, data plate, forms used and Form 2. No signal needed.</p><button class="btn primary block" id="f2Open" type="button">'+(S.f2.some(function(r){return r.key===S.form.key&&!r.sent})?'Continue inspection report':'Start inspection report')+'</button></div>';
+  h+='<div class="panel"><h2>Quick update</h2><p>Type only what you found or changed. The sheet keeps the old values for the inspection forms, and your entries are listed beside them in the workbook.</p></div>';
   h+='<div class="panel"><h2>PRV</h2><div class="fields">'+qfield('R')+qfield('S')+'</div></div>';
   h+='<div class="panel"><h2>Hose</h2><p>On the sheet: '+esc(hs||'no hose recorded')+'</p><label class="check"><input type="checkbox" id="hoseNew"'+(f.hose?' checked':'')+'> New hose fitted</label>'+(f.hose?'<div class="fields">'+qfield('V')+qfield('X')+qfield('Y')+'</div>':'')+'</div>';
   h+='<div class="panel"><h2>HRV and paint</h2><div class="fields">'+qfield('Z')+qfield('AA')+'</div></div>';
@@ -702,19 +704,70 @@ function f2refs(items){
 function f2answered(rec){var n=0;f2items().forEach(function(i){var a=rec.items[i.row];if(a&&a.r)n++});return n}
 function f2save(){
   var v=S.f2v;if(!v)return;
-  var any=Object.keys(v.items).some(function(r){var a=v.items[r];return a&&(a.r||(a.c&&a.c.trim()))});
+  var any=Object.keys(v.items).some(function(r){var a=v.items[r];return a&&(a.r||(a.c&&a.c.trim()))})||!!v.plate||!!v.touched||Object.keys(v.forms||{}).some(function(k){return v.forms[k]});
   var i=S.f2.map(function(x){return x.id}).indexOf(v.id);
   if(!any){if(i>=0){S.f2.splice(i,1);lsSet('ebp_f2',S.f2)}return}
-  var rec={id:v.id,key:v.key,v:v.v,serial:v.serial,items:v.items,ts:Date.now(),sent:0};
+  var rec={id:v.id,key:v.key,v:v.v,serial:v.serial,items:v.items,unit:v.unit,plate:v.plate||'',forms:v.forms||{},touched:v.touched?1:0,ts:Date.now(),sent:0};
   if(i>=0)S.f2[i]=rec;else S.f2.push(rec);
   lsSet('ebp_f2',S.f2);
+}
+/* ---------- Form 1 (the report's first page): unit type, data plate, forms used ---------- */
+var UNITS=[{k:'S',t:'Single',names:['']},{k:'T',t:'Twin',names:['Left','Right']},{k:'3',t:'Triple',names:['Left','Center','Right']}];
+var FORMS_FIX=[{n:2,t:'Form 2 - Visual inspection (external)',phone:1},{n:4,t:'Form 4 - Leakage (K)'},{n:20,t:'Form 20 - Statement of defects and certification'}];
+var FORMS_OPT=[{n:3,t:'Form 3 - Pressure test (3 or 5 yr)'},{n:5,t:'Form 5 - Hose test and inspection'},{n:8,t:'Form 8 - Thickness'},{n:10,t:'Form 10 - Data plate picture'},{n:11,t:'Form 11 - U1A form'},{n:13,t:'Form 13 - Additional comments'}];
+function unitTanks(v){
+  var c=norm(v.C),d=norm(v.D);
+  return S.data.tanks.filter(function(t){return norm(t.v.C)===c&&norm(t.v.D)===d}).sort(function(a,b){return a.row-b.row});
+}
+function unitGuess(v){var n=unitTanks(v).length;return n>=3?'3':(n===2?'T':'S')}
+function unitDef(k){return UNITS.filter(function(u){return u.k===k})[0]||UNITS[0]}
+function repForms(v){return Object.keys(v.forms||{}).filter(function(k){return v.forms[k]}).map(Number).sort(function(a,b){return a-b})}
+function f2state(src,v,serial,id,key){
+  return {id:id,key:key,v:v,serial:serial,items:src?JSON.parse(JSON.stringify(src.items)):{},unit:(src&&src.unit)||unitGuess(v),plate:(src&&src.plate)||'',forms:src&&src.forms?JSON.parse(JSON.stringify(src.forms)):{},touched:src&&src.touched?1:0,view:'rep'};
 }
 function openF2(o){
   var key=keyOf(o),ex=S.f2.filter(function(r){return r.key===key&&!r.sent})[0];
   var sent=S.f2.filter(function(r){return r.key===key&&r.sent})[0];
   var src=ex||sent;
-  S.f2v={id:ex?ex.id:newId(),key:key,v:{A:o.A||'',C:o.C||'',D:o.D||''},serial:o.AB||'',items:src?JSON.parse(JSON.stringify(src.items)):{}};
+  S.f2v=f2state(src,{A:o.A||'',C:o.C||'',D:o.D||''},o.AB||'',ex?ex.id:newId(),key);
   S.form=null;window.scrollTo(0,0);render();
+}
+function renderRep(){
+  var v=S.f2v,ud=unitDef(v.unit),tk=unitTanks(v.v),its=f2items(),n=f2answered(v);
+  $('#tabs').hidden=true;$('#fab').hidden=true;
+  $('#top').innerHTML='<button class="hbtn icon" id="repBack" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Inspection report - Tank '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="repDone" type="button">Done</button>';
+  var h='<div class="panel"><h2>Form 1 - Tank information</h2><p>The tank details come from the workbook. Answer the two questions below and choose the forms this report uses. Changes are saved on this phone as you go.</p></div>';
+  h+='<div class="panel"><h2>Unit</h2><p>How many tanks are on this unit?</p><div class="chips">'+UNITS.map(function(u){return '<button type="button" class="chip s'+(v.unit===u.k?' on':'')+'" data-unit="'+u.k+'">'+u.t+'</button>'}).join('')+'</div>';
+  var lines=[];
+  for(var i=0;i<ud.names.length;i++){var t=tk[i];lines.push((ud.names[i]?ud.names[i]+' tank: ':'Tank: ')+(t?[t.v.AB&&('serial '+t.v.AB),t.v.AD].filter(Boolean).join(' - ')||'(no serial in the list)':'not in the tank list'))}
+  h+='<p style="margin:0">'+lines.map(esc).join('<br>')+'</p>';
+  if(tk.length<ud.names.length)h+='<p style="margin:0;color:var(--bad)">The tank list has '+tk.length+(tk.length===1?' tank':' tanks')+' with this company and number. Add the other tank'+(ud.names.length-tk.length>1?'s':'')+' to the tank list first, or choose a different unit type.</p>';
+  h+='</div>';
+  h+='<div class="panel"><h2>Data plate</h2><p>Metal identification plate affixed and legible?</p><div class="chips"><button type="button" class="chip y'+(v.plate==='Y'?' on':'')+'" data-plate="Y">Yes</button><button type="button" class="chip n'+(v.plate==='N'?' on':'')+'" data-plate="N">No, out of service</button></div>'+(v.plate?'':'<p style="margin:0;color:var(--bad)">Please choose Yes or No before sending.</p>')+'</div>';
+  h+='<div class="panel"><h2>Forms used in this report</h2><p>Forms 1, 2, 4 and 20 are always part of the report. Tick any other forms that were done.</p>';
+  h+='<div class="f2item"><p class="tx">Form 1 - Tank information</p><p class="count" style="margin:0">This page.</p></div>';
+  FORMS_FIX.forEach(function(f){
+    h+='<div class="f2item"><p class="tx">'+esc(f.t)+'</p>'+(f.n===2?'<button type="button" class="btn block primary" id="repF2">'+(n?'Continue Form 2':'Start Form 2')+' ('+n+' of '+its.length+' answered)</button>':'<p class="count" style="margin:0">Not on the phone yet - the office fills this form in.</p>')+'</div>';
+  });
+  FORMS_OPT.forEach(function(f){
+    var on=!!(v.forms&&v.forms[f.n]);
+    h+='<div class="f2item"><label class="check"><input type="checkbox" data-form="'+f.n+'"'+(on?' checked':'')+'> '+esc(f.t)+'</label>'+(on?'<p class="count" style="margin:.3rem 0 0">Not on the phone yet - the office fills this form in.</p>':'')+'</div>';
+  });
+  h+='</div>';
+  h+='<div class="panel"><h2>Send</h2><p>Sends this report to the office: Form 1 answers, the forms used and Form 2.</p><button type="button" class="btn primary block" id="repSend">Send report</button></div>';
+  $('#view').innerHTML=h;
+}
+function repClick(t){
+  var v=S.f2v,u=t.closest('[data-unit]');
+  if(u){v.unit=u.getAttribute('data-unit');v.touched=1;f2save();var y=window.scrollY;renderRep();window.scrollTo(0,y);return true}
+  var p=t.closest('[data-plate]');
+  if(p){var pv=p.getAttribute('data-plate');v.plate=(v.plate===pv)?'':pv;f2save();var y2=window.scrollY;renderRep();window.scrollTo(0,y2);return true}
+  var fc=t.closest('[data-form]');
+  if(fc){setTimeout(function(){var k=+fc.getAttribute('data-form');v.forms=v.forms||{};v.forms[k]=fc.checked?1:0;f2save();var y3=window.scrollY;renderRep();window.scrollTo(0,y3)},0);return false}
+  if(t.closest('#repF2')){v.view='f2';window.scrollTo(0,0);render();return true}
+  if(t.closest('#repSend')){f2save();var rec=S.f2.filter(function(r){return r.id===v.id})[0];if(!rec){toast('Answer a question or fill in something first, then send.');return true}sendF2(rec.id);return true}
+  if(t.closest('#repDone')||t.closest('#repBack')){f2closeCheck();return true}
+  return false;
 }
 function renderF2(){
   var v=S.f2v,def=f2def(),refs=f2refs(v.items);
@@ -746,7 +799,7 @@ function renderF2(){
 function f2closeCheck(){
   var v=S.f2v;f2save();S.f2v=null;S.tab='tanks';render();
   var its=f2items(),rec=S.f2.filter(function(r){return r.id===v.id})[0];
-  toast(rec?('Form 2 saved ('+f2answered(rec)+' of '+its.length+' answered). It is on the To send tab.'):'Nothing entered, so nothing was saved.');
+  toast(rec?('Report saved (Form 2: '+f2answered(rec)+' of '+its.length+' answered). It is on the To send tab.'):'Nothing entered, so nothing was saved.');
 }
 function f2set(row,val){
   var v=S.f2v,a=v.items[row]||(v.items[row]={});
@@ -762,7 +815,7 @@ function f2click(t){
   if(t.closest('#f2AllYes')){
     f2items().forEach(function(it){if(it.cols.indexOf('W')>=0){var a=S.f2v.items[it.row]||(S.f2v.items[it.row]={});if(!a.r)a.r='Y'}});
     f2save();renderF2KeepScroll();return true}
-  if(t.closest('#f2Done')||t.closest('#f2Back')){f2closeCheck();return true}
+  if(t.closest('#f2Done')||t.closest('#f2Back')){f2save();S.f2v.view='rep';window.scrollTo(0,0);render();return true}
   return false;
 }
 function f2c(x){return clean(x).replace(/\|/g,'/')}
@@ -770,6 +823,7 @@ function buildF2(list){
   var lines=['eB620-form2-1|'+new Date().toISOString()+'|'+f2c(S.data.book)];
   list.forEach(function(rec){
     lines.push(['T',f2c(rec.v.A),f2c(rec.v.C),f2c(rec.v.D),f2c(rec.serial),new Date(rec.ts).toISOString().slice(0,10)].join('|'));
+    lines.push(['U',rec.unit||'S',rec.plate||'',repForms(rec).join(',')].join('|'));
     var refs=f2refs(rec.items),cm=[];
     f2def().items.forEach(function(it){
       var a=rec.items[it.row];if(!a||it.h)return;
@@ -784,19 +838,20 @@ function buildF2(list){
 }
 function f2row(rec){
   var d=new Date(rec.ts),its=f2items();
-  return '<div class="ent"><div><div class="tag" style="font-family:var(--mono);font-weight:700">'+esc(rec.v.D||'(no number)')+' <span class="badge '+(rec.sent?'good':'warn')+'">Form 2'+(rec.sent?' - sent':'')+'</span></div><div class="count">'+esc([rec.v.A,rec.v.C].filter(Boolean).join(' - '))+' - '+f2answered(rec)+' of '+its.length+' answered - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'}))+'</div></div><div class="row">'+
+  return '<div class="ent"><div><div class="tag" style="font-family:var(--mono);font-weight:700">'+esc(rec.v.D||'(no number)')+' <span class="badge '+(rec.sent?'good':'warn')+'">Report'+(rec.sent?' - sent':'')+'</span></div><div class="count">'+esc([rec.v.A,rec.v.C].filter(Boolean).join(' - '))+' - '+unitDef(rec.unit).t.toLowerCase()+' unit - Form 2: '+f2answered(rec)+' of '+its.length+' answered - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'}))+'</div></div><div class="row">'+
     (rec.sent?'':'<button class="btn sm primary" data-f2send="'+esc(rec.id)+'" type="button">Send</button>')+'<button class="btn sm" data-f2edit="'+esc(rec.id)+'" type="button">Open</button>'+(rec.sent?'<button class="btn sm" data-f2unsend="'+esc(rec.id)+'" type="button">Send again</button>':'')+'<button class="btn sm danger" data-f2del="'+esc(rec.id)+'" type="button">Delete</button></div></div>';
 }
 function f2sendPanel(){
   var u=f2unsent(),s=S.f2.filter(function(r){return r.sent});
   if(!S.f2.length)return '';
-  var h='<div class="panel"><h2>Form 2 inspections</h2><p>'+(u.length?u.length+(u.length===1?' inspection is':' inspections are')+' waiting to send. Tap Send on each one; every inspection goes in its own file and the office imports them one at a time.':'Nothing waiting to send.')+'</p></div>';
+  var h='<div class="panel"><h2>Inspection reports</h2><p>'+(u.length?u.length+(u.length===1?' report is':' reports are')+' waiting to send. Tap Send on each one; every report goes in its own email and the office imports them one at a time.':'Nothing waiting to send.')+'</p></div>';
   h+=f2unsent().map(f2row).join('');
-  if(s.length)h+='<h2 style="margin:.6rem 0 0;font-size:.95rem;color:var(--muted)">Form 2 already sent</h2>'+s.map(f2row).join('');
+  if(s.length)h+='<h2 style="margin:.6rem 0 0;font-size:.95rem;color:var(--muted)">Reports already sent</h2>'+s.map(f2row).join('');
   return h;
 }
 function sendF2(id){
   var list=f2unsent().filter(function(r){return r.id===id});if(!list.length)return;
+  if(!list[0].plate){toast('Answer the data plate question (Yes or No) on the report first.');return}
   var nc=0;list.forEach(function(r){nc=Math.max(nc,Object.keys(f2refs(r.items)).length)});
   if(nc>f2def().comments.length){toast('A Form 2 has more comments than the form has lines. Shorten them first.');return}
   var text=buildF2(list),name='eB620_form2_'+String(list[0].v.D||'tank').replace(/[^A-Za-z0-9_-]+/g,'')+'_'+stamp()+'.txt',ids=list.map(function(r){return r.id});
@@ -807,9 +862,9 @@ function sendF2(id){
 /* ---------- events ---------- */
 document.addEventListener('click',function(e){
   var t=e.target;
-  if(S.f2v){f2click(t);return}
+  if(S.f2v){if(S.f2v.view==='f2')f2click(t);else repClick(t);return}
   if(t.closest('#f2Open')&&S.form){var o=S.form.orig;if(S.form.dirty)saveDraft();openF2(Object.assign({},o));return}
-  var fe=t.closest('[data-f2edit]');if(fe){var rc=S.f2.filter(function(r){return r.id===fe.getAttribute('data-f2edit')})[0];if(rc){S.f2v={id:rc.id,key:rc.key,v:rc.v,serial:rc.serial,items:JSON.parse(JSON.stringify(rc.items))};window.scrollTo(0,0);render()}return}
+  var fe=t.closest('[data-f2edit]');if(fe){var rc=S.f2.filter(function(r){return r.id===fe.getAttribute('data-f2edit')})[0];if(rc){S.f2v=f2state(rc,rc.v,rc.serial,rc.id,rc.key);window.scrollTo(0,0);render()}return}
   var fu=t.closest('[data-f2unsend]');if(fu){S.f2.forEach(function(r){if(r.id===fu.getAttribute('data-f2unsend'))r.sent=0});lsSet('ebp_f2',S.f2);render();return}
   var fd=t.closest('[data-f2del]');
   if(fd){if(fd.getAttribute('data-armed')){S.f2=S.f2.filter(function(r){return r.id!==fd.getAttribute('data-f2del')});lsSet('ebp_f2',S.f2);render();toast('Deleted from this phone.')}else{fd.setAttribute('data-armed','1');fd.textContent='Tap again to delete';setTimeout(function(){if(fd.isConnected){fd.removeAttribute('data-armed');fd.textContent='Delete'}},3000)}return}
