@@ -149,7 +149,7 @@ main{padding-top:1rem;display:flex;flex-direction:column;gap:.9rem;min-width:0}
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 3f (Form 2, one file each, generic download)';
+var VERSION='prototype 3g (Form 2, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -640,7 +640,7 @@ function sendNow(){
   shareFile(text,name,'eB620 tank entries',list.length+(list.length===1?' tank':' tanks'),function(){S.entries.forEach(function(e){if(ids.indexOf(e.id)>=0){e.sent=Date.now()}});lsSet('ebp_entries',S.entries)});
 }
 try{if(window.claude&&claude.use){claude.use('downloads').then(function(d){window.__dl=d||null},function(){})}}catch(e){}
-function shareFile(text,name,title,countLabel,onSent){
+function shareFile(text,name,title,countLabel,onSent,subject){
   var DL=window.__dl||null;
   function doShare(){
     try{
@@ -652,8 +652,18 @@ function shareFile(text,name,title,countLabel,onSent){
   function doDownload(){
     try{var bl=new Blob([text],{type:'application/octet-stream'}),u=URL.createObjectURL(bl),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000)}catch(e){}
   }
-  openSheet('<h2>File ready</h2><p style="margin:0;color:var(--muted);font-size:.92rem">'+countLabel+' in <b>'+esc(name)+'</b>. Share it with the office. When you are sure it went out, tap "Mark as sent".</p><div class="row"><button class="btn primary" id="shBtn" type="button">Share file</button><button class="btn" id="dlBtn" type="button">Save to phone</button><button class="btn" id="cpBtn" type="button">Copy text</button></div><textarea id="tsvBox" readonly aria-label="File contents"></textarea><div class="row"><button class="btn" id="okBtn" type="button">Mark as sent</button><button class="btn" id="clBtn" type="button">Close</button></div>',function(){
+  openSheet('<h2>File ready</h2><p style="margin:0;color:var(--muted);font-size:.92rem">'+countLabel+' in <b>'+esc(name)+'</b>. Share it with the office. When you are sure it went out, tap "Mark as sent".</p><label for="offMail" style="display:block;margin-top:.7rem;font-weight:600;font-size:.9rem">Office email address</label><input id="offMail" type="email" inputmode="email" autocomplete="email" autocapitalize="off" placeholder="office@yourcompany.com" style="width:100%;min-height:3rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface2);padding:0 .9rem"><div class="row" style="margin-top:.6rem"><button class="btn primary" id="emBtn" type="button">Email to office</button></div><p style="margin:.6rem 0 0;color:var(--muted);font-size:.85rem">Opens your mail app with the report already in the message. Just tap Send. Or use:</p><div class="row"><button class="btn" id="shBtn" type="button">Share file</button><button class="btn" id="dlBtn" type="button">Save to phone</button><button class="btn" id="cpBtn" type="button">Copy text</button></div><textarea id="tsvBox" readonly aria-label="File contents"></textarea><div class="row"><button class="btn" id="okBtn" type="button">Mark as sent</button><button class="btn" id="clBtn" type="button">Close</button></div>',function(){
     $('#tsvBox').value=text;
+    $('#offMail').value=lsGet('ebp_office','');
+    $('#emBtn').onclick=function(){
+      var a=String($('#offMail').value||'').replace(/^\s+|\s+$/g,'');
+      if(!/^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(a)){toast('Type the office email address first.');$('#offMail').focus();return}
+      lsSet('ebp_office',a);
+      var sj=subject||('eB620 app - '+title);
+      var url='mailto:'+encodeURIComponent(a).replace(/%40/g,'@')+'?subject='+encodeURIComponent(sj)+'&body='+encodeURIComponent(text);
+      try{window.location.href=url}catch(e){toast('Could not open the mail app. Use Copy text below.')}
+      toast('Mail is opening. Send it, then come back and tap Mark as sent.');
+    };
     if(DL){
       $('#shBtn').textContent='Save file';$('#dlBtn').style.display='none';
       $('#shBtn').onclick=function(){DL.save({filename:name,data:text}).then(function(){toast('File handed to your phone. Choose where to put it (for example OneDrive).')},function(e){var c=e&&e.code;if(c==='declined')toast('Not saved.');else if(c==='rate_limited')toast('Wait a moment and try again.');else toast('Saving is not available here. Use Copy text below.')})};
@@ -769,6 +779,7 @@ function buildF2(list){
     });
     cm.forEach(function(c){lines.push(['C',c[0],c[1]].join('|'))});
   });
+  lines.push('eB620-end');
   return lines.join('\r\n')+'\r\n';
 }
 function f2row(rec){
@@ -789,7 +800,8 @@ function sendF2(id){
   var nc=0;list.forEach(function(r){nc=Math.max(nc,Object.keys(f2refs(r.items)).length)});
   if(nc>f2def().comments.length){toast('A Form 2 has more comments than the form has lines. Shorten them first.');return}
   var text=buildF2(list),name='eB620_form2_'+String(list[0].v.D||'tank').replace(/[^A-Za-z0-9_-]+/g,'')+'_'+stamp()+'.txt',ids=list.map(function(r){return r.id});
-  shareFile(text,name,'eB620 Form 2',list.length+(list.length===1?' inspection':' inspections'),function(){S.f2.forEach(function(r){if(ids.indexOf(r.id)>=0)r.sent=Date.now()});lsSet('ebp_f2',S.f2)});
+  var r0=list[0],sj='eB620 app - '+[r0.v.D||'tank',r0.v.A,new Date(r0.ts).toISOString().slice(0,10)].filter(Boolean).join(' - ');
+  shareFile(text,name,'eB620 Form 2',list.length+(list.length===1?' inspection':' inspections'),function(){S.f2.forEach(function(r){if(ids.indexOf(r.id)>=0)r.sent=Date.now()});lsSet('ebp_f2',S.f2)},sj);
 }
 
 /* ---------- events ---------- */
