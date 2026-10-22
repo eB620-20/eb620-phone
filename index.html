@@ -122,6 +122,7 @@ main{padding-top:1rem;display:flex;flex-direction:column;gap:.9rem;min-width:0}
 </style>
 <style>.ro{min-height:3.1rem;display:flex;align-items:center;border-radius:.7rem;background:var(--surface2);border:1.5px dashed var(--line);padding:0 .9rem;color:var(--muted)}</style>
 <style>
+.fgrid{display:grid;gap:.1rem;margin-top:.5rem}
 .f2item{padding:.8rem 0;border-top:1px solid var(--line)}
 .f2item:first-of-type{border-top:0}
 .f2item .tx{font-size:.95rem;line-height:1.35;margin:0 0 .55rem}
@@ -150,7 +151,7 @@ main{padding-top:1rem;display:flex;flex-direction:column;gap:.9rem;min-width:0}
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 4a (Form 1, Form 2, Email to office)';
+var VERSION='prototype 4b (Form 1, Form 2, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -736,7 +737,16 @@ function renderRep(){
   var v=S.f2v,ud=unitDef(v.unit),tk=unitTanks(v.v),its=f2items(),n=f2answered(v);
   $('#tabs').hidden=true;$('#fab').hidden=true;
   $('#top').innerHTML='<button class="hbtn icon" id="repBack" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Inspection report - Tank '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="repDone" type="button">Done</button>';
-  var h='<div class="panel"><h2>Form 1 - Tank information</h2><p>The tank details come from the workbook. Answer the two questions below and choose the forms this report uses. Changes are saved on this phone as you go.</p></div>';
+  var h='';
+  h+='<div class="panel"><h2>Forms used in this report</h2><p>Tick the forms done on this tank. Forms 1, 4 and 20 are always part of the report; the office completes them.</p>';
+  h+='<button type="button" class="btn block primary" id="repF2">'+(n?'Continue Form 2':'Start Form 2')+' ('+n+' of '+its.length+' answered)</button>';
+  h+='<div class="fgrid">';
+  FORMS_OPT.forEach(function(f){
+    var on=!!(v.forms&&v.forms[f.n]);
+    h+='<label class="check"><input type="checkbox" data-form="'+f.n+'"'+(on?' checked':'')+'> '+esc(f.t)+'</label>';
+  });
+  h+='</div>';
+  h+='<p class="count" style="margin:.4rem 0 0">Ticked forms other than Form 2 are not on the phone yet - the office fills them in.</p></div>';
   h+='<div class="panel"><h2>Unit</h2><p>How many tanks are on this unit?</p><div class="chips">'+UNITS.map(function(u){return '<button type="button" class="chip s'+(v.unit===u.k?' on':'')+'" data-unit="'+u.k+'">'+u.t+'</button>'}).join('')+'</div>';
   var lines=[];
   for(var i=0;i<ud.names.length;i++){var t=tk[i];lines.push((ud.names[i]?ud.names[i]+' tank: ':'Tank: ')+(t?[t.v.AB&&('serial '+t.v.AB),t.v.AD].filter(Boolean).join(' - ')||'(no serial in the list)':'not in the tank list'))}
@@ -744,16 +754,6 @@ function renderRep(){
   if(tk.length<ud.names.length)h+='<p style="margin:0;color:var(--bad)">The tank list has '+tk.length+(tk.length===1?' tank':' tanks')+' with this company and number. Add the other tank'+(ud.names.length-tk.length>1?'s':'')+' to the tank list first, or choose a different unit type.</p>';
   h+='</div>';
   h+='<div class="panel"><h2>Data plate</h2><p>Metal identification plate affixed and legible?</p><div class="chips"><button type="button" class="chip y'+(v.plate==='Y'?' on':'')+'" data-plate="Y">Yes</button><button type="button" class="chip n'+(v.plate==='N'?' on':'')+'" data-plate="N">No, out of service</button></div>'+(v.plate?'':'<p style="margin:0;color:var(--bad)">Please choose Yes or No before sending.</p>')+'</div>';
-  h+='<div class="panel"><h2>Forms used in this report</h2><p>Forms 1, 2, 4 and 20 are always part of the report. Tick any other forms that were done.</p>';
-  h+='<div class="f2item"><p class="tx">Form 1 - Tank information</p><p class="count" style="margin:0">This page.</p></div>';
-  FORMS_FIX.forEach(function(f){
-    h+='<div class="f2item"><p class="tx">'+esc(f.t)+'</p>'+(f.n===2?'<button type="button" class="btn block primary" id="repF2">'+(n?'Continue Form 2':'Start Form 2')+' ('+n+' of '+its.length+' answered)</button>':'<p class="count" style="margin:0">Not on the phone yet - the office fills this form in.</p>')+'</div>';
-  });
-  FORMS_OPT.forEach(function(f){
-    var on=!!(v.forms&&v.forms[f.n]);
-    h+='<div class="f2item"><label class="check"><input type="checkbox" data-form="'+f.n+'"'+(on?' checked':'')+'> '+esc(f.t)+'</label>'+(on?'<p class="count" style="margin:.3rem 0 0">Not on the phone yet - the office fills this form in.</p>':'')+'</div>';
-  });
-  h+='</div>';
   h+='<div class="panel"><h2>Send</h2><p>Sends this report to the office: Form 1 answers, the forms used and Form 2.</p><button type="button" class="btn primary block" id="repSend">Send report</button></div>';
   $('#view').innerHTML=h;
 }
