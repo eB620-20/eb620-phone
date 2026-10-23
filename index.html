@@ -82,7 +82,7 @@ main{padding-top:1rem;display:flex;flex-direction:column;gap:.9rem;min-width:0}
 .pick .chev{color:var(--muted);flex:none}
 .f13t{width:100%;min-height:16rem;margin-top:.5rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:.7rem .8rem;font:inherit;resize:vertical}
 .field.need input{background:#fff3a8;border-color:#c9a100}
-input[data-f3v]:placeholder-shown,input[data-f4v]:placeholder-shown{background:#fff3a8;border-color:#c9a100;color:#13242c}
+input[data-f3v]:placeholder-shown,input[data-f4v]:placeholder-shown,input[data-f8v]:placeholder-shown,input[data-f5v]:placeholder-shown{background:#fff3a8;border-color:#c9a100;color:#13242c}
 .field.bad input,.field.bad .pick{border-color:var(--bad);background:var(--bad-soft)}
 .field .msg{font-size:.84rem;color:var(--bad)}
 .field .note{font-size:.84rem;color:var(--warn)}
@@ -156,7 +156,7 @@ input[data-f3v]:placeholder-shown,input[data-f4v]:placeholder-shown{background:#
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 4n (Forms list, Form 1, Form 2, Form 3, Form 4, Form 13, Form 20, Email to office)';
+var VERSION='prototype 4q (Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -343,7 +343,7 @@ function tankIcon(){return '<svg width="30" height="30" viewBox="0 0 32 32" aria
 /* ---------- rendering ---------- */
 function unsent(){return S.entries.filter(function(e){return!e.sent})}
 function render(){
-  if(S.f2v){if(S.f2v.view==='f2')renderF2();else if(S.f2v.view==='f20')renderF20();else if(S.f2v.view==='f3')renderF3();else if(S.f2v.view==='f4')renderF4();else if(S.f2v.view==='f13')renderF13();else renderRep();return}
+  if(S.f2v){if(S.f2v.view==='f2')renderF2();else if(S.f2v.view==='f20')renderF20();else if(S.f2v.view==='f3')renderF3();else if(S.f2v.view==='f4')renderF4();else if(S.f2v.view==='f13')renderF13();else if(S.f2v.view==='f8')renderF8();else if(S.f2v.view==='f5')renderF5();else renderRep();return}
   if(S.form){renderForm();return}
   var top=$('#top');
   var ts=S.data.made||'';
@@ -710,10 +710,10 @@ function f2refs(items){
 function f2answered(rec){var n=0;f2items().forEach(function(i){var a=rec.items[i.row];if(a&&a.r)n++});return n}
 function f2save(){
   var v=S.f2v;if(!v)return;
-  var any=Object.keys(v.items).some(function(r){var a=v.items[r];return a&&(a.r||(a.c&&a.c.trim()))})||!!v.plate||!!v.touched||Object.keys(v.forms||{}).length>0||!!(v.f20&&(v.f20.date||v.f20.res))||f3any(v)||f4any(v)||f13any(v);
+  var any=Object.keys(v.items).some(function(r){var a=v.items[r];return a&&(a.r||(a.c&&a.c.trim()))})||!!v.plate||!!v.touched||Object.keys(v.forms||{}).length>0||!!(v.f20&&(v.f20.date||v.f20.res))||f3any(v)||f4any(v)||f13any(v)||f8any(v)||f5any(v);
   var i=S.f2.map(function(x){return x.id}).indexOf(v.id);
   if(!any){if(i>=0){S.f2.splice(i,1);lsSet('ebp_f2',S.f2)}return}
-  var rec={id:v.id,key:v.key,v:v.v,serial:v.serial,items:v.items,unit:v.unit,plate:v.plate||'',forms:v.forms||{},f20:v.f20||{date:'',res:'',auto:0},f3:v.f3||{items:{},vals:{}},f4:v.f4||{items:{},vals:{}},f13:v.f13||{text:''},touched:v.touched?1:0,ts:Date.now(),sent:0};
+  var rec={id:v.id,key:v.key,v:v.v,serial:v.serial,items:v.items,unit:v.unit,plate:v.plate||'',forms:v.forms||{},f20:v.f20||{date:'',res:'',auto:0},f3:v.f3||{items:{},vals:{}},f4:v.f4||{items:{},vals:{}},f13:v.f13||{text:''},f8:v.f8||{q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''},f5:v.f5||{h:[]},touched:v.touched?1:0,ts:Date.now(),sent:0};
   if(i>=0)S.f2[i]=rec;else S.f2.push(rec);
   lsSet('ebp_f2',S.f2);
 }
@@ -731,7 +731,7 @@ function repForms(v){return FORMS_ALL.filter(function(f){return formOn(v,f.n)}).
 function f20done(v){return !!(v.f20&&v.f20.res&&v.f20.date)}
 function todayISO(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function f2state(src,v,serial,id,key){
-  return {id:id,key:key,v:v,serial:serial,items:src?JSON.parse(JSON.stringify(src.items)):{},unit:(src&&src.unit)||unitGuess(v),plate:(src&&src.plate)||'',forms:src&&src.forms?JSON.parse(JSON.stringify(src.forms)):{},f20:src&&src.f20?JSON.parse(JSON.stringify(src.f20)):{date:'',res:'',auto:0},f3:src&&src.f3?JSON.parse(JSON.stringify(src.f3)):{items:{},vals:{}},f4:src&&src.f4?JSON.parse(JSON.stringify(src.f4)):{items:{},vals:{}},f13:src&&src.f13?JSON.parse(JSON.stringify(src.f13)):{text:''},touched:src&&src.touched?1:0,view:'rep'};
+  return {id:id,key:key,v:v,serial:serial,items:src?JSON.parse(JSON.stringify(src.items)):{},unit:(src&&src.unit)||unitGuess(v),plate:(src&&src.plate)||'',forms:src&&src.forms?JSON.parse(JSON.stringify(src.forms)):{},f20:src&&src.f20?JSON.parse(JSON.stringify(src.f20)):{date:'',res:'',auto:0},f3:src&&src.f3?JSON.parse(JSON.stringify(src.f3)):{items:{},vals:{}},f4:src&&src.f4?JSON.parse(JSON.stringify(src.f4)):{items:{},vals:{}},f13:src&&src.f13?JSON.parse(JSON.stringify(src.f13)):{text:''},f8:src&&src.f8?JSON.parse(JSON.stringify(src.f8)):{q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''},f5:src&&src.f5?JSON.parse(JSON.stringify(src.f5)):{h:[]},touched:src&&src.touched?1:0,view:'rep'};
 }
 function openF2(o){
   var key=keyOf(o),ex=S.f2.filter(function(r){return r.key===key&&!r.sent})[0];
@@ -773,6 +773,12 @@ function renderRep(){
     }else if(f.n===4){
       if(on){var n4=f4answered(v),t4=f4rows().length,miss4=[];if(!String(f4val(v,'mdm')).trim())miss4.push('test medium');if(!String(f4val(v,'sp')).trim())miss4.push('start pressure');row+='<p class="count" style="margin:.2rem 0 .5rem">'+n4+' of '+t4+' answered'+(ud.names.length>1?' (for the first tank, '+ud.names[0].toLowerCase()+'; the office does the other tanks)':'')+'</p>'+(miss4.length&&f4any(v)?'<p class="count" style="margin:0 0 .5rem;color:var(--bad)">Still to be filled in: '+miss4.join(' and ')+'.</p>':'')+'<button type="button" class="btn block'+(nx==='f4'?' primary':'')+'" id="repF4">'+(n4===0&&!f4any(v)?'Start Form 4':(n4<t4?'Continue Form 4':'Edit Form 4'))+'</button>'}
       else row+='<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
+    }else if(f.n===5){
+      if(on){var n5=f5answered(v),t5=f5n(v);row+='<p class="count" style="margin:.2rem 0 .5rem">'+n5+' of '+t5+(t5===1?' hose':' hoses')+' answered</p><button type="button" class="btn block" id="repF5">'+(n5===0&&!f5any(v)?'Start Form 5':(n5<t5?'Continue Form 5':'Edit Form 5'))+'</button>'}
+      else row+='<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
+    }else if(f.n===8){
+      if(on){var n8=f8answered(v),t8=F8Q.length;row+='<p class="count" style="margin:.2rem 0 .5rem">'+n8+' of '+t8+' checklist questions answered</p><button type="button" class="btn block" id="repF8">'+(n8===0&&!f8any(v)?'Start Form 8':(n8<t8?'Continue Form 8':'Edit Form 8'))+'</button>'}
+      else row+='<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
     }else if(f.n===13){
       if(on){row+='<p class="count" style="margin:.2rem 0 .5rem">'+(f13any(v)?esc(f13count(v)):'Nothing typed yet')+'</p><button type="button" class="btn block" id="repF13">'+(f13any(v)?'Edit Form 13':'Start Form 13')+'</button>'}
       else row+='<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
@@ -789,7 +795,7 @@ function renderRep(){
     h+='<p style="margin:.8rem 0 .3rem;font-weight:600">Add a form</p><div class="fgrid">'+off.map(function(f){return '<button type="button" class="btn block" data-addform="'+f.n+'">+ Form '+f.n+' - '+esc(f.s)+'</button>'}).join('')+'</div>';
   }
   h+='</div>';
-  h+='<div class="panel"><h2>Send</h2><p>Sends this report to the office: unit, data plate, the forms in the report, Form 2, Form 3, Form 4, Form 13 and Form 20.</p><button type="button" class="btn primary block" id="repSend">Send report</button></div>';
+  h+='<div class="panel"><h2>Send</h2><p>Sends this report to the office: unit, data plate, the forms in the report, Form 2, Form 3, Form 4, Form 5, Form 8, Form 13 and Form 20.</p><button type="button" class="btn primary block" id="repSend">Send report</button></div>';
   $('#view').innerHTML=h;
 }
 function repKeep(){var y=window.scrollY;renderRep();window.scrollTo(0,y)}
@@ -808,6 +814,8 @@ function repClick(t){
   var fc=t.closest('[data-form]');
   if(fc){setTimeout(function(){var k=+fc.getAttribute('data-form');v.forms=v.forms||{};v.forms[k]=fc.checked?1:0;f2save();repKeep()},0);return false}
   if(t.closest('#repF2')){v.view='f2';window.scrollTo(0,0);render();return true}
+  if(t.closest('#repF5')){v.f5=v.f5||{h:[]};v.view='f5';window.scrollTo(0,0);render();return true}
+  if(t.closest('#repF8')){v.f8=v.f8||{q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''};v.view='f8';window.scrollTo(0,0);render();return true}
   if(t.closest('#repF13')){v.f13=v.f13||{text:''};v.view='f13';window.scrollTo(0,0);render();return true}
   if(t.closest('#repF4')){v.f4=v.f4||{items:{},vals:{}};v.view='f4';window.scrollTo(0,0);render();return true}
   if(t.closest('#repF3')){v.f3=v.f3||{items:{},vals:{}};v.view='f3';window.scrollTo(0,0);render();return true}
@@ -893,6 +901,8 @@ function buildF2(list){
     var refs=f2refs(rec.items),cm=[];
     var f3l=formOn(rec,3)?buildF3(rec):[];f3l.forEach(function(x){lines.push(x)});
     var f4l=formOn(rec,4)?buildF4(rec):[];f4l.forEach(function(x){lines.push(x)});
+    var f5l=formOn(rec,5)?buildF5(rec):[];f5l.forEach(function(x){lines.push(x)});
+    var f8l=formOn(rec,8)?buildF8(rec):[];f8l.forEach(function(x){lines.push(x)});
     var f13l=formOn(rec,13)?buildF13(rec):[];f13l.forEach(function(x){lines.push(x)});
     if(formOn(rec,2))f2def().items.forEach(function(it){
       var a=rec.items[it.row];if(!a||it.h)return;
@@ -924,6 +934,8 @@ function sendF2(id){
   if(!f20done(list[0])){toast('Answer Form 20 (date and Pass or Fail) on the report first.');return}
   if(formOn(list[0],3)){var bad3=f3problems(list[0]);if(bad3.length){toast('Form 3: '+bad3[0]+' Open Form 3 and fix it first.');return}}
   if(formOn(list[0],4)){var bad4=f4problems(list[0]);if(bad4.length){toast('Form 4: '+bad4[0]+' Open Form 4 and fix it first.');return}}
+  if(formOn(list[0],5)){var bad5=f5problems(list[0]);if(bad5.length){toast('Form 5: '+bad5[0]+' Open Form 5 and fix it first.');return}}
+  if(formOn(list[0],8)){var bad8=f8problems(list[0]);if(bad8.length){toast('Form 8: '+bad8[0]+' Open Form 8 and fix it first.');return}}
   if(formOn(list[0],13)){var bad13=f13problems(list[0]);if(bad13.length){toast('Form 13: '+bad13[0]+' Open Form 13 and shorten it first.');return}}
   var nc=0;list.forEach(function(r){nc=Math.max(nc,Object.keys(f2refs(r.items)).length)});
   if(nc>f2def().comments.length){toast('A Form 2 has more comments than the form has lines. Shorten them first.');return}
@@ -1282,10 +1294,163 @@ function f13click(t){
   return false;
 }
 
+/* ---------- Form 8 (thickness) ---------- */
+var F8Q=[
+{row:14,t:'Shell thickness shown on the data plate. If Yes, record the value and unit.',val:1},
+{row:15,t:'Head thickness shown on the data plate. If Yes, record the value and unit.',val:1},
+{row:16,t:'Is a U1A form available?'},
+{row:17,t:'Head thickness shown on the U1A form. If Yes, record the value and unit.',val:1},
+{row:18,t:'Shell thickness shown on the U1A form. If Yes, record the value and unit.',val:1},
+{row:19,t:'Test firm credentials on file?'},
+{row:20,t:'Credentials on file with record of testing.'},
+{row:21,t:'Instructions from the manufacturer of the thickness testing device are available.'},
+{row:22,t:'Inspector follows the instructions of the test device manufacturer (7.2.6.1.1a).'},
+{row:23,t:'Test devices capable of accurately measuring thickness to within +/- 0.002 in.'}];
+var F8A=[
+{row:26,t:'Around any piping that contains lading'},
+{row:27,t:'High stress areas (bottom of tank): Q, R, S'},
+{row:28,t:'Around openings: J, K'},
+{row:29,t:'Weld joints: N, O, P, T, U, V'},
+{row:30,t:'Shell reinforcements'},
+{row:31,t:'Where appurtenances are attached: I, L, S'},
+{row:32,t:'Known thin areas of tank'},
+{row:33,t:'Nominal liquid level lines: F, G, H'},
+{row:34,t:'Structures joining multiple carbon steel tanks on a self-supporting transport unit'},
+{row:36,t:'Upper coupler area'},
+{row:37,t:'Suspension system attachments'},
+{row:38,t:'Any connecting structures'}];
+var F8L=['F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V'];
+var F8EX=5,F8CM=110,F8AM=30;
+function f8o(v){return v.f8||{q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''}}
+function f8num(s){var t=String(s==null?'':s).trim().replace(/,/g,'.');return /^\d+(\.\d+)?$/.test(t)?String(+t):null}
+function f8ex(f,i){f.ex=f.ex||[];while(f.ex.length<F8EX)f.ex.push({l:'',v:''});return f.ex[i]}
+function f8answered(v){var f=f8o(v),n=0;F8Q.forEach(function(q){if((f.q||{})[q.row])n++});return n}
+function f8any(v){var f=f8o(v);return Object.keys(f.q||{}).some(function(k){return f.q[k]})||Object.keys(f.a||{}).some(function(k){return f.a[k]})||!!f.dg||Object.keys(f.rd||{}).some(function(k){return String(f.rd[k]||'').trim()})||(f.ex||[]).some(function(e){return e&&(String(e.l||'').trim()||String(e.v||'').trim())})||!!String(f.cm||'').trim()||Object.keys(f.vals||{}).some(function(k){return f.vals[k]&&String(f.vals[k].n||'').trim()})}
+function f8problems(rec){
+  var out=[],f=f8o(rec);
+  F8Q.forEach(function(q){if(!q.val||(f.q||{})[q.row]!=='Y')return;var o=(f.vals||{})[q.row]||{};if(String(o.n||'').trim()&&f8num(o.n)===null)out.push('Row "'+q.t.split('.')[0]+'": numbers only, then choose the unit.')});
+  if(f.dg){F8L.forEach(function(L){var s=(f.rd||{})[L];if(String(s||'').trim()&&f8num(s)===null)out.push('Reading '+L+': numbers only.')});
+    (f.ex||[]).forEach(function(e,i){if(!e)return;var l=String(e.l||'').trim(),s=String(e.v||'').trim();if(s&&f8num(s)===null)out.push('Extra spot '+(i+1)+': numbers only.');if(s&&!l)out.push('Extra spot '+(i+1)+': type the letter or name of the spot.');if(l&&!s)out.push('Extra spot '+(i+1)+': type the reading.')})}
+  if(String(f.cm||'').length>F8CM)out.push('The comment is longer than '+F8CM+' characters.');
+  return out;
+}
+function buildF8(rec){
+  var f=f8o(rec),L=[];
+  F8Q.forEach(function(q){var a=(f.q||{})[q.row];if(!a)return;L.push(['Q',q.row,a].join('|'));if(q.val&&a==='Y'){var o=(f.vals||{})[q.row]||{},n=f8num(o.n);if(n!==null)L.push(['M',q.row,n,o.u==='mm'?'mm':'in'].join('|'))}});
+  F8A.forEach(function(q){var at=String((f.a||{})[q.row]||'').replace(/\|/g,' ').replace(/\s+/g,' ').trim();if(at)L.push(['J',q.row,at].join('|'))});
+  if(f.dg){L.push('B|Y');F8L.forEach(function(x){var n=f8num((f.rd||{})[x]);if(n!==null)L.push(['O',x,n].join('|'))});
+    (f.ex||[]).forEach(function(e,i){if(!e)return;var n=f8num(e.v),l=f2c(String(e.l||'').trim()).slice(0,3);if(n!==null&&l)L.push(['Z',i+1,l,n].join('|'))})}
+  if(String(f.cm||'').trim())L.push(['H',f2c(String(f.cm).trim())].join('|'));
+  return L;
+}
+function renderF8(){
+  var v=S.f2v,f=v.f8||(v.f8={q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''});
+  f.q=f.q||{};f.vals=f.vals||{};f.a=f.a||{};f.rd=f.rd||{};f8ex(f,0);
+  $('#tabs').hidden=true;$('#fab').hidden=true;
+  $('#top').innerHTML='<button class="hbtn icon" id="f8Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 8 - Tank '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f8Done" type="button">Done</button>';
+  var h='<div class="panel"><h2>Thickness test</h2><p>Answer the checklist, tick the areas that were tested, and enter the readings from the tank diagram. Changes are saved on this phone as you go.</p></div>';
+  h+='<div class="panel"><div class="f2h">Checklist</div>';
+  F8Q.forEach(function(q){
+    var a=f.q[q.row]||'';
+    h+='<div class="f2item"><p class="tx">'+esc(q.t)+'</p><div class="chips"><button type="button" class="chip y'+(a==='Y'?' on':'')+'" data-f8q="'+q.row+'" data-v="Y">Yes</button><button type="button" class="chip n'+(a==='N'?' on':'')+'" data-f8q="'+q.row+'" data-v="N">No</button></div>';
+    if(q.val&&a==='Y'){var o=f.vals[q.row]||(f.vals[q.row]={n:'',u:'in'});
+      h+='<div class="field" style="margin-top:.55rem"><label>Thickness value</label><input type="text" placeholder=" " inputmode="decimal" autocomplete="off" data-f8v="v'+q.row+'" value="'+esc(o.n||'')+'"></div><div class="chips" style="margin-top:.4rem"><button type="button" class="chip s'+((o.u||'in')==='in'?' on':'')+'" data-f8u="'+q.row+'" data-v="in">inches</button><button type="button" class="chip s'+(o.u==='mm'?' on':'')+'" data-f8u="'+q.row+'" data-v="mm">mm</button></div>'}
+    h+='</div>'});
+  h+='</div>';
+  h+='<div class="panel"><div class="f2h">Thickness test measurements found at the following areas</div><p class="count" style="margin:0 0 .4rem">Type the measurement(s) for each area tested, for example 0.201 (up to '+F8AM+' characters). Leave the others blank.</p>';
+  F8A.forEach(function(q){h+='<div class="field" style="margin-top:.5rem"><label>'+esc(q.t)+'</label><input type="text" placeholder=" " maxlength="'+F8AM+'" autocomplete="off" data-f8v="a'+q.row+'" value="'+esc(f.a[q.row]||'')+'"></div>'});
+  h+='</div>';
+  h+='<div class="panel"><div class="f2h">Tank diagram</div><p class="tx" style="margin:0 0 .4rem">Tank diagram with thickness readings attached?</p><div class="chips"><button type="button" class="chip y'+(f.dg?' on':'')+'" data-f8dg="Y">Yes</button><button type="button" class="chip n'+(!f.dg?' on':'')+'" data-f8dg="N">No</button></div>';
+  if(f.dg){
+    h+='<p class="count" style="margin:.6rem 0 .2rem">Thickness reading at each spot on the diagram (numbers only).</p>';
+    F8L.forEach(function(x){h+='<div class="field" style="margin-top:.45rem"><label>Spot '+x+'</label><input type="text" placeholder=" " inputmode="decimal" autocomplete="off" data-f8v="r'+x+'" value="'+esc(f.rd[x]||'')+'"></div>'});
+    h+='<p class="count" style="margin:.8rem 0 .2rem">Other spots (type the letter or name, then the reading).</p>';
+    for(var i=0;i<F8EX;i++){var e=f8ex(f,i);h+='<div style="display:flex;gap:.5rem;margin-top:.45rem"><div class="field" style="flex:1;margin:0"><label>Spot</label><input type="text" placeholder=" " maxlength="3" autocomplete="off" data-f8v="e'+i+'l" value="'+esc(e.l||'')+'"></div><div class="field" style="flex:2;margin:0"><label>Reading</label><input type="text" placeholder=" " inputmode="decimal" autocomplete="off" data-f8v="e'+i+'v" value="'+esc(e.v||'')+'"></div></div>'}}
+  h+='</div>';
+  h+='<div class="panel"><div class="f2h">Comment</div><p class="count" style="margin:0 0 .3rem">One line on the form (up to '+F8CM+' characters). For more, use Form 13.</p><textarea data-f8v="cm" maxlength="'+F8CM+'" placeholder="Comment (short - one line on the form)">'+esc(f.cm||'')+'</textarea></div>';
+  $('#view').innerHTML=h;
+}
+function f8click(t){
+  var v=S.f2v,f=v.f8||(v.f8={q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''}),y=window.scrollY;
+  function again(){f2save();renderF8();window.scrollTo(0,y)}
+  var q=t.closest('[data-f8q]');if(q){var r=+q.getAttribute('data-f8q'),x=q.getAttribute('data-v');f.q=f.q||{};f.q[r]=(f.q[r]===x)?'':x;if(!f.q[r])delete f.q[r];again();return true}
+  var u=t.closest('[data-f8u]');if(u){var r2=+u.getAttribute('data-f8u');f.vals=f.vals||{};(f.vals[r2]||(f.vals[r2]={n:'',u:'in'})).u=u.getAttribute('data-v');again();return true}
+  var d=t.closest('[data-f8dg]');if(d){var yes=d.getAttribute('data-f8dg')==='Y';f.dg=(yes&&f.dg)?0:(yes?1:0);again();return true}
+  if(t.closest('#f8Done')||t.closest('#f8Back')){
+    var act=document.activeElement;if(act&&act.getAttribute&&act.getAttribute('data-f8v'))f8store(act);
+    f2save();
+    if(t.closest('#f8Done')){var pb=f8problems(v);if(pb.length){toast('Form 8 cannot be marked done yet: '+pb[0]);return true}}
+    v.view='rep';window.scrollTo(0,0);render();return true}
+  return false;
+}
+function f8store(el){
+  var v=S.f2v;if(!v)return;var f=v.f8||(v.f8={q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''}),k=el.getAttribute('data-f8v'),val=el.value,m;
+  if(k==='cm'){f.cm=val;return}
+  if((m=/^v(\d+)$/.exec(k))){f.vals=f.vals||{};(f.vals[+m[1]]||(f.vals[+m[1]]={n:'',u:'in'})).n=val;return}
+  if((m=/^a(\d+)$/.exec(k))){f.a=f.a||{};if(String(val).trim())f.a[+m[1]]=val;else delete f.a[+m[1]];return}
+  if((m=/^r([A-Z])$/.exec(k))){f.rd=f.rd||{};f.rd[m[1]]=val;return}
+  if((m=/^e(\d)([lv])$/.exec(k))){f8ex(f,+m[1])[m[2]]=val;return}
+}
+
+/* ---------- Form 5 (hose test) ---------- */
+var F5CM=50,F5DEF='{h:[{res:"",np:0,cm:""}]}';
+function f5new(){return {h:[]}}
+function f5o(v){return v.f5||{h:[]}}
+function f5n(v){var n=unitDef(v.unit).names.length;return n<1?1:n}
+function f5h(v,i){var f=v.f5||(v.f5={h:[]});f.h=f.h||[];while(f.h.length<=i)f.h.push({res:'',np:0,cm:''});return f.h[i]}
+function f5answered(v){var f=f5o(v),n=0;for(var i=0;i<f5n(v);i++){if(f.h&&f.h[i]&&f.h[i].res)n++}return n}
+function f5any(v){var f=f5o(v);return (f.h||[]).some(function(h){return h&&(h.res||h.np||String(h.cm||'').trim())})}
+function f5problems(rec){
+  var out=[],f=f5o(rec),n=f5n(rec),nm=unitDef(rec.unit).names;
+  for(var i=0;i<n;i++){var h=(f.h||[])[i]||{};var who=n>1?(nm[i].toLowerCase()+' tank hose'):'the hose';
+    if(!h.res)out.push('Choose Pass or Fail for '+who+'.');
+    if(String(h.cm||'').length>F5CM)out.push('The comment for '+who+' is longer than '+F5CM+' characters.')}
+  return out;
+}
+function buildF5(rec){
+  var f=f5o(rec),n=f5n(rec),L=[];
+  for(var i=0;i<n;i++){var h=(f.h||[])[i]||{};if(!h.res)continue;
+    L.push(['R',i+1,h.res,(h.res==='F'&&h.np)?1:0,f2c(String(h.cm||'').trim())].join('|'))}
+  return L;
+}
+function renderF5(){
+  var v=S.f2v,ud=unitDef(v.unit),tk=unitTanks(v.v),n=f5n(v);
+  $('#tabs').hidden=true;$('#fab').hidden=true;
+  $('#top').innerHTML='<button class="hbtn icon" id="f5Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 5 - Tank '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f5Done" type="button">Done</button>';
+  var h='<div class="panel"><h2>Hose test and inspection</h2><p>One hose for each tank. Choose Pass or Fail. A hose that fails or has expired is replaced: the office sheet adds a line for the new hose.</p></div>';
+  for(var i=0;i<n;i++){
+    var o=f5h(v,i),t=tk[i],tv=t?t.v:{};
+    var info=[tv.V&&('expires '+tv.V),tv.X&&(tv.X+' ft'),tv.W,tv.Y].filter(Boolean).join(', ');
+    h+='<div class="panel"><div class="f2h">'+(ud.names[i]?esc(ud.names[i])+' tank hose':'Hose')+'</div>';
+    h+='<p class="count" style="margin:0 0 .5rem">'+(info?esc('On file: '+info):'No hose details in the tank list.')+'</p>';
+    h+='<div class="chips"><button type="button" class="chip y'+(o.res==='P'?' on':'')+'" data-f5r="'+i+'" data-v="P">Pass</button><button type="button" class="chip n'+(o.res==='F'?' on':'')+'" data-f5r="'+i+'" data-v="F">Fail</button></div>';
+    if(o.res==='F'){
+      h+='<p class="count" style="margin:.6rem 0 .3rem">The sheet adds a line for the new hose. Leave the comment empty and it writes "Hose has Expired or Failed, see below for new hose".</p>';
+      h+='<button type="button" class="chip s'+(o.np?' on':'')+'" style="display:block;width:100%;text-align:left" data-f5np="'+i+'">'+(o.np?'&#10003; ':'')+'New hose fitted and passed</button>'}
+    h+='<div class="field" style="margin-top:.7rem"><label>Comment (optional, short)</label><input type="text" placeholder=" " maxlength="'+F5CM+'" autocomplete="off" data-f5v="c'+i+'" value="'+esc(o.cm||'')+'"></div></div>'}
+  $('#view').innerHTML=h;
+}
+function f5click(t){
+  var v=S.f2v,y=window.scrollY;
+  function again(){f2save();renderF5();window.scrollTo(0,y)}
+  var r=t.closest('[data-f5r]');if(r){var i=+r.getAttribute('data-f5r'),x=r.getAttribute('data-v'),o=f5h(v,i);o.res=(o.res===x)?'':x;if(o.res!=='F')o.np=0;again();return true}
+  var p=t.closest('[data-f5np]');if(p){var o2=f5h(v,+p.getAttribute('data-f5np'));o2.np=o2.np?0:1;again();return true}
+  if(t.closest('#f5Done')||t.closest('#f5Back')){
+    var act=document.activeElement;if(act&&act.getAttribute&&act.getAttribute('data-f5v'))f5store(act);
+    f2save();
+    if(t.closest('#f5Done')){var pb=f5problems(v);if(pb.length){toast('Form 5 cannot be marked done yet: '+pb[0]);return true}}
+    v.view='rep';window.scrollTo(0,0);render();return true}
+  return false;
+}
+function f5store(el){
+  var v=S.f2v;if(!v)return;var k=el.getAttribute('data-f5v'),m;
+  if((m=/^c(\d)$/.exec(k))){f5h(v,+m[1]).cm=el.value}
+}
+
 /* ---------- events ---------- */
 document.addEventListener('click',function(e){
   var t=e.target;
-  if(S.f2v){if(S.f2v.view==='f2')f2click(t);else if(S.f2v.view==='f20')f20click(t);else if(S.f2v.view==='f3')f3click(t);else if(S.f2v.view==='f4')f4click(t);else if(S.f2v.view==='f13')f13click(t);else repClick(t);return}
+  if(S.f2v){if(S.f2v.view==='f2')f2click(t);else if(S.f2v.view==='f20')f20click(t);else if(S.f2v.view==='f3')f3click(t);else if(S.f2v.view==='f4')f4click(t);else if(S.f2v.view==='f13')f13click(t);else if(S.f2v.view==='f8')f8click(t);else if(S.f2v.view==='f5')f5click(t);else repClick(t);return}
   if(t.closest('#f2Open')&&S.form){var o=S.form.orig;if(S.form.dirty)saveDraft();openF2(Object.assign({},o));return}
   var fe=t.closest('[data-f2edit]');if(fe){var rc=S.f2.filter(function(r){return r.id===fe.getAttribute('data-f2edit')})[0];if(rc){S.f2v=f2state(rc,rc.v,rc.serial,rc.id,rc.key);window.scrollTo(0,0);render()}return}
   var fu=t.closest('[data-f2unsend]');if(fu){S.f2.forEach(function(r){if(r.id===fu.getAttribute('data-f2unsend'))r.sent=0});lsSet('ebp_f2',S.f2);render();return}
@@ -1352,6 +1517,10 @@ document.addEventListener('change',function(e){
 document.addEventListener('input',function(e){
   var f3k=e.target.getAttribute&&e.target.getAttribute('data-f3v');
   if(f3k&&S.f2v){var f3=S.f2v.f3||(S.f2v.f3={items:{},vals:{}});f3.vals[f3k]=e.target.value;f2save();return}
+  var f5k=e.target.getAttribute&&e.target.getAttribute('data-f5v');
+  if(f5k&&S.f2v){f5store(e.target);f2save();return}
+  var f8k=e.target.getAttribute&&e.target.getAttribute('data-f8v');
+  if(f8k&&S.f2v){f8store(e.target);f2save();return}
   if(e.target.id==='f13text'&&S.f2v){(S.f2v.f13||(S.f2v.f13={text:''})).text=e.target.value;f2save();f13refresh();return}
   var f4i=e.target.getAttribute&&e.target.getAttribute('data-f4v');
   if(f4i&&S.f2v){var f4=S.f2v.f4||(S.f2v.f4={items:{},vals:{}});f4.vals[f4i]=e.target.value;f2save();return}
