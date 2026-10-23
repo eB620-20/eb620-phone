@@ -86,6 +86,8 @@ input[data-f3v]:placeholder-shown,input[data-f4v]:placeholder-shown{background:#
 .field.bad input,.field.bad .pick{border-color:var(--bad);background:var(--bad-soft)}
 .field .msg{font-size:.84rem;color:var(--bad)}
 .field .note{font-size:.84rem;color:var(--warn)}
+.field.warn input{background:#ffd0d0;border-color:#d11a1a;color:#13242c}
+.field.warn .note{color:var(--bad);font-weight:600}
 .field .hint{font-size:.78rem;color:var(--muted)}
 .pager{display:flex;gap:.6rem;margin-top:.4rem}
 .pager .btn{flex:1}
@@ -154,7 +156,7 @@ input[data-f3v]:placeholder-shown,input[data-f4v]:placeholder-shown{background:#
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 4l (Forms list, Form 1, Form 2, Form 3, Form 4, Form 13, Form 20, Email to office)';
+var VERSION='prototype 4n (Forms list, Form 1, Form 2, Form 3, Form 4, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -392,7 +394,7 @@ function entRow(e){
 }
 function renderSend(){
   var u=unsent(),s=S.entries.filter(function(e){return e.sent});
-  var h='<div class="panel"><h2>'+(u.length?u.length+(u.length===1?' entry is':' entries are')+' waiting to send':'Nothing waiting to send')+'</h2><p>'+(u.length?'Send the file to the office by email, text or any app on this phone. The office imports it with the "Import from phone" button in the workbook.':'Tanks you save on this phone appear here until you send them.')+'</p>'+(u.length?'<button class="btn primary block" id="sendBtn" type="button">Send to office</button>':'')+'</div>';
+  var h='<div class="panel"><h2>New tanks and tank updates</h2><p class="count" style="margin:.2rem 0 .5rem;font-size:.85rem">'+(u.length?u.length+(u.length===1?' entry is':' entries are')+' waiting to send.':'Nothing waiting to send.')+'</p><p>'+(u.length?'Send the file to the office by email, text or any app on this phone. The office imports it with the "Import from phone" button in the workbook.':'New tanks and changes you save on this phone appear here until you send them.')+'</p>'+(u.length?'<button class="btn primary block" id="sendBtn" type="button">Send to office</button>':'')+'</div>';
   h+=u.map(entRow).join('');
   if(s.length){h+='<h2 style="margin:.6rem 0 0;font-size:.95rem;color:var(--muted)">Already sent</h2>'+s.map(entRow).join('')}
   h+=f2sendPanel();
@@ -1047,8 +1049,14 @@ function f3inHTML(x,v){
     return '<p class="count" style="margin:.5rem 0 .2rem">'+esc(x.l)+'</p><div class="chips" style="flex-wrap:wrap">'+x.opts.map(function(o,i){return '<button type="button" class="chip s'+(val===o?' on':'')+'" data-f3pick="'+x.k+'" data-v="'+esc(o)+'">'+esc(x.labs[i])+'</button>'}).join('')+'</div>';
   }
   var c=f3chk(x,val),im=x.kind==='n'?'decimal':(x.kind==='i'?'numeric':(x.kind==='my'?'numeric':'text'));
-  var need=(x.k==='wt'&&!String(val).trim());return '<div class="field'+(c.msg?' bad':'')+(need?' need':'')+'" style="margin-top:.55rem"><label>'+esc(x.l)+(x.u?' ('+esc(x.u)+')':'')+(x.k==='wt'?' <span class="req">* required</span>':'')+'</label><input type="text" placeholder=" " data-f3v="'+x.k+'" value="'+esc(val)+'" inputmode="'+im+'" autocomplete="off" autocapitalize="off"><div class="msg" data-f3m="'+x.k+'">'+esc(c.msg)+'</div><div class="note" data-f3n="'+x.k+'">'+esc(c.warn)+'</div>'+(x.hint?'<div class="hint">'+esc(x.hint)+'</div>':'')+'</div>';
+  var need=(x.k==='wt'&&!String(val).trim()),tw=f3testWarn(S.f2v);return '<div class="field'+(c.msg?' bad':'')+(tw[x.k]?' warn':'')+(need?' need':'')+'" style="margin-top:.55rem"><label>'+esc(x.l)+(x.u?' ('+esc(x.u)+')':'')+(x.k==='wt'?' <span class="req">* required</span>':'')+'</label><input type="text" placeholder=" " data-f3v="'+x.k+'" value="'+esc(val)+'" inputmode="'+im+'" autocomplete="off" autocapitalize="off"><div class="msg" data-f3m="'+x.k+'">'+esc(c.msg)+'</div><div class="note" data-f3n="'+x.k+'">'+esc(c.warn||tw[x.k]||'')+'</div>'+(x.hint?'<div class="hint">'+esc(x.hint)+'</div>':'')+'</div>';
 }
+function f3design(v){var s=String((v.v||{}).S||''),m=/\d+(\.\d+)?/.exec(s);if(!m)return 0;var n=+m[0];if(/kpa/i.test(s))return n>1800?265:(n>1700?250:0);return n}
+function f3testWarn(v){var vals=(f3o(v).vals)||{},d=f3design(v),o={sp:'',ep:''},sp=parseFloat(vals.sp),ep=parseFloat(vals.ep);
+  if(d&&!isNaN(sp)&&sp<d*1.5)o.sp='Below 1.5 x the design pressure ('+(d*1.5)+' psi for a '+d+' psi tank).';
+  var e=isNaN(ep)?sp:ep;if(!isNaN(sp)&&!isNaN(e)&&e>sp*1.02)o.ep='More than 2% above the start pressure.';
+  return o}
+function f3testShow(){var v=S.f2v,tw=f3testWarn(v);['sp','ep'].forEach(function(k){var el=$('[data-f3v="'+k+'"]');if(!el)return;var fld=el.closest('.field');if(fld)fld.classList.toggle('warn',!!tw[k]);var w=$('[data-f3n="'+k+'"]');if(w)w.textContent=tw[k]})}
 function f3blur(el,k){
   var v=S.f2v,f=v.f3||(v.f3={items:{},vals:{}}),x=f3inputs().filter(function(y){return y.k===k})[0];if(!x)return;
   var c=f3chk(x,el.value);
@@ -1057,6 +1065,7 @@ function f3blur(el,k){
   f2save();
   var fld=el.closest('.field');if(fld){fld.classList.toggle('bad',!!c.msg);if(k==='wt')fld.classList.toggle('need',!String(el.value).trim())}
   var m=$('[data-f3m="'+k+'"]'),w=$('[data-f3n="'+k+'"]');if(m)m.textContent=c.msg;if(w)w.textContent=c.warn;
+  if(k==='sp'||k==='ep')f3testShow();
   f3refresh();
 }
 function f3refresh(){
