@@ -80,6 +80,7 @@ main{padding-top:1rem;display:flex;flex-direction:column;gap:.9rem;min-width:0}
 .pick{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
 .pick .ph{color:var(--muted)}
 .pick .chev{color:var(--muted);flex:none}
+.f13t{width:100%;min-height:16rem;margin-top:.5rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:.7rem .8rem;font:inherit;resize:vertical}
 .field.need input{background:#fff3a8;border-color:#c9a100}
 .field.bad input,.field.bad .pick{border-color:var(--bad);background:var(--bad-soft)}
 .field .msg{font-size:.84rem;color:var(--bad)}
@@ -152,7 +153,7 @@ main{padding-top:1rem;display:flex;flex-direction:column;gap:.9rem;min-width:0}
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 4f (Forms list, Form 1, Form 2, Form 3, Form 4, Form 20, Email to office)';
+var VERSION='prototype 4g (Forms list, Form 1, Form 2, Form 3, Form 4, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -339,7 +340,7 @@ function tankIcon(){return '<svg width="30" height="30" viewBox="0 0 32 32" aria
 /* ---------- rendering ---------- */
 function unsent(){return S.entries.filter(function(e){return!e.sent})}
 function render(){
-  if(S.f2v){if(S.f2v.view==='f2')renderF2();else if(S.f2v.view==='f20')renderF20();else if(S.f2v.view==='f3')renderF3();else if(S.f2v.view==='f4')renderF4();else renderRep();return}
+  if(S.f2v){if(S.f2v.view==='f2')renderF2();else if(S.f2v.view==='f20')renderF20();else if(S.f2v.view==='f3')renderF3();else if(S.f2v.view==='f4')renderF4();else if(S.f2v.view==='f13')renderF13();else renderRep();return}
   if(S.form){renderForm();return}
   var top=$('#top');
   var ts=S.data.made||'';
@@ -706,10 +707,10 @@ function f2refs(items){
 function f2answered(rec){var n=0;f2items().forEach(function(i){var a=rec.items[i.row];if(a&&a.r)n++});return n}
 function f2save(){
   var v=S.f2v;if(!v)return;
-  var any=Object.keys(v.items).some(function(r){var a=v.items[r];return a&&(a.r||(a.c&&a.c.trim()))})||!!v.plate||!!v.touched||Object.keys(v.forms||{}).length>0||!!(v.f20&&(v.f20.date||v.f20.res))||f3any(v)||f4any(v);
+  var any=Object.keys(v.items).some(function(r){var a=v.items[r];return a&&(a.r||(a.c&&a.c.trim()))})||!!v.plate||!!v.touched||Object.keys(v.forms||{}).length>0||!!(v.f20&&(v.f20.date||v.f20.res))||f3any(v)||f4any(v)||f13any(v);
   var i=S.f2.map(function(x){return x.id}).indexOf(v.id);
   if(!any){if(i>=0){S.f2.splice(i,1);lsSet('ebp_f2',S.f2)}return}
-  var rec={id:v.id,key:v.key,v:v.v,serial:v.serial,items:v.items,unit:v.unit,plate:v.plate||'',forms:v.forms||{},f20:v.f20||{date:'',res:'',auto:0},f3:v.f3||{items:{},vals:{}},f4:v.f4||{items:{},vals:{}},touched:v.touched?1:0,ts:Date.now(),sent:0};
+  var rec={id:v.id,key:v.key,v:v.v,serial:v.serial,items:v.items,unit:v.unit,plate:v.plate||'',forms:v.forms||{},f20:v.f20||{date:'',res:'',auto:0},f3:v.f3||{items:{},vals:{}},f4:v.f4||{items:{},vals:{}},f13:v.f13||{text:''},touched:v.touched?1:0,ts:Date.now(),sent:0};
   if(i>=0)S.f2[i]=rec;else S.f2.push(rec);
   lsSet('ebp_f2',S.f2);
 }
@@ -727,7 +728,7 @@ function repForms(v){return FORMS_ALL.filter(function(f){return formOn(v,f.n)}).
 function f20done(v){return !!(v.f20&&v.f20.res&&v.f20.date)}
 function todayISO(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function f2state(src,v,serial,id,key){
-  return {id:id,key:key,v:v,serial:serial,items:src?JSON.parse(JSON.stringify(src.items)):{},unit:(src&&src.unit)||unitGuess(v),plate:(src&&src.plate)||'',forms:src&&src.forms?JSON.parse(JSON.stringify(src.forms)):{},f20:src&&src.f20?JSON.parse(JSON.stringify(src.f20)):{date:'',res:'',auto:0},f3:src&&src.f3?JSON.parse(JSON.stringify(src.f3)):{items:{},vals:{}},f4:src&&src.f4?JSON.parse(JSON.stringify(src.f4)):{items:{},vals:{}},touched:src&&src.touched?1:0,view:'rep'};
+  return {id:id,key:key,v:v,serial:serial,items:src?JSON.parse(JSON.stringify(src.items)):{},unit:(src&&src.unit)||unitGuess(v),plate:(src&&src.plate)||'',forms:src&&src.forms?JSON.parse(JSON.stringify(src.forms)):{},f20:src&&src.f20?JSON.parse(JSON.stringify(src.f20)):{date:'',res:'',auto:0},f3:src&&src.f3?JSON.parse(JSON.stringify(src.f3)):{items:{},vals:{}},f4:src&&src.f4?JSON.parse(JSON.stringify(src.f4)):{items:{},vals:{}},f13:src&&src.f13?JSON.parse(JSON.stringify(src.f13)):{text:''},touched:src&&src.touched?1:0,view:'rep'};
 }
 function openF2(o){
   var key=keyOf(o),ex=S.f2.filter(function(r){return r.key===key&&!r.sent})[0];
@@ -770,6 +771,9 @@ function renderRep(){
     }else if(f.n===4){
       if(on){var n4=f4answered(v),t4=f4rows().length,miss4=[];if(!String(f4val(v,'mdm')).trim())miss4.push('test medium');if(!String(f4val(v,'sp')).trim())miss4.push('start pressure');row+='<p class="count" style="margin:.2rem 0 .5rem">'+n4+' of '+t4+' answered'+(ud.names.length>1?' (for the first tank, '+ud.names[0].toLowerCase()+'; the office does the other tanks)':'')+'</p>'+(miss4.length?'<p class="count" style="margin:0 0 .5rem;color:var(--bad)">Still to be filled in: '+miss4.join(' and ')+'.</p>':'')+'<button type="button" class="btn block'+(nx==='f4'?' primary':'')+'" id="repF4">'+(n4===0&&!f4any(v)?'Start Form 4':(n4<t4?'Continue Form 4':'Edit Form 4'))+'</button>'}
       else row+='<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
+    }else if(f.n===13){
+      if(on){row+='<p class="count" style="margin:.2rem 0 .5rem">'+(f13any(v)?esc(f13count(v)):'Nothing typed yet')+'</p><button type="button" class="btn block" id="repF13">'+(f13any(v)?'Edit Form 13':'Start Form 13')+'</button>'}
+      else row+='<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
     }else{
       row+=on?'<p class="count" style="margin:.2rem 0 0">Not on the phone yet - the office fills this form in.</p>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
     }
@@ -783,7 +787,7 @@ function renderRep(){
     h+='<p style="margin:.8rem 0 .3rem;font-weight:600">Add a form</p><div class="fgrid">'+off.map(function(f){return '<button type="button" class="btn block" data-addform="'+f.n+'">+ Form '+f.n+' - '+esc(f.s)+'</button>'}).join('')+'</div>';
   }
   h+='</div>';
-  h+='<div class="panel"><h2>Send</h2><p>Sends this report to the office: unit, data plate, the forms in the report, Form 2, Form 3, Form 4 and Form 20.</p><button type="button" class="btn primary block" id="repSend">Send report</button></div>';
+  h+='<div class="panel"><h2>Send</h2><p>Sends this report to the office: unit, data plate, the forms in the report, Form 2, Form 3, Form 4, Form 13 and Form 20.</p><button type="button" class="btn primary block" id="repSend">Send report</button></div>';
   $('#view').innerHTML=h;
 }
 function repKeep(){var y=window.scrollY;renderRep();window.scrollTo(0,y)}
@@ -802,6 +806,7 @@ function repClick(t){
   var fc=t.closest('[data-form]');
   if(fc){setTimeout(function(){var k=+fc.getAttribute('data-form');v.forms=v.forms||{};v.forms[k]=fc.checked?1:0;f2save();repKeep()},0);return false}
   if(t.closest('#repF2')){v.view='f2';window.scrollTo(0,0);render();return true}
+  if(t.closest('#repF13')){v.f13=v.f13||{text:''};v.view='f13';window.scrollTo(0,0);render();return true}
   if(t.closest('#repF4')){v.f4=v.f4||{items:{},vals:{}};v.view='f4';window.scrollTo(0,0);render();return true}
   if(t.closest('#repF3')){v.f3=v.f3||{items:{},vals:{}};v.view='f3';window.scrollTo(0,0);render();return true}
   if(t.closest('#repF20')){v.f20=v.f20||{date:'',res:'',auto:0};if(!v.f20.date){v.f20.date=todayISO();f2save()}v.view='f20';window.scrollTo(0,0);render();return true}
@@ -884,6 +889,7 @@ function buildF2(list){
     var refs=f2refs(rec.items),cm=[];
     var f3l=formOn(rec,3)?buildF3(rec):[];f3l.forEach(function(x){lines.push(x)});
     var f4l=formOn(rec,4)?buildF4(rec):[];f4l.forEach(function(x){lines.push(x)});
+    var f13l=formOn(rec,13)?buildF13(rec):[];f13l.forEach(function(x){lines.push(x)});
     if(formOn(rec,2))f2def().items.forEach(function(it){
       var a=rec.items[it.row];if(!a||it.h)return;
       var ref=refs[it.row]||'';
@@ -914,6 +920,7 @@ function sendF2(id){
   if(!f20done(list[0])){toast('Answer Form 20 (date and Pass or Fail) on the report first.');return}
   if(formOn(list[0],3)){var bad3=f3problems(list[0]);if(bad3.length){toast('Form 3: '+bad3[0]+' Open Form 3 and fix it first.');return}}
   if(formOn(list[0],4)){var bad4=f4problems(list[0]);if(bad4.length){toast('Form 4: '+bad4[0]+' Open Form 4 and fix it first.');return}}
+  if(formOn(list[0],13)){var bad13=f13problems(list[0]);if(bad13.length){toast('Form 13: '+bad13[0]+' Open Form 13 and shorten it first.');return}}
   var nc=0;list.forEach(function(r){nc=Math.max(nc,Object.keys(f2refs(r.items)).length)});
   if(nc>f2def().comments.length){toast('A Form 2 has more comments than the form has lines. Shorten them first.');return}
   var text=buildF2(list),name='eB620_form2_'+String(list[0].v.D||'tank').replace(/[^A-Za-z0-9_-]+/g,'')+'_'+stamp()+'.txt',ids=list.map(function(r){return r.id});
@@ -1220,10 +1227,49 @@ function f4click(t){
   return false;
 }
 
+/* ---------- Form 13 (additional comments) ---------- */
+var F13W=80,F13MAX=36;
+function f13o(v){return v.f13||{text:''}}
+function f13wrap(txt){
+  var out=[];
+  String(txt||'').replace(/\r/g,'').split('\n').forEach(function(p){
+    p=p.trim();
+    if(!p){out.push('');return}
+    var cur='';
+    p.split(/\s+/).forEach(function(x){
+      while(x.length>F13W){if(cur){out.push(cur);cur=''}out.push(x.slice(0,F13W));x=x.slice(F13W)}
+      if(!cur)cur=x;else if((cur+' '+x).length<=F13W)cur+=' '+x;else{out.push(cur);cur=x}
+    });
+    if(cur)out.push(cur);
+  });
+  while(out.length&&!out[out.length-1].trim())out.pop();
+  return out;
+}
+function f13lines(v){return f13wrap(f13o(v).text)}
+function f13any(v){return !!String(f13o(v).text||'').trim()}
+function f13problems(rec){var n=f13lines(rec).length;return n>F13MAX?['There are '+n+' lines but the form has only '+F13MAX+'.']:[]}
+function buildF13(rec){var L=[];f13lines(rec).forEach(function(t,i){if(t.trim())L.push(['G',i+1,f2c(t)].join('|'))});return L}
+function f13count(v){var n=f13lines(v).length;return n+' of '+F13MAX+' lines used'+(n>F13MAX?' - too long, shorten it':'')}
+function renderF13(){
+  var v=S.f2v,f=v.f13||(v.f13={text:''});
+  $('#tabs').hidden=true;$('#fab').hidden=true;
+  $('#top').innerHTML='<button class="hbtn icon" id="f13Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 13 - Additional comments</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+' - Tank '+esc(v.v.D||'')+'</p></div><button class="hbtn solid" id="f13Done" type="button">Done</button>';
+  var h='<div class="panel"><h2>Additional comments</h2><p>Type anything that should be on the report and is not covered by the other forms. A line on the form holds about '+F13W+' characters, so long text carries on to the next line by itself. Press Enter to start a new line. Changes are saved on this phone as you go.</p>';
+  h+='<textarea id="f13text" class="f13t" rows="14" placeholder="Additional comments">'+esc(f.text||'')+'</textarea>';
+  h+='<p class="count" id="f13cnt" style="margin:.4rem 0 0">'+esc(f13count(v))+'</p></div>';
+  $('#view').innerHTML=h;
+}
+function f13refresh(){var c=$('#f13cnt');if(c){c.textContent=f13count(S.f2v);c.style.color=f13lines(S.f2v).length>F13MAX?'var(--bad)':''}}
+function f13click(t){
+  var v=S.f2v;
+  if(t.closest('#f13Done')||t.closest('#f13Back')){f2save();v.view='rep';window.scrollTo(0,0);render();return true}
+  return false;
+}
+
 /* ---------- events ---------- */
 document.addEventListener('click',function(e){
   var t=e.target;
-  if(S.f2v){if(S.f2v.view==='f2')f2click(t);else if(S.f2v.view==='f20')f20click(t);else if(S.f2v.view==='f3')f3click(t);else if(S.f2v.view==='f4')f4click(t);else repClick(t);return}
+  if(S.f2v){if(S.f2v.view==='f2')f2click(t);else if(S.f2v.view==='f20')f20click(t);else if(S.f2v.view==='f3')f3click(t);else if(S.f2v.view==='f4')f4click(t);else if(S.f2v.view==='f13')f13click(t);else repClick(t);return}
   if(t.closest('#f2Open')&&S.form){var o=S.form.orig;if(S.form.dirty)saveDraft();openF2(Object.assign({},o));return}
   var fe=t.closest('[data-f2edit]');if(fe){var rc=S.f2.filter(function(r){return r.id===fe.getAttribute('data-f2edit')})[0];if(rc){S.f2v=f2state(rc,rc.v,rc.serial,rc.id,rc.key);window.scrollTo(0,0);render()}return}
   var fu=t.closest('[data-f2unsend]');if(fu){S.f2.forEach(function(r){if(r.id===fu.getAttribute('data-f2unsend'))r.sent=0});lsSet('ebp_f2',S.f2);render();return}
@@ -1290,6 +1336,7 @@ document.addEventListener('change',function(e){
 document.addEventListener('input',function(e){
   var f3k=e.target.getAttribute&&e.target.getAttribute('data-f3v');
   if(f3k&&S.f2v){var f3=S.f2v.f3||(S.f2v.f3={items:{},vals:{}});f3.vals[f3k]=e.target.value;f2save();return}
+  if(e.target.id==='f13text'&&S.f2v){(S.f2v.f13||(S.f2v.f13={text:''})).text=e.target.value;f2save();f13refresh();return}
   var f4i=e.target.getAttribute&&e.target.getAttribute('data-f4v');
   if(f4i&&S.f2v){var f4=S.f2v.f4||(S.f2v.f4={items:{},vals:{}});f4.vals[f4i]=e.target.value;f2save();return}
   var f4m=e.target.getAttribute&&e.target.getAttribute('data-f4cm');
