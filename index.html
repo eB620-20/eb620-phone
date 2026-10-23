@@ -154,7 +154,7 @@ input[data-f3v]:placeholder-shown,input[data-f4v]:placeholder-shown{background:#
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 4j (Forms list, Form 1, Form 2, Form 3, Form 4, Form 13, Form 20, Email to office)';
+var VERSION='prototype 4l (Forms list, Form 1, Form 2, Form 3, Form 4, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -757,9 +757,8 @@ function renderRep(){
   h+='<p style="margin:0">'+lines.map(esc).join('<br>')+'</p>';
   if(tk.length<ud.names.length)h+='<p style="margin:0;color:var(--bad)">The tank list has '+tk.length+(tk.length===1?' tank':' tanks')+' with this company and number. Add the other tank'+(ud.names.length-tk.length>1?'s':'')+' to the tank list first, or choose a different unit type.</p>';
   h+='</div>';
-  h+='<div class="panel"><h2>Data plate</h2><p>Metal identification plate affixed and legible?</p><div class="chips"><button type="button" class="chip y'+(v.plate==='Y'?' on':'')+'" data-plate="Y">Yes</button><button type="button" class="chip n'+(v.plate==='N'?' on':'')+'" data-plate="N">No, out of service</button></div>'+(v.plate?'':'<p style="margin:0;color:var(--bad)">Please choose Yes or No before sending.</p>')+'</div>';
-  h+='<div class="panel"><h2>Forms in this report</h2><p>Open a form to fill it in. Untick a form that was not done.</p>';
-  h+='<div class="f2item"><p class="tx">Form 1 - Tank information</p><p class="count" style="margin:0">Answered above.</p></div>';
+  h+='<div class="panel"><h2 style="font-size:1.25rem;text-align:center">Forms in this report</h2><p>Open a form to fill it in. Untick a form that was not done.</p>';
+  h+='<div class="f2item"><p class="tx" style="font-weight:700;font-size:1rem;color:var(--ink)">Form 1 - Tank Information</p><p class="count" style="margin:.2rem 0 .4rem">Data plate: metal identification plate affixed and legible?</p><div class="chips"><button type="button" class="chip y'+(v.plate==='Y'?' on':'')+'" data-plate="Y">Yes</button><button type="button" class="chip n'+(v.plate==='N'?' on':'')+'" data-plate="N">No, out of service</button></div>'+(v.plate?'':'<p class="count" style="margin:.4rem 0 0;color:var(--bad)">Please choose Yes or No before sending.</p>')+'</div>';
   FORMS_ALL.forEach(function(f){
     var on=formOn(v,f.n);
     if(!on&&!f.def)return;
@@ -782,7 +781,7 @@ function renderRep(){
     h+=row;
   });
   var f20=v.f20||{};
-  h+='<div class="f2item"><p class="tx">Form 20 - Statement of certification</p><p class="count" style="margin:.2rem 0 .5rem">'+(f20done(v)?(f20.res==='P'?'Pass - returned to service':'Fail - out of service')+', '+esc(f20.date):'Date and Pass / Fail not answered')+'</p><button type="button" class="btn block'+(nx==='f20'?' primary':'')+'" id="repF20">'+(f20done(v)?'Edit Form 20':'Answer Form 20')+'</button></div>';
+  h+='<div class="f2item"><p class="tx" style="font-weight:700;font-size:1rem;color:var(--ink)">Form 20 - Statement of certification</p><p class="count" style="margin:.2rem 0 .2rem">Date of inspection</p><div class="field" style="margin:0 0 .5rem"><input type="date" id="f20date" value="'+esc(f20.date||todayISO())+'"></div><p class="count" style="margin:0 0 .3rem">Result (Pass: returned to service. Fail: out of service.)</p><div class="chips"><button type="button" class="chip y'+(f20.res==='P'?' on':'')+'" data-f20res="P">Pass</button><button type="button" class="chip n'+(f20.res==='F'?' on':'')+'" data-f20res="F">Fail</button></div>'+(v.plate==='N'&&f20.res==='F'&&f20.auto?'<p class="count" style="margin:.4rem 0 0">Set to Fail because the data plate answer is No, out of service.</p>':'')+(f20done(v)?'':'<p class="count" style="margin:.4rem 0 0;color:var(--bad)">Choose Pass or Fail before sending.</p>')+'</div>';
   var off=FORMS_ALL.filter(function(f){return !f.def&&!formOn(v,f.n)});
   if(off.length){
     h+='<p style="margin:.8rem 0 .3rem;font-weight:600">Add a form</p><div class="fgrid">'+off.map(function(f){return '<button type="button" class="btn block" data-addform="'+f.n+'">+ Form '+f.n+' - '+esc(f.s)+'</button>'}).join('')+'</div>';
@@ -810,6 +809,8 @@ function repClick(t){
   if(t.closest('#repF13')){v.f13=v.f13||{text:''};v.view='f13';window.scrollTo(0,0);render();return true}
   if(t.closest('#repF4')){v.f4=v.f4||{items:{},vals:{}};v.view='f4';window.scrollTo(0,0);render();return true}
   if(t.closest('#repF3')){v.f3=v.f3||{items:{},vals:{}};v.view='f3';window.scrollTo(0,0);render();return true}
+  var fr=t.closest('[data-f20res]');
+  if(fr){var f20=v.f20=v.f20||{date:'',res:'',auto:0},fx=fr.getAttribute('data-f20res');f20.res=(f20.res===fx)?'':fx;f20.auto=0;if(!f20.date)f20.date=todayISO();f2save();repKeep();return true}
   if(t.closest('#repF20')){v.f20=v.f20||{date:'',res:'',auto:0};if(!v.f20.date){v.f20.date=todayISO();f2save()}v.view='f20';window.scrollTo(0,0);render();return true}
   if(t.closest('#repSend')){f2save();var rec=S.f2.filter(function(r){return r.id===v.id})[0];if(!rec){toast('Answer a question or fill in something first, then send.');return true}sendF2(rec.id);return true}
   if(t.closest('#repDone')||t.closest('#repBack')){f2closeCheck();return true}
