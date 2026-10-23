@@ -80,6 +80,7 @@ main{padding-top:1rem;display:flex;flex-direction:column;gap:.9rem;min-width:0}
 .pick{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
 .pick .ph{color:var(--muted)}
 .pick .chev{color:var(--muted);flex:none}
+.field.need input{background:#fff3a8;border-color:#c9a100}
 .field.bad input,.field.bad .pick{border-color:var(--bad);background:var(--bad-soft)}
 .field .msg{font-size:.84rem;color:var(--bad)}
 .field .note{font-size:.84rem;color:var(--warn)}
@@ -151,7 +152,7 @@ main{padding-top:1rem;display:flex;flex-direction:column;gap:.9rem;min-width:0}
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 4d (Forms list, Form 1, Form 2, Form 3, Form 20, Email to office)';
+var VERSION='prototype 4f (Forms list, Form 1, Form 2, Form 3, Form 4, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -338,7 +339,7 @@ function tankIcon(){return '<svg width="30" height="30" viewBox="0 0 32 32" aria
 /* ---------- rendering ---------- */
 function unsent(){return S.entries.filter(function(e){return!e.sent})}
 function render(){
-  if(S.f2v){if(S.f2v.view==='f2')renderF2();else if(S.f2v.view==='f20')renderF20();else if(S.f2v.view==='f3')renderF3();else renderRep();return}
+  if(S.f2v){if(S.f2v.view==='f2')renderF2();else if(S.f2v.view==='f20')renderF20();else if(S.f2v.view==='f3')renderF3();else if(S.f2v.view==='f4')renderF4();else renderRep();return}
   if(S.form){renderForm();return}
   var top=$('#top');
   var ts=S.data.made||'';
@@ -705,10 +706,10 @@ function f2refs(items){
 function f2answered(rec){var n=0;f2items().forEach(function(i){var a=rec.items[i.row];if(a&&a.r)n++});return n}
 function f2save(){
   var v=S.f2v;if(!v)return;
-  var any=Object.keys(v.items).some(function(r){var a=v.items[r];return a&&(a.r||(a.c&&a.c.trim()))})||!!v.plate||!!v.touched||Object.keys(v.forms||{}).length>0||!!(v.f20&&(v.f20.date||v.f20.res))||f3any(v);
+  var any=Object.keys(v.items).some(function(r){var a=v.items[r];return a&&(a.r||(a.c&&a.c.trim()))})||!!v.plate||!!v.touched||Object.keys(v.forms||{}).length>0||!!(v.f20&&(v.f20.date||v.f20.res))||f3any(v)||f4any(v);
   var i=S.f2.map(function(x){return x.id}).indexOf(v.id);
   if(!any){if(i>=0){S.f2.splice(i,1);lsSet('ebp_f2',S.f2)}return}
-  var rec={id:v.id,key:v.key,v:v.v,serial:v.serial,items:v.items,unit:v.unit,plate:v.plate||'',forms:v.forms||{},f20:v.f20||{date:'',res:'',auto:0},f3:v.f3||{items:{},vals:{}},touched:v.touched?1:0,ts:Date.now(),sent:0};
+  var rec={id:v.id,key:v.key,v:v.v,serial:v.serial,items:v.items,unit:v.unit,plate:v.plate||'',forms:v.forms||{},f20:v.f20||{date:'',res:'',auto:0},f3:v.f3||{items:{},vals:{}},f4:v.f4||{items:{},vals:{}},touched:v.touched?1:0,ts:Date.now(),sent:0};
   if(i>=0)S.f2[i]=rec;else S.f2.push(rec);
   lsSet('ebp_f2',S.f2);
 }
@@ -726,7 +727,7 @@ function repForms(v){return FORMS_ALL.filter(function(f){return formOn(v,f.n)}).
 function f20done(v){return !!(v.f20&&v.f20.res&&v.f20.date)}
 function todayISO(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function f2state(src,v,serial,id,key){
-  return {id:id,key:key,v:v,serial:serial,items:src?JSON.parse(JSON.stringify(src.items)):{},unit:(src&&src.unit)||unitGuess(v),plate:(src&&src.plate)||'',forms:src&&src.forms?JSON.parse(JSON.stringify(src.forms)):{},f20:src&&src.f20?JSON.parse(JSON.stringify(src.f20)):{date:'',res:'',auto:0},f3:src&&src.f3?JSON.parse(JSON.stringify(src.f3)):{items:{},vals:{}},touched:src&&src.touched?1:0,view:'rep'};
+  return {id:id,key:key,v:v,serial:serial,items:src?JSON.parse(JSON.stringify(src.items)):{},unit:(src&&src.unit)||unitGuess(v),plate:(src&&src.plate)||'',forms:src&&src.forms?JSON.parse(JSON.stringify(src.forms)):{},f20:src&&src.f20?JSON.parse(JSON.stringify(src.f20)):{date:'',res:'',auto:0},f3:src&&src.f3?JSON.parse(JSON.stringify(src.f3)):{items:{},vals:{}},f4:src&&src.f4?JSON.parse(JSON.stringify(src.f4)):{items:{},vals:{}},touched:src&&src.touched?1:0,view:'rep'};
 }
 function openF2(o){
   var key=keyOf(o),ex=S.f2.filter(function(r){return r.key===key&&!r.sent})[0];
@@ -739,6 +740,7 @@ function nextForm(v){
   var its=f2items();
   if(formOn(v,2)&&f2answered(v)<its.length)return 'f2';
   if(formOn(v,3)&&f3answered(v)<f3rows().length)return 'f3';
+  if(formOn(v,4)&&f4answered(v)<f4rows().length)return 'f4';
   if(!f20done(v))return 'f20';
   return '';
 }
@@ -763,7 +765,10 @@ function renderRep(){
     if(f.n===2){
       row+=on?'<p class="count" style="margin:.2rem 0 .5rem">'+n+' of '+its.length+' answered</p><button type="button" class="btn block'+(nx==='f2'?' primary':'')+'" id="repF2">'+(n===0?'Start Form 2':(n<its.length?'Continue Form 2':'Edit Form 2'))+'</button>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
     }else if(f.n===3){
-      if(on){var n3=f3answered(v),t3=f3rows().length;row+='<p class="count" style="margin:.2rem 0 .5rem">'+n3+' of '+t3+' answered'+(ud.names.length>1?' (for the first tank, '+ud.names[0].toLowerCase()+'; the office does the other tanks)':'')+'</p><button type="button" class="btn block'+(nx==='f3'?' primary':'')+'" id="repF3">'+(n3===0&&!f3any(v)?'Start Form 3':(n3<t3?'Continue Form 3':'Edit Form 3'))+'</button>'}
+      if(on){var n3=f3answered(v),t3=f3rows().length;row+='<p class="count" style="margin:.2rem 0 .5rem">'+n3+' of '+t3+' answered'+(ud.names.length>1?' (for the first tank, '+ud.names[0].toLowerCase()+'; the office does the other tanks)':'')+'</p>'+(f3o(v).vals&&String(f3o(v).vals.wt||'').trim()?'':'<p class="count" style="margin:0 0 .5rem;color:var(--bad)">Water temperature still to be filled in.</p>')+'<button type="button" class="btn block'+(nx==='f3'?' primary':'')+'" id="repF3">'+(n3===0&&!f3any(v)?'Start Form 3':(n3<t3?'Continue Form 3':'Edit Form 3'))+'</button>'}
+      else row+='<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
+    }else if(f.n===4){
+      if(on){var n4=f4answered(v),t4=f4rows().length,miss4=[];if(!String(f4val(v,'mdm')).trim())miss4.push('test medium');if(!String(f4val(v,'sp')).trim())miss4.push('start pressure');row+='<p class="count" style="margin:.2rem 0 .5rem">'+n4+' of '+t4+' answered'+(ud.names.length>1?' (for the first tank, '+ud.names[0].toLowerCase()+'; the office does the other tanks)':'')+'</p>'+(miss4.length?'<p class="count" style="margin:0 0 .5rem;color:var(--bad)">Still to be filled in: '+miss4.join(' and ')+'.</p>':'')+'<button type="button" class="btn block'+(nx==='f4'?' primary':'')+'" id="repF4">'+(n4===0&&!f4any(v)?'Start Form 4':(n4<t4?'Continue Form 4':'Edit Form 4'))+'</button>'}
       else row+='<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
     }else{
       row+=on?'<p class="count" style="margin:.2rem 0 0">Not on the phone yet - the office fills this form in.</p>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
@@ -778,7 +783,7 @@ function renderRep(){
     h+='<p style="margin:.8rem 0 .3rem;font-weight:600">Add a form</p><div class="fgrid">'+off.map(function(f){return '<button type="button" class="btn block" data-addform="'+f.n+'">+ Form '+f.n+' - '+esc(f.s)+'</button>'}).join('')+'</div>';
   }
   h+='</div>';
-  h+='<div class="panel"><h2>Send</h2><p>Sends this report to the office: unit, data plate, the forms in the report, Form 2, Form 3 and Form 20.</p><button type="button" class="btn primary block" id="repSend">Send report</button></div>';
+  h+='<div class="panel"><h2>Send</h2><p>Sends this report to the office: unit, data plate, the forms in the report, Form 2, Form 3, Form 4 and Form 20.</p><button type="button" class="btn primary block" id="repSend">Send report</button></div>';
   $('#view').innerHTML=h;
 }
 function repKeep(){var y=window.scrollY;renderRep();window.scrollTo(0,y)}
@@ -797,6 +802,7 @@ function repClick(t){
   var fc=t.closest('[data-form]');
   if(fc){setTimeout(function(){var k=+fc.getAttribute('data-form');v.forms=v.forms||{};v.forms[k]=fc.checked?1:0;f2save();repKeep()},0);return false}
   if(t.closest('#repF2')){v.view='f2';window.scrollTo(0,0);render();return true}
+  if(t.closest('#repF4')){v.f4=v.f4||{items:{},vals:{}};v.view='f4';window.scrollTo(0,0);render();return true}
   if(t.closest('#repF3')){v.f3=v.f3||{items:{},vals:{}};v.view='f3';window.scrollTo(0,0);render();return true}
   if(t.closest('#repF20')){v.f20=v.f20||{date:'',res:'',auto:0};if(!v.f20.date){v.f20.date=todayISO();f2save()}v.view='f20';window.scrollTo(0,0);render();return true}
   if(t.closest('#repSend')){f2save();var rec=S.f2.filter(function(r){return r.id===v.id})[0];if(!rec){toast('Answer a question or fill in something first, then send.');return true}sendF2(rec.id);return true}
@@ -849,7 +855,7 @@ function renderF2(){
 function f2closeCheck(){
   var v=S.f2v;f2save();S.f2v=null;S.tab='tanks';render();
   var its=f2items(),rec=S.f2.filter(function(r){return r.id===v.id})[0];
-  toast(rec?('Report saved'+(formOn(rec,2)||formOn(rec,3)?' ('+[formOn(rec,2)?'Form 2: '+f2answered(rec)+' of '+its.length:'',formOn(rec,3)?'Form 3: '+f3answered(rec)+' of '+f3rows().length:''].filter(Boolean).join(', ')+' answered)':'')+'. It is on the To send tab.'):'Nothing entered, so nothing was saved.');
+  toast(rec?('Report saved'+(formOn(rec,2)||formOn(rec,3)||formOn(rec,4)?' ('+[formOn(rec,2)?'Form 2: '+f2answered(rec)+' of '+its.length:'',formOn(rec,3)?'Form 3: '+f3answered(rec)+' of '+f3rows().length:'',formOn(rec,4)?'Form 4: '+f4answered(rec)+' of '+f4rows().length:''].filter(Boolean).join(', ')+' answered)':'')+'. It is on the To send tab.'):'Nothing entered, so nothing was saved.');
 }
 function f2set(row,val){
   var v=S.f2v,a=v.items[row]||(v.items[row]={});
@@ -877,6 +883,7 @@ function buildF2(list){
     if(rec.f20&&rec.f20.res&&rec.f20.date)lines.push(['S','20',rec.f20.date,rec.f20.res].join('|'));
     var refs=f2refs(rec.items),cm=[];
     var f3l=formOn(rec,3)?buildF3(rec):[];f3l.forEach(function(x){lines.push(x)});
+    var f4l=formOn(rec,4)?buildF4(rec):[];f4l.forEach(function(x){lines.push(x)});
     if(formOn(rec,2))f2def().items.forEach(function(it){
       var a=rec.items[it.row];if(!a||it.h)return;
       var ref=refs[it.row]||'';
@@ -905,7 +912,8 @@ function sendF2(id){
   var list=f2unsent().filter(function(r){return r.id===id});if(!list.length)return;
   if(!list[0].plate){toast('Answer the data plate question (Yes or No) on the report first.');return}
   if(!f20done(list[0])){toast('Answer Form 20 (date and Pass or Fail) on the report first.');return}
-  if(formOn(list[0],3)){var bad3=f3problems(list[0]);if(bad3.length){toast('Form 3: '+bad3[0]+' Fix it on Form 3 first.');return}}
+  if(formOn(list[0],3)){var bad3=f3problems(list[0]);if(bad3.length){toast('Form 3: '+bad3[0]+' Open Form 3 and fix it first.');return}}
+  if(formOn(list[0],4)){var bad4=f4problems(list[0]);if(bad4.length){toast('Form 4: '+bad4[0]+' Open Form 4 and fix it first.');return}}
   var nc=0;list.forEach(function(r){nc=Math.max(nc,Object.keys(f2refs(r.items)).length)});
   if(nc>f2def().comments.length){toast('A Form 2 has more comments than the form has lines. Shorten them first.');return}
   var text=buildF2(list),name='eB620_form2_'+String(list[0].v.D||'tank').replace(/[^A-Za-z0-9_-]+/g,'')+'_'+stamp()+'.txt',ids=list.map(function(r){return r.id});
@@ -973,6 +981,7 @@ function f3chk(inp,raw){
 }
 function f3problems(rec){
   var out=[],f=f3o(rec);
+  if(!String((f.vals||{}).wt||'').trim())out.push('Water temperature must be filled in.');
   f3inputs().forEach(function(x){if(x.kind==='c')return;var r=f3chk(x,(f.vals||{})[x.k]);if(r.msg)out.push(x.l+': '+r.msg)});
   var nc=Object.keys(f3refs(f)).length;
   if(nc>f3def().comments.length)out.push('there are '+nc+' comments but the form has only '+f3def().comments.length+' lines.');
@@ -1029,7 +1038,7 @@ function f3inHTML(x,v){
     return '<p class="count" style="margin:.5rem 0 .2rem">'+esc(x.l)+'</p><div class="chips" style="flex-wrap:wrap">'+x.opts.map(function(o,i){return '<button type="button" class="chip s'+(val===o?' on':'')+'" data-f3pick="'+x.k+'" data-v="'+esc(o)+'">'+esc(x.labs[i])+'</button>'}).join('')+'</div>';
   }
   var c=f3chk(x,val),im=x.kind==='n'?'decimal':(x.kind==='i'?'numeric':(x.kind==='my'?'numeric':'text'));
-  return '<div class="field'+(c.msg?' bad':'')+'" style="margin-top:.55rem"><label>'+esc(x.l)+(x.u?' ('+esc(x.u)+')':'')+'</label><input type="text" data-f3v="'+x.k+'" value="'+esc(val)+'" inputmode="'+im+'" autocomplete="off" autocapitalize="off"><div class="msg" data-f3m="'+x.k+'">'+esc(c.msg)+'</div><div class="note" data-f3n="'+x.k+'">'+esc(c.warn)+'</div>'+(x.hint?'<div class="hint">'+esc(x.hint)+'</div>':'')+'</div>';
+  var need=(x.k==='wt'&&!String(val).trim());return '<div class="field'+(c.msg?' bad':'')+(need?' need':'')+'" style="margin-top:.55rem"><label>'+esc(x.l)+(x.u?' ('+esc(x.u)+')':'')+(x.k==='wt'?' <span class="req">* required</span>':'')+'</label><input type="text" data-f3v="'+x.k+'" value="'+esc(val)+'" inputmode="'+im+'" autocomplete="off" autocapitalize="off"><div class="msg" data-f3m="'+x.k+'">'+esc(c.msg)+'</div><div class="note" data-f3n="'+x.k+'">'+esc(c.warn)+'</div>'+(x.hint?'<div class="hint">'+esc(x.hint)+'</div>':'')+'</div>';
 }
 function f3blur(el,k){
   var v=S.f2v,f=v.f3||(v.f3={items:{},vals:{}}),x=f3inputs().filter(function(y){return y.k===k})[0];if(!x)return;
@@ -1037,7 +1046,7 @@ function f3blur(el,k){
   if(!c.msg&&c.value!==el.value){el.value=c.value}
   if(!c.msg)f.vals[k]=c.value;else f.vals[k]=el.value;
   f2save();
-  var fld=el.closest('.field');if(fld)fld.classList.toggle('bad',!!c.msg);
+  var fld=el.closest('.field');if(fld){fld.classList.toggle('bad',!!c.msg);if(k==='wt')fld.classList.toggle('need',!String(el.value).trim())}
   var m=$('[data-f3m="'+k+'"]'),w=$('[data-f3n="'+k+'"]');if(m)m.textContent=c.msg;if(w)w.textContent=c.warn;
   f3refresh();
 }
@@ -1067,10 +1076,154 @@ function f3click(t){
   return false;
 }
 
+/* ---------- Form 4 (leakage test) ---------- */
+var F4DEF={sheet:'Sheet06',comments:[29,30,31,32,33,34,35,36,37,38,39,40,41],items:[
+{row:14,t:'Piping bled down and plumbing decontaminated',cols:'WXYZ'},
+{row:15,t:'During the test, precautions shall be taken to prevent overpressurization of the tank (7.2.7.4e)',cols:'WXYZ'},
+{row:16,t:'All self closing relief valves set lower than test pressure are removed / inoperative (7.2.5.1a)',cols:'WXYZ',inp:[{k:'rvt',l:'Relief valves are',kind:'c',opts:['O','S','OS'],labs:['Removed','Inoperative','Both']}]},
+{row:17,t:'Product piping and all valves and accessories in place and operative (7.2.5.1b)',cols:'WXYZ'},
+{row:18,t:'Tank design pressure OR MAWP on the data plate (7.2.5.1h)',cols:'',inp:[{k:'dm',l:'Pressure basis',kind:'c',opts:['D','M'],labs:['Design pressure','MAWP on data plate']},{k:'rp',l:'Record pressure (number)',kind:'n'}]},
+{row:19,t:'Test medium used (7.2.5.1e)',cols:'',inp:[{k:'mdm',l:'Test medium',kind:'c',opts:['Water','Lading(nh3)','Air'],labs:['Water','Lading (NH3)','Air']}]},
+{row:24,t:'Test pressure. It must be not less than 80% of the tank design pressure or MAWP, whichever is less, and marked on the data plate.',cols:'',inp:[{k:'un',l:'Pressure units',kind:'c',opts:['psi','kpa'],labs:['psi','kPa']},{k:'sp',l:'Pressure at test start',kind:'n'},{k:'ep',l:'Pressure at test finish',kind:'n',hint:'Same as the start pressure if left empty.'}]},
+{row:25,t:'Each valve and closure shall be tested in sequence (7.2.5.1c)',cols:'WXYZ'},
+{row:26,t:'Test pressure maintained at each valve and closure for 5 minutes (7.2.5.1i)',cols:'WXYZ'}
+]};
+var F4REQ=['mdm','sp'];
+function f4def(){return (S.data&&S.data.form3)||F4DEF}
+function f4o(v){return v.f4||{items:{},vals:{}}}
+function f4has(it,c){return !!it.cols&&it.cols.indexOf(c)>=0}
+function f4rows(){return f4def().items.filter(function(i){return f4has(i,'W')||f4has(i,'X')})}
+function f4val(v,k){return String((f4o(v).vals||{})[k]||'')}
+function f4auto(v){return false}
+function f4r(it,v){var a=(f4o(v).items||{})[it.row]||{};return a.r||''}
+function f4answered(v){var n=0;f4rows().forEach(function(i){if(f4r(i,v))n++});return n}
+function f4any(v){var f=f4o(v);return Object.keys(f.items||{}).some(function(r){var a=f.items[r];return a&&(a.r||(a.c&&a.c.trim()))})||Object.keys(f.vals||{}).some(function(k){return String(f.vals[k]||'').trim()})}
+function f4refs(f4){
+  var m={},k=0;
+  f4def().items.forEach(function(i){var a=(f4.items||{})[i.row];if(a&&a.c&&String(a.c).trim()){k++;m[i.row]=k}});
+  return m;
+}
+function f4inputs(){var o=[];f4def().items.forEach(function(i){(i.inp||[]).forEach(function(x){o.push(x)})});return o}
+function f4chk(inp,raw){
+  var v=String(raw==null?'':raw).trim(),r={value:v,msg:'',warn:''};
+  if(!v)return r;
+  if(inp.kind==='n'){
+    var t=v.replace(/,/g,'.');
+    if(!/^\d+(\.\d+)?$/.test(t)){r.msg='Numbers only, no units.';return r}
+    r.value=String(+t);
+    return r}
+  if(inp.kind==='i'){
+    if(!/^\d+$/.test(v)){r.msg='Whole minutes only.';return r}
+    r.value=String(+v);
+    if(inp.k==='dur'&&+v<10)r.msg='The minimum duration is 10 minutes (7.2.7.4a).';
+    return r}
+  if(inp.kind==='my'||inp.kind==='myn'){
+    if(inp.kind==='myn'&&/^n\/?a$/i.test(v)){r.value='N/A';return r}
+    var o=parseMY(v);
+    if(!o){r.msg='Could not read that date. Type it like 10-2026, 10/26 or 1026'+(inp.kind==='myn'?', or N/A':'')+'.';return r}
+    r.value=fmtMY(o);return r}
+  return r;
+}
+function f4problems(rec){
+  var out=[],f=f4o(rec);
+  if(!String((f.vals||{}).mdm||'').trim())out.push('Test medium must be chosen.');
+  if(!String((f.vals||{}).sp||'').trim())out.push('Pressure at test start must be filled in.');
+  f4inputs().forEach(function(x){if(x.kind==='c')return;var r=f4chk(x,(f.vals||{})[x.k]);if(r.msg)out.push(x.l+': '+r.msg)});
+  var nc=Object.keys(f4refs(f)).length;
+  if(nc>f4def().comments.length)out.push('there are '+nc+' comments but the form has only '+f4def().comments.length+' lines.');
+  return out;
+}
+function buildF4(rec){
+  var f=f4o(rec),refs=f4refs(f),L=[],cm=[];
+  f4def().items.forEach(function(it){
+    if(!(f4has(it,'W')||f4has(it,'X')||f4has(it,'Y')))return;
+    var a=(f.items||{})[it.row]||{},r=f4r(it,rec),ref=refs[it.row]||'';
+    if(r||ref)L.push(['K',it.row,r,ref].join('|'));
+    if(ref)cm.push([ref,f2c(a.c)]);
+  });
+  f4inputs().forEach(function(x){
+    var raw=(f.vals||{})[x.k],val=x.kind==='c'?String(raw||''):f4chk(x,raw).value;
+    if(x.kind!=='c'&&f4chk(x,raw).msg)val='';
+    if(!val&&x.k==='ep')val=f4chk(f4inputs().filter(function(y){return y.k==='sp'})[0],(f.vals||{}).sp).value;
+    if(val)L.push(['L',x.k,f2c(val)].join('|'));
+  });
+  cm.forEach(function(c){L.push(['E',c[0],c[1]].join('|'))});
+  return L;
+}
+function renderF4(){
+  var v=S.f2v,def=f4def(),f=v.f4||(v.f4={items:{},vals:{}}),refs=f4refs(f),ud=unitDef(v.unit);
+  $('#tabs').hidden=true;$('#fab').hidden=true;
+  var rows=f4rows(),n=f4answered(v);
+  $('#top').innerHTML='<button class="hbtn icon" id="f4Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 4 - Tank '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f4Done" type="button">Done</button>';
+  var h='<div class="panel"><h2>Leakage test</h2><p>Tap Yes, No or N/A for each item and type the numbers where they are asked for. A comment gets the next Ref # and is printed on the form beside the item. Changes are saved on this phone as you go.</p>'+(ud.names.length>1?'<p style="margin:0">This is for the first tank ('+esc(ud.names[0].toLowerCase())+'). The office does the leakage test form of the other tank'+(ud.names.length>2?'s':'')+'.</p>':'')+'</div>';
+  h+='<div class="f2bar"><span class="count" style="flex:1;margin:0" id="f4cnt">'+n+' of '+rows.length+' answered</span><button class="btn sm" id="f4AllYes" type="button">Mark the rest Yes</button></div>';
+  h+='<div class="panel">';
+  def.items.forEach(function(it){
+    var a=f.items[it.row]||{},cols=it.cols||'',r=f4r(it,v);
+    function chip(col,lab,cls,val){return cols.indexOf(col)>=0?'<button type="button" class="chip '+cls+(a.r===val?' on':'')+'" data-f4r="'+it.row+'" data-v="'+val+'">'+lab+'</button>':''}
+    var ch=(f4has(it,'W')||f4has(it,'X'))?chip('W','Yes','y','Y')+chip('X','No','n','N')+chip('Z','N/A','a','A'):'';
+    var hasC=a.c!=null&&(a.c!==''||a.cOpen);
+    h+='<div class="f2item"><p class="tx">'+esc(it.t)+(refs[it.row]?'<span class="rf">Ref '+refs[it.row]+'</span>':'')+'</p>';
+    if(ch)h+='<div class="chips">'+ch+'</div>';
+    (it.inp||[]).forEach(function(x){h+=f4inHTML(x,v)});
+    if(f4has(it,'Y')){
+      if(hasC||a.r==='N')h+='<textarea data-f4cm="'+it.row+'" maxlength="110" placeholder="Comment (short - one line on the form)">'+esc(a.c||'')+'</textarea>';
+      else h+='<button type="button" class="lnk" data-f4add="'+it.row+'">+ Add comment</button>';
+    }
+    h+='</div>';
+  });
+  h+='</div>';
+  var nc=Object.keys(refs).length,mx=def.comments.length;
+  h+='<div class="panel"><p style="margin:0;color:'+(nc>mx?'var(--bad)':'var(--muted)')+'">'+nc+' of '+mx+' comment lines used on the form.'+(nc>mx?' There is only room for '+mx+'. Shorten or remove some comments before sending.':'')+'</p></div>';
+  $('#view').innerHTML=h;
+}
+function f4inHTML(x,v){
+  var val=f4val(v,x.k);
+  if(x.kind==='c'){
+    return '<p class="count" style="margin:.5rem 0 .2rem">'+esc(x.l)+(F4REQ.indexOf(x.k)>=0?' <span class="req">* required</span>':'')+'</p><div class="chips" style="flex-wrap:wrap">'+x.opts.map(function(o,i){return '<button type="button" class="chip s'+(val===o?' on':'')+'" data-f4pick="'+x.k+'" data-v="'+esc(o)+'">'+esc(x.labs[i])+'</button>'}).join('')+'</div>';
+  }
+  var c=f4chk(x,val),im=x.kind==='n'?'decimal':(x.kind==='i'?'numeric':(x.kind==='my'?'numeric':'text'));
+  var need=(F4REQ.indexOf(x.k)>=0&&!String(val).trim());return '<div class="field'+(c.msg?' bad':'')+(need?' need':'')+'" style="margin-top:.55rem"><label>'+esc(x.l)+(x.u?' ('+esc(x.u)+')':'')+(F4REQ.indexOf(x.k)>=0?' <span class="req">* required</span>':'')+'</label><input type="text" data-f4v="'+x.k+'" value="'+esc(val)+'" inputmode="'+im+'" autocomplete="off" autocapitalize="off"><div class="msg" data-f4m="'+x.k+'">'+esc(c.msg)+'</div><div class="note" data-f4n="'+x.k+'">'+esc(c.warn)+'</div>'+(x.hint?'<div class="hint">'+esc(x.hint)+'</div>':'')+'</div>';
+}
+function f4blur(el,k){
+  var v=S.f2v,f=v.f4||(v.f4={items:{},vals:{}}),x=f4inputs().filter(function(y){return y.k===k})[0];if(!x)return;
+  var c=f4chk(x,el.value);
+  if(!c.msg&&c.value!==el.value){el.value=c.value}
+  if(!c.msg)f.vals[k]=c.value;else f.vals[k]=el.value;
+  f2save();
+  var fld=el.closest('.field');if(fld){fld.classList.toggle('bad',!!c.msg);if(F4REQ.indexOf(k)>=0)fld.classList.toggle('need',!String(el.value).trim())}
+  var m=$('[data-f4m="'+k+'"]'),w=$('[data-f4n="'+k+'"]');if(m)m.textContent=c.msg;if(w)w.textContent=c.warn;
+  f4refresh();
+}
+function f4refresh(){
+  var v=S.f2v,cn=$('#f4cnt');if(cn)cn.textContent=f4answered(v)+' of '+f4rows().length+' answered';
+}
+function f4set(row,val){
+  var v=S.f2v,f=v.f4||(v.f4={items:{},vals:{}}),a=f.items[row]||(f.items[row]={});
+  a.r=(a.r===val)?'':val;
+  if(a.r==='N'&&a.c==null)a.c='';
+  f2save();var y=window.scrollY;renderF4();window.scrollTo(0,y);
+}
+function f4click(t){
+  var v=S.f2v,f=v.f4||(v.f4={items:{},vals:{}});
+  var r=t.closest('[data-f4r]');if(r){f4set(+r.getAttribute('data-f4r'),r.getAttribute('data-v'));return true}
+  var pk=t.closest('[data-f4pick]');
+  if(pk){var k=pk.getAttribute('data-f4pick'),o=pk.getAttribute('data-v');f.vals[k]=(f.vals[k]===o)?'':o;f2save();var y2=window.scrollY;renderF4();window.scrollTo(0,y2);return true}
+  var ad=t.closest('[data-f4add]');
+  if(ad){var row=+ad.getAttribute('data-f4add'),a=f.items[row]||(f.items[row]={});a.c=a.c||'';a.cOpen=1;var y3=window.scrollY;renderF4();window.scrollTo(0,y3);setTimeout(function(){var el=$('[data-f4cm="'+row+'"]');if(el)el.focus()},30);return true}
+  if(t.closest('#f4AllYes')){
+    f4rows().forEach(function(it){if(f4has(it,'W')){var a2=f.items[it.row]||(f.items[it.row]={});if(!a2.r)a2.r='Y'}});
+    f2save();var y4=window.scrollY;renderF4();window.scrollTo(0,y4);return true}
+  if(t.closest('#f4Done')||t.closest('#f4Back')){
+    var act=document.activeElement;if(act&&act.getAttribute&&act.getAttribute('data-f4v'))f4blur(act,act.getAttribute('data-f4v'));
+    f2save();v.view='rep';window.scrollTo(0,0);render();return true}
+  return false;
+}
+
 /* ---------- events ---------- */
 document.addEventListener('click',function(e){
   var t=e.target;
-  if(S.f2v){if(S.f2v.view==='f2')f2click(t);else if(S.f2v.view==='f20')f20click(t);else if(S.f2v.view==='f3')f3click(t);else repClick(t);return}
+  if(S.f2v){if(S.f2v.view==='f2')f2click(t);else if(S.f2v.view==='f20')f20click(t);else if(S.f2v.view==='f3')f3click(t);else if(S.f2v.view==='f4')f4click(t);else repClick(t);return}
   if(t.closest('#f2Open')&&S.form){var o=S.form.orig;if(S.form.dirty)saveDraft();openF2(Object.assign({},o));return}
   var fe=t.closest('[data-f2edit]');if(fe){var rc=S.f2.filter(function(r){return r.id===fe.getAttribute('data-f2edit')})[0];if(rc){S.f2v=f2state(rc,rc.v,rc.serial,rc.id,rc.key);window.scrollTo(0,0);render()}return}
   var fu=t.closest('[data-f2unsend]');if(fu){S.f2.forEach(function(r){if(r.id===fu.getAttribute('data-f2unsend'))r.sent=0});lsSet('ebp_f2',S.f2);render();return}
@@ -1123,6 +1276,8 @@ document.addEventListener('click',function(e){
 document.addEventListener('change',function(e){
   var f3k=e.target.getAttribute&&e.target.getAttribute('data-f3v');
   if(f3k&&S.f2v){f3blur(e.target,f3k);return}
+  var f4k=e.target.getAttribute&&e.target.getAttribute('data-f4v');
+  if(f4k&&S.f2v){f4blur(e.target,f4k);return}
   if(e.target.id==='f20date'&&S.f2v){(S.f2v.f20||(S.f2v.f20={date:'',res:'',auto:0})).date=e.target.value;f2save();return}
   if(e.target.id==='hoseNew'&&S.form){S.form.hose=e.target.checked;S.form.dirty=true;saveDraft();renderForm();return}
   if(e.target.id==='fileIn'&&e.target.files&&e.target.files[0]){
@@ -1135,6 +1290,10 @@ document.addEventListener('change',function(e){
 document.addEventListener('input',function(e){
   var f3k=e.target.getAttribute&&e.target.getAttribute('data-f3v');
   if(f3k&&S.f2v){var f3=S.f2v.f3||(S.f2v.f3={items:{},vals:{}});f3.vals[f3k]=e.target.value;f2save();return}
+  var f4i=e.target.getAttribute&&e.target.getAttribute('data-f4v');
+  if(f4i&&S.f2v){var f4=S.f2v.f4||(S.f2v.f4={items:{},vals:{}});f4.vals[f4i]=e.target.value;f2save();return}
+  var f4m=e.target.getAttribute&&e.target.getAttribute('data-f4cm');
+  if(f4m&&S.f2v){var f4b=S.f2v.f4||(S.f2v.f4={items:{},vals:{}}),a4=f4b.items[+f4m]||(f4b.items[+f4m]={});a4.c=e.target.value;f2save();return}
   var f3m=e.target.getAttribute&&e.target.getAttribute('data-f3cm');
   if(f3m&&S.f2v){var f3b=S.f2v.f3||(S.f2v.f3={items:{},vals:{}}),a3=f3b.items[+f3m]||(f3b.items[+f3m]={});a3.c=e.target.value;f2save();return}
   var fc=e.target.getAttribute&&e.target.getAttribute('data-f2c');
