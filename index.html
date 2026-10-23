@@ -82,6 +82,7 @@ main{padding-top:1rem;display:flex;flex-direction:column;gap:.9rem;min-width:0}
 .pick .chev{color:var(--muted);flex:none}
 .f13t{width:100%;min-height:16rem;margin-top:.5rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:.7rem .8rem;font:inherit;resize:vertical}
 .field.need input{background:#fff3a8;border-color:#c9a100}
+input[data-f3v]:placeholder-shown,input[data-f4v]:placeholder-shown{background:#fff3a8;border-color:#c9a100;color:#13242c}
 .field.bad input,.field.bad .pick{border-color:var(--bad);background:var(--bad-soft)}
 .field .msg{font-size:.84rem;color:var(--bad)}
 .field .note{font-size:.84rem;color:var(--warn)}
@@ -153,7 +154,7 @@ main{padding-top:1rem;display:flex;flex-direction:column;gap:.9rem;min-width:0}
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 4g (Forms list, Form 1, Form 2, Form 3, Form 4, Form 13, Form 20, Email to office)';
+var VERSION='prototype 4j (Forms list, Form 1, Form 2, Form 3, Form 4, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -734,7 +735,7 @@ function openF2(o){
   var key=keyOf(o),ex=S.f2.filter(function(r){return r.key===key&&!r.sent})[0];
   var sent=S.f2.filter(function(r){return r.key===key&&r.sent})[0];
   var src=ex||sent;
-  S.f2v=f2state(src,{A:o.A||'',C:o.C||'',D:o.D||''},o.AB||'',ex?ex.id:newId(),key);
+  S.f2v=f2state(src,{A:o.A||'',C:o.C||'',D:o.D||'',S:o.S||''},o.AB||'',ex?ex.id:newId(),key);
   S.form=null;window.scrollTo(0,0);render();
 }
 function nextForm(v){
@@ -766,10 +767,10 @@ function renderRep(){
     if(f.n===2){
       row+=on?'<p class="count" style="margin:.2rem 0 .5rem">'+n+' of '+its.length+' answered</p><button type="button" class="btn block'+(nx==='f2'?' primary':'')+'" id="repF2">'+(n===0?'Start Form 2':(n<its.length?'Continue Form 2':'Edit Form 2'))+'</button>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
     }else if(f.n===3){
-      if(on){var n3=f3answered(v),t3=f3rows().length;row+='<p class="count" style="margin:.2rem 0 .5rem">'+n3+' of '+t3+' answered'+(ud.names.length>1?' (for the first tank, '+ud.names[0].toLowerCase()+'; the office does the other tanks)':'')+'</p>'+(f3o(v).vals&&String(f3o(v).vals.wt||'').trim()?'':'<p class="count" style="margin:0 0 .5rem;color:var(--bad)">Water temperature still to be filled in.</p>')+'<button type="button" class="btn block'+(nx==='f3'?' primary':'')+'" id="repF3">'+(n3===0&&!f3any(v)?'Start Form 3':(n3<t3?'Continue Form 3':'Edit Form 3'))+'</button>'}
+      if(on){var n3=f3answered(v),t3=f3rows().length;row+='<p class="count" style="margin:.2rem 0 .5rem">'+n3+' of '+t3+' answered'+(ud.names.length>1?' (for the first tank, '+ud.names[0].toLowerCase()+'; the office does the other tanks)':'')+'</p>'+(!f3any(v)||(f3o(v).vals&&String(f3o(v).vals.wt||'').trim())?'':'<p class="count" style="margin:0 0 .5rem;color:var(--bad)">Water temperature still to be filled in.</p>')+'<button type="button" class="btn block'+(nx==='f3'?' primary':'')+'" id="repF3">'+(n3===0&&!f3any(v)?'Start Form 3':(n3<t3?'Continue Form 3':'Edit Form 3'))+'</button>'}
       else row+='<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
     }else if(f.n===4){
-      if(on){var n4=f4answered(v),t4=f4rows().length,miss4=[];if(!String(f4val(v,'mdm')).trim())miss4.push('test medium');if(!String(f4val(v,'sp')).trim())miss4.push('start pressure');row+='<p class="count" style="margin:.2rem 0 .5rem">'+n4+' of '+t4+' answered'+(ud.names.length>1?' (for the first tank, '+ud.names[0].toLowerCase()+'; the office does the other tanks)':'')+'</p>'+(miss4.length?'<p class="count" style="margin:0 0 .5rem;color:var(--bad)">Still to be filled in: '+miss4.join(' and ')+'.</p>':'')+'<button type="button" class="btn block'+(nx==='f4'?' primary':'')+'" id="repF4">'+(n4===0&&!f4any(v)?'Start Form 4':(n4<t4?'Continue Form 4':'Edit Form 4'))+'</button>'}
+      if(on){var n4=f4answered(v),t4=f4rows().length,miss4=[];if(!String(f4val(v,'mdm')).trim())miss4.push('test medium');if(!String(f4val(v,'sp')).trim())miss4.push('start pressure');row+='<p class="count" style="margin:.2rem 0 .5rem">'+n4+' of '+t4+' answered'+(ud.names.length>1?' (for the first tank, '+ud.names[0].toLowerCase()+'; the office does the other tanks)':'')+'</p>'+(miss4.length&&f4any(v)?'<p class="count" style="margin:0 0 .5rem;color:var(--bad)">Still to be filled in: '+miss4.join(' and ')+'.</p>':'')+'<button type="button" class="btn block'+(nx==='f4'?' primary':'')+'" id="repF4">'+(n4===0&&!f4any(v)?'Start Form 4':(n4<t4?'Continue Form 4':'Edit Form 4'))+'</button>'}
       else row+='<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
     }else if(f.n===13){
       if(on){row+='<p class="count" style="margin:.2rem 0 .5rem">'+(f13any(v)?esc(f13count(v)):'Nothing typed yet')+'</p><button type="button" class="btn block" id="repF13">'+(f13any(v)?'Edit Form 13':'Start Form 13')+'</button>'}
@@ -1045,7 +1046,7 @@ function f3inHTML(x,v){
     return '<p class="count" style="margin:.5rem 0 .2rem">'+esc(x.l)+'</p><div class="chips" style="flex-wrap:wrap">'+x.opts.map(function(o,i){return '<button type="button" class="chip s'+(val===o?' on':'')+'" data-f3pick="'+x.k+'" data-v="'+esc(o)+'">'+esc(x.labs[i])+'</button>'}).join('')+'</div>';
   }
   var c=f3chk(x,val),im=x.kind==='n'?'decimal':(x.kind==='i'?'numeric':(x.kind==='my'?'numeric':'text'));
-  var need=(x.k==='wt'&&!String(val).trim());return '<div class="field'+(c.msg?' bad':'')+(need?' need':'')+'" style="margin-top:.55rem"><label>'+esc(x.l)+(x.u?' ('+esc(x.u)+')':'')+(x.k==='wt'?' <span class="req">* required</span>':'')+'</label><input type="text" data-f3v="'+x.k+'" value="'+esc(val)+'" inputmode="'+im+'" autocomplete="off" autocapitalize="off"><div class="msg" data-f3m="'+x.k+'">'+esc(c.msg)+'</div><div class="note" data-f3n="'+x.k+'">'+esc(c.warn)+'</div>'+(x.hint?'<div class="hint">'+esc(x.hint)+'</div>':'')+'</div>';
+  var need=(x.k==='wt'&&!String(val).trim());return '<div class="field'+(c.msg?' bad':'')+(need?' need':'')+'" style="margin-top:.55rem"><label>'+esc(x.l)+(x.u?' ('+esc(x.u)+')':'')+(x.k==='wt'?' <span class="req">* required</span>':'')+'</label><input type="text" placeholder=" " data-f3v="'+x.k+'" value="'+esc(val)+'" inputmode="'+im+'" autocomplete="off" autocapitalize="off"><div class="msg" data-f3m="'+x.k+'">'+esc(c.msg)+'</div><div class="note" data-f3n="'+x.k+'">'+esc(c.warn)+'</div>'+(x.hint?'<div class="hint">'+esc(x.hint)+'</div>':'')+'</div>';
 }
 function f3blur(el,k){
   var v=S.f2v,f=v.f3||(v.f3={items:{},vals:{}}),x=f3inputs().filter(function(y){return y.k===k})[0];if(!x)return;
@@ -1079,7 +1080,9 @@ function f3click(t){
     f2save();var y4=window.scrollY;renderF3();window.scrollTo(0,y4);return true}
   if(t.closest('#f3Done')||t.closest('#f3Back')){
     var act=document.activeElement;if(act&&act.getAttribute&&act.getAttribute('data-f3v'))f3blur(act,act.getAttribute('data-f3v'));
-    f2save();v.view='rep';window.scrollTo(0,0);render();return true}
+    f2save();
+    if(t.closest('#f3Done')){var pb=f3problems(v);if(pb.length){toast('Form 3 cannot be marked done yet: '+pb[0]);renderF3();return true}}
+    v.view='rep';window.scrollTo(0,0);render();return true}
   return false;
 }
 
@@ -1089,7 +1092,7 @@ var F4DEF={sheet:'Sheet06',comments:[29,30,31,32,33,34,35,36,37,38,39,40,41],ite
 {row:15,t:'During the test, precautions shall be taken to prevent overpressurization of the tank (7.2.7.4e)',cols:'WXYZ'},
 {row:16,t:'All self closing relief valves set lower than test pressure are removed / inoperative (7.2.5.1a)',cols:'WXYZ',inp:[{k:'rvt',l:'Relief valves are',kind:'c',opts:['O','S','OS'],labs:['Removed','Inoperative','Both']}]},
 {row:17,t:'Product piping and all valves and accessories in place and operative (7.2.5.1b)',cols:'WXYZ'},
-{row:18,t:'Tank design pressure OR MAWP on the data plate (7.2.5.1h)',cols:'',inp:[{k:'dm',l:'Pressure basis',kind:'c',opts:['D','M'],labs:['Design pressure','MAWP on data plate']},{k:'rp',l:'Record pressure (number)',kind:'n'}]},
+{row:18,t:'Tank design pressure OR MAWP on the data plate (7.2.5.1h)',cols:'',inp:[{k:'dm',l:'Pressure basis',kind:'c',opts:['D','M'],labs:['Design pressure','MAWP on data plate']},{k:'rp',l:'Record pressure (number)',kind:'n',hint:'Filled in from the tank list. Change it if the data plate says something different.'}]},
 {row:19,t:'Test medium used (7.2.5.1e)',cols:'',inp:[{k:'mdm',l:'Test medium',kind:'c',opts:['Water','Lading(nh3)','Air'],labs:['Water','Lading (NH3)','Air']}]},
 {row:24,t:'Test pressure. It must be not less than 80% of the tank design pressure or MAWP, whichever is less, and marked on the data plate.',cols:'',inp:[{k:'un',l:'Pressure units',kind:'c',opts:['psi','kpa'],labs:['psi','kPa']},{k:'sp',l:'Pressure at test start',kind:'n'},{k:'ep',l:'Pressure at test finish',kind:'n',hint:'Same as the start pressure if left empty.'}]},
 {row:25,t:'Each valve and closure shall be tested in sequence (7.2.5.1c)',cols:'WXYZ'},
@@ -1104,7 +1107,7 @@ function f4val(v,k){return String((f4o(v).vals||{})[k]||'')}
 function f4auto(v){return false}
 function f4r(it,v){var a=(f4o(v).items||{})[it.row]||{};return a.r||''}
 function f4answered(v){var n=0;f4rows().forEach(function(i){if(f4r(i,v))n++});return n}
-function f4any(v){var f=f4o(v);return Object.keys(f.items||{}).some(function(r){var a=f.items[r];return a&&(a.r||(a.c&&a.c.trim()))})||Object.keys(f.vals||{}).some(function(k){return String(f.vals[k]||'').trim()})}
+function f4any(v){var f=f4o(v);return Object.keys(f.items||{}).some(function(r){var a=f.items[r];return a&&(a.r||(a.c&&a.c.trim()))})||Object.keys(f.vals||{}).some(function(k){if(k==='rp'&&f.rpAuto&&f.vals.rp===f.rpAuto)return false;return String(f.vals[k]||'').trim()})}
 function f4refs(f4){
   var m={},k=0;
   f4def().items.forEach(function(i){var a=(f4.items||{})[i.row];if(a&&a.c&&String(a.c).trim()){k++;m[i.row]=k}});
@@ -1159,6 +1162,7 @@ function buildF4(rec){
 }
 function renderF4(){
   var v=S.f2v,def=f4def(),f=v.f4||(v.f4={items:{},vals:{}}),refs=f4refs(f),ud=unitDef(v.unit);
+  f.vals=f.vals||{};if(!f.rpDone){f.rpDone=1;var rm=/\d+(\.\d+)?/.exec(String((v.v||{}).S||''));if(rm&&!String(f.vals.rp||'').trim()){f.vals.rp=rm[0];f.rpAuto=rm[0]}f2save()}
   $('#tabs').hidden=true;$('#fab').hidden=true;
   var rows=f4rows(),n=f4answered(v);
   $('#top').innerHTML='<button class="hbtn icon" id="f4Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 4 - Tank '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f4Done" type="button">Done</button>';
@@ -1190,7 +1194,7 @@ function f4inHTML(x,v){
     return '<p class="count" style="margin:.5rem 0 .2rem">'+esc(x.l)+(F4REQ.indexOf(x.k)>=0?' <span class="req">* required</span>':'')+'</p><div class="chips" style="flex-wrap:wrap">'+x.opts.map(function(o,i){return '<button type="button" class="chip s'+(val===o?' on':'')+'" data-f4pick="'+x.k+'" data-v="'+esc(o)+'">'+esc(x.labs[i])+'</button>'}).join('')+'</div>';
   }
   var c=f4chk(x,val),im=x.kind==='n'?'decimal':(x.kind==='i'?'numeric':(x.kind==='my'?'numeric':'text'));
-  var need=(F4REQ.indexOf(x.k)>=0&&!String(val).trim());return '<div class="field'+(c.msg?' bad':'')+(need?' need':'')+'" style="margin-top:.55rem"><label>'+esc(x.l)+(x.u?' ('+esc(x.u)+')':'')+(F4REQ.indexOf(x.k)>=0?' <span class="req">* required</span>':'')+'</label><input type="text" data-f4v="'+x.k+'" value="'+esc(val)+'" inputmode="'+im+'" autocomplete="off" autocapitalize="off"><div class="msg" data-f4m="'+x.k+'">'+esc(c.msg)+'</div><div class="note" data-f4n="'+x.k+'">'+esc(c.warn)+'</div>'+(x.hint?'<div class="hint">'+esc(x.hint)+'</div>':'')+'</div>';
+  var need=(F4REQ.indexOf(x.k)>=0&&!String(val).trim());return '<div class="field'+(c.msg?' bad':'')+(need?' need':'')+'" style="margin-top:.55rem"><label>'+esc(x.l)+(x.u?' ('+esc(x.u)+')':'')+(F4REQ.indexOf(x.k)>=0?' <span class="req">* required</span>':'')+'</label><input type="text" placeholder=" " data-f4v="'+x.k+'" value="'+esc(val)+'" inputmode="'+im+'" autocomplete="off" autocapitalize="off"><div class="msg" data-f4m="'+x.k+'">'+esc(c.msg)+'</div><div class="note" data-f4n="'+x.k+'">'+esc(c.warn)+'</div>'+(x.hint?'<div class="hint">'+esc(x.hint)+'</div>':'')+'</div>';
 }
 function f4blur(el,k){
   var v=S.f2v,f=v.f4||(v.f4={items:{},vals:{}}),x=f4inputs().filter(function(y){return y.k===k})[0];if(!x)return;
@@ -1223,7 +1227,9 @@ function f4click(t){
     f2save();var y4=window.scrollY;renderF4();window.scrollTo(0,y4);return true}
   if(t.closest('#f4Done')||t.closest('#f4Back')){
     var act=document.activeElement;if(act&&act.getAttribute&&act.getAttribute('data-f4v'))f4blur(act,act.getAttribute('data-f4v'));
-    f2save();v.view='rep';window.scrollTo(0,0);render();return true}
+    f2save();
+    if(t.closest('#f4Done')){var pb=f4problems(v);if(pb.length){toast('Form 4 cannot be marked done yet: '+pb[0]);renderF4();return true}}
+    v.view='rep';window.scrollTo(0,0);render();return true}
   return false;
 }
 
