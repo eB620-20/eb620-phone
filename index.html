@@ -164,7 +164,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 5l (office changes made after the export are never overwritten by an older phone copy: only the fields you changed are sent, with their original values; TDU units: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, TDU unit opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
+var VERSION='prototype 5m (a sent report stays sent when you leave it; office changes made after the export are never overwritten by an older phone copy: only the fields you changed are sent, with their original values; TDU units: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, TDU unit opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -813,6 +813,12 @@ function f2save(){
   var i=S.f2.map(function(x){return x.id}).indexOf(v.id);
   if(!any){if(i>=0){S.f2.splice(i,1);lsSet('ebp_f2',S.f2)}return}
   var rec={id:v.id,key:v.key,v:v.v,serial:v.serial,items:v.items,f2t:v.f2t||{},unit:v.unit,plate:v.plate||'',forms:v.forms||{},f20:v.f20||{date:'',res:'',auto:0},f3:v.f3||{items:{},vals:{}},f4:v.f4||{items:{},vals:{}},f13:v.f13||{text:''},f8:v.f8||{q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''},f5:v.f5||{h:[]},touched:v.touched?1:0,tdu:v.tdu?1:0,ts:Date.now(),sent:0};
+  /* a report already sent stays "sent" while its content is unchanged (leaving the report after Mark as sent used to reset it) */
+  if(i>=0&&S.f2[i].sent){
+    var o=S.f2[i],oo=Object.assign({},o),nn=Object.assign({},rec);
+    delete oo.ts;delete oo.sent;delete nn.ts;delete nn.sent;
+    if(JSON.stringify(oo)===JSON.stringify(nn)){rec.sent=o.sent;rec.ts=o.ts}
+  }
   if(i>=0)S.f2[i]=rec;else S.f2.push(rec);
   lsSet('ebp_f2',S.f2);
 }
