@@ -164,7 +164,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 5o (tank and TDU entries in the email use ~~ instead of tab characters, which mail apps turn into spaces; tank entries file ends with eB620-end like the other files; a sent report stays sent when you leave it; office changes made after the export are never overwritten by an older phone copy: only the fields you changed are sent, with their original values; TDU units: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, TDU unit opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
+var VERSION='prototype 5p (the email starts with a plain sentence for mail filters; tank and TDU entries in the email use ~~ instead of tab characters, which mail apps turn into spaces; tank entries file ends with eB620-end like the other files; a sent report stays sent when you leave it; office changes made after the export are never overwritten by an older phone copy: only the fields you changed are sent, with their original values; TDU units: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, TDU unit opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -755,7 +755,7 @@ function shareFile(text,name,title,countLabel,onSent,subject){
       if(!/^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(a)){toast('Type the office email address first.');$('#offMail').focus();return}
       lsSet('ebp_office',a);
       var sj=subject||('eB620 app - '+title);
-      var url='mailto:'+encodeURIComponent(a).replace(/%40/g,'@')+'?subject='+encodeURIComponent(sj)+'&body='+encodeURIComponent(/^eB620-(phone|tdu)-/.test(text)?text.replace(/\t/g,'~~'):text);
+      var url='mailto:'+encodeURIComponent(a).replace(/%40/g,'@')+'?subject='+encodeURIComponent(sj)+'&body='+encodeURIComponent('eB620 phone app: data for the office import. Nothing to read or change here, just send it.\r\n\r\n'+(/^eB620-(phone|tdu)-/.test(text)?text.replace(/\t/g,'~~'):text));
       try{window.location.href=url}catch(e){toast('Could not open the mail app. Use Copy text below.')}
       toast('Mail is opening. Send it, then come back and tap Mark as sent.');
     };
