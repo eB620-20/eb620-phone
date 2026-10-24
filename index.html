@@ -164,7 +164,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 5g (three-way status filter: Active / Not active / All, TDU unit opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
+var VERSION='prototype 5h (picture email with the picture inside the text; three-way status filter: Active / Not active / All, TDU unit opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -1749,13 +1749,34 @@ function f10shrink(file,name){
     }catch(e){fallback()}
   });
 }
+function f10go(u){if(window.__f10go){window.__f10go(u);return}window.location.href=u}
+function f10tiny(file){
+  return new Promise(function(res){
+    try{
+      var url=URL.createObjectURL(file),img=new Image();
+      img.onload=function(){
+        try{
+          var w=img.naturalWidth,h=img.naturalHeight,best=null,sizes=[800,700,600,520,440,360],qs=[0.6,0.5,0.4,0.32],si,qi,d,c,cx,k;
+          outer:for(si=0;si<sizes.length;si++){
+            k=Math.min(1,sizes[si]/Math.max(w,h));c=document.createElement('canvas');c.width=Math.max(1,Math.round(w*k));c.height=Math.max(1,Math.round(h*k));
+            cx=c.getContext('2d');cx.drawImage(img,0,0,c.width,c.height);
+            for(qi=0;qi<qs.length;qi++){d=(c.toDataURL('image/jpeg',qs[qi]).split(',')[1])||'';best=d;if(d.length<=34000)break outer}
+          }
+          URL.revokeObjectURL(url);res(best);
+        }catch(e){res(null)}
+      };
+      img.onerror=function(){res(null)};
+      img.src=url;
+    }catch(e){res(null)}
+  });
+}
 function f10open(){
   var v=S.f2v,sl=f10slots(v),i;F10={files:{},extra:[]};
   var h='<h2>Data plate pictures</h2><p style="margin:0;color:var(--muted);font-size:.92rem">Pictures cannot go inside the report, so they go in their own email. Choose the photo of each data plate, then tap Send pictures. The office imports them into Form 10.</p>';
   sl.forEach(function(s){h+='<div class="f2item" style="margin-top:.6rem"><p class="tx" style="margin:0 0 .3rem">'+esc(s.l)+'</p><label class="btn block" style="position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;width:100%;box-sizing:border-box"><span id="f10t'+s.k+'">Take or choose photo</span><input type="file" accept="image/*" data-f10="'+s.k+'" style="position:absolute;left:0;top:0;width:100%;height:100%;opacity:0"></label></div>'});
   h+='<div class="f2item" style="margin-top:.6rem"><p class="tx" style="margin:0 0 .3rem">Other pictures (optional)</p><label class="btn block" style="position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;width:100%;box-sizing:border-box"><span id="f10tx">Choose photos</span><input type="file" accept="image/*" multiple data-f10x="1" style="position:absolute;left:0;top:0;width:100%;height:100%;opacity:0"></label></div>';
   h+='<label for="f10Addr" style="display:block;margin-top:.8rem;font-weight:600;font-size:.9rem">Office email address</label><input id="f10Addr" type="email" inputmode="email" autocomplete="email" autocapitalize="off" placeholder="office@yourcompany.com" style="width:100%;min-height:3rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface2);padding:0 .9rem">';
-  h+='<div class="row" style="margin-top:.7rem"><button class="btn primary" id="f10Send" type="button">Send pictures</button></div><p style="margin:.6rem 0 0;color:var(--muted);font-size:.85rem">Opens your phone\'s share menu with the photos already attached. Your phone\'s share menu cannot fill in the To and Subject boxes the way the report email does, so the app copies the subject for you to paste.</p><div class="row"><button class="btn" id="f10Draft" type="button">Email without pictures</button><button class="btn" id="f10Close" type="button">Close</button></div><p id="f10Msg" style="margin:.5rem 0 0;color:var(--muted);font-size:.85rem"></p>';
+  h+='<div class="row" style="margin-top:.7rem"><button class="btn primary" id="f10Mail" type="button">Email pictures</button></div><p style="margin:.6rem 0 0;color:var(--muted);font-size:.85rem">Opens your mail app with the address and subject filled in, like the reports. The picture is put inside the email (shrunk to a small size), one email per picture. Tap each picture\'s button in the list that appears, then send the email.</p><div id="f10List"></div><div class="row" style="margin-top:.7rem"><button class="btn" id="f10Send" type="button">Share menu instead (full-size pictures)</button></div><p style="margin:.4rem 0 0;color:var(--muted);font-size:.8rem">The share menu attaches full-size pictures, but your phone cannot fill in the To and Subject boxes from it, so the app copies the subject for you to paste.</p><div class="row"><button class="btn" id="f10Draft" type="button">Email without pictures</button><button class="btn" id="f10Close" type="button">Close</button></div><p id="f10Msg" style="margin:.5rem 0 0;color:var(--muted);font-size:.85rem"></p>';
   openSheet(h,function(w){
     $('#f10Addr').value=lsGet('ebp_office','');
     Array.prototype.forEach.call(w.querySelectorAll('input[type=file]'),function(el){
@@ -1769,6 +1790,31 @@ function f10open(){
     function addr(){var a=String($('#f10Addr').value||'').replace(/^\s+|\s+$/g,'');if(!/^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(a)){toast('Type the office email address first.');$('#f10Addr').focus();return null}lsSet('ebp_office',a);return a}
     $('#f10Close').onclick=closeSheet;
     $('#f10Draft').onclick=function(){var a=addr();if(!a)return;var sj=f10subject(v),body='Data plate pictures for '+[v.v.C,v.v.D].filter(Boolean).join(' - ')+'.\n\nAttach the pictures to this email, the first tank first, then send.';window.location.href='mailto:'+encodeURIComponent(a).replace(/%40/g,'@')+'?subject='+encodeURIComponent(sj)+'&body='+encodeURIComponent(body)};
+    function b64lines(b){var o=[],i;for(i=0;i<b.length;i+=76)o.push(b.substr(i,76));return o.join('\n')}
+    $('#f10Mail').onclick=function(){
+      var a=addr();if(!a)return;
+      var list=[];
+      sl.forEach(function(x){if(F10.files[x.k])list.push({n:x.nm+'.jpg',l:x.l,f:F10.files[x.k]})});
+      F10.extra.forEach(function(f,i){list.push({n:'extra'+(i+1)+'.jpg',l:'Other picture '+(i+1),f:f})});
+      if(!list.length){toast('Choose at least one photo first.');return}
+      $('#f10Msg').textContent='Getting the pictures ready...';
+      Promise.all(list.map(function(x){return f10tiny(x.f)})).then(function(r){
+        $('#f10Msg').textContent='';
+        var h='',bad=0;
+        F10.mail=[];
+        list.forEach(function(x,i){if(r[i]){F10.mail.push({n:x.n,l:x.l,b:r[i]});h+='<button class="btn block" type="button" style="margin-top:.4rem" data-f10m="'+(F10.mail.length-1)+'">Email: '+esc(x.l)+' ('+Math.round(r[i].length*0.75/1024)+' KB)</button>'}else bad++});
+        if(bad)h+='<p style="color:var(--muted);font-size:.85rem">'+bad+' picture'+(bad===1?' could':'s could')+' not be read here. Use the share menu button for '+(bad===1?'it':'them')+'.</p>';
+        $('#f10List').innerHTML=h;
+      });
+    };
+    $('#f10List').onclick=function(e){
+      var b=e.target.closest('[data-f10m]');if(!b)return;
+      var a=addr();if(!a)return;
+      var x=F10.mail[+b.getAttribute('data-f10m')];if(!x)return;
+      var sj=f10subject(v),body='Data plate picture for '+[v.v.C,v.v.D].filter(Boolean).join(' - ')+'.\nJust send this email as it is. The office import turns the lines below back into the picture. Please do not change them.\n\neB620-pic|'+x.n+'\n'+b64lines(x.b)+'\neB620-pic-end\n';
+      f10go('mailto:'+encodeURIComponent(a).replace(/%40/g,'@')+'?subject='+encodeURIComponent(sj)+'&body='+encodeURIComponent(body));
+      if(b.getAttribute('data-done')!=='1'){b.setAttribute('data-done','1');b.textContent='\u2713 '+b.textContent}
+    };
     $('#f10Send').onclick=function(){
       var a=addr();if(!a)return;
       var sj=f10subject(v);
