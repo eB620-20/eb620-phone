@@ -164,7 +164,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 5k (TDU units: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, TDU unit opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
+var VERSION='prototype 5l (office changes made after the export are never overwritten by an older phone copy: only the fields you changed are sent, with their original values; TDU units: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, TDU unit opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -586,6 +586,37 @@ function pickValue(c,val){
   renderForm();
   setTimeout(function(){var b=$('#f_'+c);if(b&&b.focus)b.focus()},0);
 }
+/* ---------- stale-data protection: what changed on the phone, and what the sheet held when the data was loaded ---------- */
+function sameVal(f,a,b){
+  var x=String(a==null?'':a).trim(),y=String(b==null?'':b).trim();
+  if(!x&&!y)return true;if(!x||!y)return false;
+  var k=f&&f.kind;
+  if(k==='M'){var p=parseMY(x),q=parseMY(y);if(p&&q)return p.m===q.m&&p.y===q.y}
+  else if(k==='Y'){var p2=parseYear(x),q2=parseYear(y);if(p2!=null&&q2!=null)return p2===q2}
+  return norm(x)===norm(y);
+}
+function snapV(v){var o={};Object.keys(v||{}).forEach(function(c){o[c]=v[c]});return o}
+/* base = values of the export this entry started from; prev = values last sent for it (the sheet may hold those now) */
+function setBase(ent,ex,baseRows){
+  if(!ent.row)return;
+  if(ex&&ex.kind!=='quick'){
+    if(ex.base){ent.base=ex.base;var pv=ex.sent?ex.v:ex.prev;if(pv)ent.prev=snapV(pv)}
+    return;
+  }
+  var b=baseRows.filter(function(x){return x.row===ent.row})[0];
+  if(b)ent.base=snapV(b.v);
+}
+/* columns whose value now differs from the base; null when the entry has no base (old entry or new row: the office then imports it as before) */
+function chgOf(e,fm,cols){
+  if(!e.base)return null;
+  var src=e.kind==='quick'?(e.q||{}):e.v,out=[];
+  cols.forEach(function(c){
+    if(e.kind==='quick'&&c!=='Z'&&c!=='AA')return;
+    if(e.kind==='quick'){if(src[c]!=null&&String(src[c]).trim()!==''&&!sameVal(fm[c],src[c],e.base[c]))out.push(c);return}
+    if(!sameVal(fm[c],src[c],e.base[c]))out.push(c);
+  });
+  return out;
+}
 function saveForm(rear){
   var f=S.form,r=validateAll(f);
   f.errs=r.errs;f.notes=r.notes;
@@ -602,6 +633,7 @@ function saveForm(rear){
   if(f.kind==='tdu'){saveTduEntry(f,ent,rear===true);return}
   var i=S.entries.map(function(e){return e.id}).indexOf(ent.id);
   if(i<0&&ent.row)i=S.entries.map(function(e){return e.row}).indexOf(ent.row);
+  setBase(ent,i>=0?S.entries[i]:null,S.data.tanks);
   if(i>=0)S.entries[i]=ent;else S.entries.push(ent);
   lsSet('ebp_entries',S.entries);dropDraft();S.form=null;S.tab='tanks';
   render();toast('Saved. It is waiting on the To send tab.');
@@ -648,6 +680,7 @@ function saveQuick(){
   if(!Object.keys(vals).length&&!note&&!f.hose){toast('Nothing to save yet. Type what you found or changed.');return}
   var o=f.orig,ent={id:f.id,kind:'quick',row:f.row,key:f.key,q:vals,hose:f.hose&&(vals.V||vals.X||vals.Y)?1:0,note:note,v:{A:o.A,C:o.C,D:o.D},ts:Date.now(),sent:0};
   var i=S.entries.map(function(e){return e.id}).indexOf(ent.id);
+  ent.base={Z:o.Z||'',AA:o.AA||''};
   if(i>=0)S.entries[i]=ent;else S.entries.push(ent);
   lsSet('ebp_entries',S.entries);dropDraft();S.form=null;S.tab='tanks';
   render();toast('Update saved. It is waiting on the To send tab.');
@@ -683,11 +716,15 @@ function copyPicker(){
 /* ---------- send ---------- */
 function clean(x){return String(x==null?'':x).replace(/[\t\r\n]+/g,' ').trim()}
 function buildTSV(list){
-  var cols=S.data.fields.map(function(f){return f.c});
-  var lines=['eB620-phone-2\t'+new Date().toISOString()+'\t'+clean(S.data.book),['_id','_row','_key','_kind','_hose','_note'].concat(cols).join('\t')];
+  var cols=S.data.fields.map(function(f){return f.c}),anyPrev=list.some(function(e){return e.prev&&e.base});
+  var lines=['eB620-phone-2\t'+new Date().toISOString()+'\t'+clean(S.data.book),['_id','_row','_key','_kind','_hose','_note','_chg','_prev'].concat(cols,cols.map(function(c){return 'o_'+c}),anyPrev?cols.map(function(c){return 'p_'+c}):[]).join('\t')];
   list.forEach(function(e){
-    var q=e.kind==='quick',src=q?(e.q||{}):e.v;
-    lines.push([e.id,e.row||'',clean(e.key),q?'quick':'full',q&&e.hose?'1':'',q?clean(e.note):''].concat(cols.map(function(c){return clean(src[c])})).join('\t'))});
+    var q=e.kind==='quick',src=q?(e.q||{}):e.v,ch=chgOf(e,F,cols),chs=ch?('|'+ch.join('|')+(ch.length?'|':'')):'';
+    var hasPrev=!!(e.prev&&e.base);
+    lines.push([e.id,e.row||'',clean(e.key),q?'quick':'full',q&&e.hose?'1':'',q?clean(e.note):'',chs,hasPrev?'1':''].concat(
+      cols.map(function(c){return clean(src[c])}),
+      cols.map(function(c){return ch&&ch.indexOf(c)>=0?clean(e.base[c]):''}),
+      anyPrev?cols.map(function(c){return hasPrev&&ch&&ch.indexOf(c)>=0?clean(e.prev[c]):''}):[]).join('\t'))});
   return lines.join('\r\n')+'\r\n';
 }
 function stamp(){var d=new Date();return d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate())+'_'+pad2(d.getHours())+pad2(d.getMinutes())}
@@ -826,6 +863,7 @@ function saveTduEntry(f,ent,rear){
   ent.kind='tdu';
   var i=S.tdue.map(function(e){return e.id}).indexOf(ent.id);
   if(i<0&&ent.row)i=S.tdue.map(function(e){return e.row}).indexOf(ent.row);
+  setBase(ent,i>=0?S.tdue[i]:null,tduBaseRows());
   if(i>=0){ent.id=S.tdue[i].id;S.tdue[i]=ent}else S.tdue.push(ent);
   lsSet('ebp_tdue',S.tdue);dropDraft();S.form=null;S.tab='tanks';S.kind='tdu';
   if(rear){
@@ -898,9 +936,14 @@ function tduSendPanel(){
   return h;
 }
 function buildTduTSV(list){
-  var cols=tduFields().map(function(f){return f.c});
-  var lines=['eB620-tdu-1\t'+new Date().toISOString()+'\t'+clean(S.data.book),['_id','_row','_key'].concat(cols).join('\t')];
-  list.forEach(function(e){lines.push([e.id,e.row||'',clean(e.key)].concat(cols.map(function(c){return clean(e.v[c])})).join('\t'))});
+  var cols=tduFields().map(function(f){return f.c}),anyPrev=list.some(function(e){return e.prev&&e.base});
+  var lines=['eB620-tdu-1\t'+new Date().toISOString()+'\t'+clean(S.data.book),['_id','_row','_key','_chg','_prev'].concat(cols,cols.map(function(c){return 'o_'+c}),anyPrev?cols.map(function(c){return 'p_'+c}):[]).join('\t')];
+  list.forEach(function(e){
+    var ch=chgOf(e,FT,cols),chs=ch?('|'+ch.join('|')+(ch.length?'|':'')):'',hasPrev=!!(e.prev&&e.base);
+    lines.push([e.id,e.row||'',clean(e.key),chs,hasPrev?'1':''].concat(
+      cols.map(function(c){return clean(e.v[c])}),
+      cols.map(function(c){return ch&&ch.indexOf(c)>=0?clean(e.base[c]):''}),
+      anyPrev?cols.map(function(c){return hasPrev&&ch&&ch.indexOf(c)>=0?clean(e.prev[c]):''}):[]).join('\t'))});
   lines.push('eB620-end');
   return lines.join('\r\n')+'\r\n';
 }
