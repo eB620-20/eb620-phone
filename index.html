@@ -164,7 +164,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 5h (picture email with the picture inside the text; three-way status filter: Active / Not active / All, TDU unit opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
+var VERSION='prototype 5i (picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, TDU unit opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -1776,7 +1776,7 @@ function f10open(){
   sl.forEach(function(s){h+='<div class="f2item" style="margin-top:.6rem"><p class="tx" style="margin:0 0 .3rem">'+esc(s.l)+'</p><label class="btn block" style="position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;width:100%;box-sizing:border-box"><span id="f10t'+s.k+'">Take or choose photo</span><input type="file" accept="image/*" data-f10="'+s.k+'" style="position:absolute;left:0;top:0;width:100%;height:100%;opacity:0"></label></div>'});
   h+='<div class="f2item" style="margin-top:.6rem"><p class="tx" style="margin:0 0 .3rem">Other pictures (optional)</p><label class="btn block" style="position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;width:100%;box-sizing:border-box"><span id="f10tx">Choose photos</span><input type="file" accept="image/*" multiple data-f10x="1" style="position:absolute;left:0;top:0;width:100%;height:100%;opacity:0"></label></div>';
   h+='<label for="f10Addr" style="display:block;margin-top:.8rem;font-weight:600;font-size:.9rem">Office email address</label><input id="f10Addr" type="email" inputmode="email" autocomplete="email" autocapitalize="off" placeholder="office@yourcompany.com" style="width:100%;min-height:3rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface2);padding:0 .9rem">';
-  h+='<div class="row" style="margin-top:.7rem"><button class="btn primary" id="f10Mail" type="button">Email pictures</button></div><p style="margin:.6rem 0 0;color:var(--muted);font-size:.85rem">Opens your mail app with the address and subject filled in, like the reports. The picture is put inside the email (shrunk to a small size), one email per picture. Tap each picture\'s button in the list that appears, then send the email.</p><div id="f10List"></div><div class="row" style="margin-top:.7rem"><button class="btn" id="f10Send" type="button">Share menu instead (full-size pictures)</button></div><p style="margin:.4rem 0 0;color:var(--muted);font-size:.8rem">The share menu attaches full-size pictures, but your phone cannot fill in the To and Subject boxes from it, so the app copies the subject for you to paste.</p><div class="row"><button class="btn" id="f10Draft" type="button">Email without pictures</button><button class="btn" id="f10Close" type="button">Close</button></div><p id="f10Msg" style="margin:.5rem 0 0;color:var(--muted);font-size:.85rem"></p>';
+  h+='<div class="row" style="margin-top:.7rem"><button class="btn primary" id="f10Mail" type="button">Email pictures</button></div><p style="margin:.6rem 0 0;color:var(--muted);font-size:.85rem">Opens your mail app with the address and subject filled in, like the reports. The picture is put inside the email (shrunk to a small size), one email per picture. Tap each picture\'s button in the list that appears. If the picture is too big for the email link, it is copied for you and you paste it into the message.</p><div id="f10List"></div><div class="row" style="margin-top:.7rem"><button class="btn" id="f10Send" type="button">Share menu instead (full-size pictures)</button></div><p style="margin:.4rem 0 0;color:var(--muted);font-size:.8rem">The share menu attaches full-size pictures, but your phone cannot fill in the To and Subject boxes from it, so the app copies the subject for you to paste.</p><div class="row"><button class="btn" id="f10Draft" type="button">Email without pictures</button><button class="btn" id="f10Close" type="button">Close</button></div><p id="f10Msg" style="margin:.5rem 0 0;color:var(--muted);font-size:.85rem"></p>';
   openSheet(h,function(w){
     $('#f10Addr').value=lsGet('ebp_office','');
     Array.prototype.forEach.call(w.querySelectorAll('input[type=file]'),function(el){
@@ -1804,15 +1804,29 @@ function f10open(){
         F10.mail=[];
         list.forEach(function(x,i){if(r[i]){F10.mail.push({n:x.n,l:x.l,b:r[i]});h+='<button class="btn block" type="button" style="margin-top:.4rem" data-f10m="'+(F10.mail.length-1)+'">Email: '+esc(x.l)+' ('+Math.round(r[i].length*0.75/1024)+' KB)</button>'}else bad++});
         if(bad)h+='<p style="color:var(--muted);font-size:.85rem">'+bad+' picture'+(bad===1?' could':'s could')+' not be read here. Use the share menu button for '+(bad===1?'it':'them')+'.</p>';
-        $('#f10List').innerHTML=h;
+        $('#f10List').innerHTML=h+'<p id="f10Hint" style="margin:.6rem 0 0;font-size:.9rem"></p>';
+        try{$('#f10List').scrollIntoView({block:'center'})}catch(e){}
       });
     };
+    function copyText(t){
+      var done=false;
+      try{var ta=document.createElement('textarea');ta.value=t;ta.setAttribute('readonly','');ta.style.cssText='position:fixed;left:-9999px;top:0;opacity:0';document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,t.length);done=document.execCommand&&document.execCommand('copy');ta.remove()}catch(e){}
+      try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).catch(function(){});done=true}}catch(e){}
+      return done;
+    }
     $('#f10List').onclick=function(e){
       var b=e.target.closest('[data-f10m]');if(!b)return;
       var a=addr();if(!a)return;
       var x=F10.mail[+b.getAttribute('data-f10m')];if(!x)return;
-      var sj=f10subject(v),body='Data plate picture for '+[v.v.C,v.v.D].filter(Boolean).join(' - ')+'.\nJust send this email as it is. The office import turns the lines below back into the picture. Please do not change them.\n\neB620-pic|'+x.n+'\n'+b64lines(x.b)+'\neB620-pic-end\n';
-      f10go('mailto:'+encodeURIComponent(a).replace(/%40/g,'@')+'?subject='+encodeURIComponent(sj)+'&body='+encodeURIComponent(body));
+      var sj=f10subject(v),blk='eB620-pic|'+x.n+'\n'+b64lines(x.b)+'\neB620-pic-end\n',head='Data plate picture for '+[v.v.C,v.v.D].filter(Boolean).join(' - ')+'.\n',full=head+'Just send this email as it is. Please do not change the lines below.\n\n'+blk;
+      var base='mailto:'+encodeURIComponent(a).replace(/%40/g,'@')+'?subject='+encodeURIComponent(sj)+'&body=',url=base+encodeURIComponent(full),pasted=false,msg;
+      if(url.length>7000){
+        pasted=copyText(blk);
+        url=base+encodeURIComponent(head+'\nPress and hold in the empty space below, tap Paste, then send. (The picture was copied for you.)\n\n');
+        msg=pasted?'Mail is opening with the address and subject filled in. The picture is copied: in the message, press and hold in the empty space, tap Paste, then send. If Mail did not open, open your mail app, start a new email to '+a+', use the subject '+sj+', and Paste.':'Mail is opening, but this phone would not copy the picture. Use the share menu button below instead.';
+      }else msg='Mail is opening with the picture in the message. Just send it.';
+      f10go(url);
+      $('#f10Hint').textContent=msg;
       if(b.getAttribute('data-done')!=='1'){b.setAttribute('data-done','1');b.textContent='\u2713 '+b.textContent}
     };
     $('#f10Send').onclick=function(){
