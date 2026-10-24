@@ -164,7 +164,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 5a (same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
+var VERSION='prototype 5b (TDU unit opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -351,6 +351,7 @@ function tankIcon(){return '<svg width="30" height="30" viewBox="0 0 32 32" aria
 /* ---------- rendering ---------- */
 function unsent(){return S.entries.filter(function(e){return!e.sent})}
 function render(){
+  if(S.tduDetail&&!S.f2v){renderTduDetail();return}
   if(S.f2v){if(S.f2v.view==='f2')renderF2();else if(S.f2v.view==='f20')renderF20();else if(S.f2v.view==='f3')renderF3();else if(S.f2v.view==='f4')renderF4();else if(S.f2v.view==='f13')renderF13();else if(S.f2v.view==='f8')renderF8();else if(S.f2v.view==='f5')renderF5();else renderRep();return}
   if(S.form){renderForm();return}
   var top=$('#top');
@@ -738,7 +739,7 @@ function f2tAny(v){return Object.keys(v.f2t||{}).some(function(k){var it=(v.f2t[
 function f2maxRefs(v){var m=0;for(var k=0;k<f2nt(v);k++)m=Math.max(m,Object.keys(f2refs(f2eff(v,k))).length);return m}
 function f2save(){
   var v=S.f2v;if(!v)return;
-  var any=Object.keys(v.items).some(function(r){var a=v.items[r];return a&&(a.r||(a.c&&a.c.trim()))})||!!v.plate||!!v.touched||Object.keys(v.forms||{}).length>0||!!(v.f20&&(v.f20.date||v.f20.res))||f2tAny(v)||f3any(v)||f4any(v)||f13any(v)||f8any(v)||f5any(v);
+  var any=Object.keys(v.items).some(function(r){var a=v.items[r];return a&&(a.r||(a.c&&a.c.trim()))})||!!v.plate||!!v.touched||(!v.tdu&&Object.keys(v.forms||{}).length>0)||!!(v.f20&&(v.f20.date||v.f20.res))||f2tAny(v)||f3any(v)||f4any(v)||f13any(v)||f8any(v)||f5any(v);
   var i=S.f2.map(function(x){return x.id}).indexOf(v.id);
   if(!any){if(i>=0){S.f2.splice(i,1);lsSet('ebp_f2',S.f2)}return}
   var rec={id:v.id,key:v.key,v:v.v,serial:v.serial,items:v.items,f2t:v.f2t||{},unit:v.unit,plate:v.plate||'',forms:v.forms||{},f20:v.f20||{date:'',res:'',auto:0},f3:v.f3||{items:{},vals:{}},f4:v.f4||{items:{},vals:{}},f13:v.f13||{text:''},f8:v.f8||{q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''},f5:v.f5||{h:[]},touched:v.touched?1:0,tdu:v.tdu?1:0,ts:Date.now(),sent:0};
@@ -811,6 +812,18 @@ function openTdu(row){
   S.f2v.tdu=1;S.f2v.forms={2:0,4:0};
   if(!src||!/^d/.test(S.f2v.unit))S.f2v.unit=tduUnitRows(v0).length>=2?'dq':(t.v.AK?'dd':'ds');
   S.form=null;window.scrollTo(0,0);render();
+}
+function renderTduDetail(){
+  var t=tduRows().filter(function(x){return x.row===S.tduDetail})[0];
+  if(!t){S.tduDetail=null;render();return}
+  var v=t.v,rows=tduUnitRows({A:v.A||'',C:v.C||'',D:v.D||''}),r2=rows[1]?rows[1].v:null,key='TDU|'+keyOf({A:v.A||'',C:v.C||'',D:v.D||''});
+  var cont=S.f2.some(function(r){return r.key===key&&!r.sent});
+  $('#tabs').hidden=true;$('#fab').hidden=true;
+  $('#top').innerHTML='<button class="hbtn icon" id="tduBack" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>TDU unit '+esc(v.D||'')+'</h1><p>'+esc([v.A,v.C].filter(Boolean).join(' - '))+'</p></div>';
+  function row(l,x){return x?'<p style="margin:.15rem 0"><span class="count">'+esc(l)+'</span><br>'+esc(x)+'</p>':''}
+  var h='<div class="panel"><h2>Inspection report</h2><p>Start the report for this unit: unit type and data plate. No signal needed. Nothing is saved until you start.</p><button class="btn primary block" id="tduStart" type="button">'+(cont?'Continue inspection report':'Start inspection report')+'</button></div>';
+  h+='<div class="panel"><h2>Unit details</h2>'+row('Location',v.A)+row('Province',v.B)+row('Company',v.C)+row('Unit number',v.D)+row('Status',v.E)+row('Description',v.F)+row(r2?'Front tank serial (left)':'Left / single tank serial',v.AJ)+row(r2?'Front tank serial (right)':'Right tank serial',v.AK)+(r2?row('Rear tank serial (left)',r2.AJ)+row('Rear tank serial (right)',r2.AK):'')+'<p class="count" style="margin:.5rem 0 0">'+(rows.length>1?'Two rows in the TDU list: a quad.':'The TDU list holds only these details for now.')+'</p></div>';
+  $('#view').innerHTML=h;
 }
 function renderRepTdu(){
   var v=S.f2v,sl=tduSerials(v.v,v.unit);
@@ -1770,6 +1783,8 @@ function f10open(){
 document.addEventListener('click',function(e){
   var t=e.target;
   if(S.f2v){if(S.f2v.view==='f2')f2click(t);else if(S.f2v.view==='f20')f20click(t);else if(S.f2v.view==='f3')f3click(t);else if(S.f2v.view==='f4')f4click(t);else if(S.f2v.view==='f13')f13click(t);else if(S.f2v.view==='f8')f8click(t);else if(S.f2v.view==='f5')f5click(t);else repClick(t);return}
+  if(S.tduDetail&&t.closest('#tduBack')){S.tduDetail=null;window.scrollTo(0,0);render();return}
+  if(S.tduDetail&&t.closest('#tduStart')){var tr=S.tduDetail;S.tduDetail=null;openTdu(tr);return}
   if(t.closest('#f2Open')&&S.form){var o=S.form.orig;if(S.form.dirty)saveDraft();openF2(Object.assign({},o));return}
   var fe=t.closest('[data-f2edit]');if(fe){var rc=S.f2.filter(function(r){return r.id===fe.getAttribute('data-f2edit')})[0];if(rc){S.f2v=f2state(rc,rc.v,rc.serial,rc.id,rc.key);window.scrollTo(0,0);render()}return}
   var fu=t.closest('[data-f2unsend]');if(fu){S.f2.forEach(function(r){if(r.id===fu.getAttribute('data-f2unsend'))r.sent=0});lsSet('ebp_f2',S.f2);render();return}
@@ -1791,7 +1806,7 @@ document.addEventListener('click',function(e){
   var op=t.closest('[data-open]');
   if(op){
     var k=op.getAttribute('data-open');
-    if(k.indexOf('t:')===0)openTdu(+k.slice(2));else if(k.indexOf('e:')===0)openEntry(k.slice(2));else openRow(+k.slice(2));
+    if(k.indexOf('t:')===0){S.tduDetail=+k.slice(2);window.scrollTo(0,0);render()}else if(k.indexOf('e:')===0)openEntry(k.slice(2));else openRow(+k.slice(2));
     return;
   }
   var ed=t.closest('[data-edit]');if(ed){openEntry(ed.getAttribute('data-edit'));return}
