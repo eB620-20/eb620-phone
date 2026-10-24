@@ -164,7 +164,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 4y (extra hose only after a fail, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
+var VERSION='prototype 4z (Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -1603,45 +1603,50 @@ function f5new(){return {h:[]}}
 function f5o(v){return v.f5||{h:[]}}
 function f5n(v){var n=unitDef(v.unit).names.length;return n<1?1:n}
 function f5h(v,i){var f=v.f5||(v.f5={h:[]});f.h=f.h||[];while(f.h.length<=i)f.h.push({res:'',np:0,cm:'',yr:'',ln:'',dia:'',mf:''});return f.h[i]}
-function f5answered(v){var f=f5o(v),n=0;for(var i=0;i<f5n(v);i++){if(f.h&&f.h[i]&&f.h[i].res)n++}return n}
+function f5has(t){var tv=t&&t.v;return !!(tv&&(tv.V||tv.X||tv.W||tv.Y))}
+function f5answered(v){var f=f5o(v),n=0;for(var i=0;i<f5n(v);i++){if(f.h&&f.h[i]&&(f.h[i].res||(f.h[i].x&&f.h[i].x.res)))n++}return n}
 function f5any(v){var f=f5o(v);return (f.h||[]).some(function(h){return h&&(h.res||h.np||String(h.cm||'').trim()||String(h.yr||'').trim()||String(h.ln||'').trim()||h.dia||h.mf||h.x)})}
 function f5problems(rec){
-  var out=[],f=f5o(rec),n=f5n(rec),nm=unitDef(rec.unit).names;
+  var out=[],f=f5o(rec),n=f5n(rec),nm=unitDef(rec.unit).names,tk=unitTanks(rec.v);
   for(var i=0;i<n;i++){var h=(f.h||[])[i]||{};var who=n>1?(nm[i].toLowerCase()+' tank hose'):'the hose';
-    if(!h.res)out.push('Choose Pass or Fail for '+who+'.');
-    if(String(h.cm||'').length>F5CM)out.push('The comment for '+who+' is longer than '+F5CM+' characters.');
-    if(h.res==='F'){
-      var yr=String(h.yr||'').trim(),ln=String(h.ln||'').trim(),cy=new Date().getFullYear();
-      if(yr&&(!/^\d{4}$/.test(yr)||+yr<cy-2||+yr>cy+10))out.push('New hose expiry year for '+who+' must be a 4-digit year from '+(cy-2)+' to '+(cy+10)+'.');
-      if(ln&&(!/^\d+(\.\d+)?$/.test(ln)||+ln<1||+ln>50))out.push('New hose length for '+who+' must be a number from 1 to 50 (no ft or quotes).')}
-    var x=h.res==='F'?h.x:null;
-    if(x){var wx='the extra hose of '+(n>1?nm[i].toLowerCase()+' tank':'this tank'),yx=String(x.yr||'').trim(),lx=String(x.ln||'').trim(),cyx=new Date().getFullYear();
+    if(!f5has(tk[i])){
+      var x=h.x;if(!x)continue;
+      var wx=n>1?('the added hose of the '+nm[i].toLowerCase()+' tank'):'the added hose',yx=String(x.yr||'').trim(),lx=String(x.ln||'').trim(),cyx=new Date().getFullYear();
       if(!x.res)out.push('Choose Pass or Fail for '+wx+'.');
       if(!yx||!/^\d{4}$/.test(yx)||+yx<cyx-2||+yx>cyx+10)out.push('Expiry year of '+wx+' must be a 4-digit year from '+(cyx-2)+' to '+(cyx+10)+'.');
       if(!lx||!/^\d+(\.\d+)?$/.test(lx)||+lx<1||+lx>50)out.push('Length of '+wx+' must be a number from 1 to 50 (no ft or quotes).');
       if(!x.dia)out.push('Choose the diameter of '+wx+'.');
       if(!x.mf)out.push('Choose the manufacturer (MFG) of '+wx+'.');
-      if(String(x.cm||'').length>F5CM)out.push('The comment for '+wx+' is longer than '+F5CM+' characters.')}}
+      if(String(x.cm||'').length>F5CM)out.push('The comment for '+wx+' is longer than '+F5CM+' characters.');
+      continue}
+    if(!h.res)out.push('Choose Pass or Fail for '+who+'.');
+    if(String(h.cm||'').length>F5CM)out.push('The comment for '+who+' is longer than '+F5CM+' characters.');
+    if(h.res==='F'){
+      var yr=String(h.yr||'').trim(),ln=String(h.ln||'').trim(),cy=new Date().getFullYear();
+      if(yr&&(!/^\d{4}$/.test(yr)||+yr<cy-2||+yr>cy+10))out.push('New hose expiry year for '+who+' must be a 4-digit year from '+(cy-2)+' to '+(cy+10)+'.');
+      if(ln&&(!/^\d+(\.\d+)?$/.test(ln)||+ln<1||+ln>50))out.push('New hose length for '+who+' must be a number from 1 to 50 (no ft or quotes).')}}
   return out;
 }
 function buildF5(rec){
-  var f=f5o(rec),n=f5n(rec),L=[];
-  for(var i=0;i<n;i++){var h=(f.h||[])[i]||{};if(!h.res)continue;
+  var f=f5o(rec),n=f5n(rec),L=[],tk=unitTanks(rec.v);
+  for(var i=0;i<n;i++){var h=(f.h||[])[i]||{};
+    if(!f5has(tk[i])){var x=h.x;if(!x||!x.res)continue;
+      L.push(['X',i+1,x.res,f2c(String(x.cm||'').trim()),f2c(String(x.yr||'').trim()),f2c(String(x.ln||'').trim()),f2c(x.dia||''),f2c(x.mf||'')].join('|'));continue}
+    if(!h.res)continue;
     var nh=h.res==='F';L.push(['R',i+1,h.res,(nh&&h.np)?1:0,f2c(String(h.cm||'').trim()),nh?f2c(String(h.yr||'').trim()):'',nh?f2c(String(h.ln||'').trim()):'',nh?f2c(h.dia||''):'',nh?f2c(h.mf||''):''].join('|'))}
-  for(var j=0;j<n;j++){var hx=(f.h||[])[j]||{},x=hx.res==='F'?hx.x:null;if(!x||!x.res)continue;
-    L.push(['X',j+1,x.res,f2c(String(x.cm||'').trim()),f2c(String(x.yr||'').trim()),f2c(String(x.ln||'').trim()),f2c(x.dia||''),f2c(x.mf||'')].join('|'))}
   return L;
 }
 function renderF5(){
   var v=S.f2v,ud=unitDef(v.unit),tk=unitTanks(v.v),n=f5n(v);
   $('#tabs').hidden=true;$('#fab').hidden=true;
   $('#top').innerHTML='<button class="hbtn icon" id="f5Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 5 - Tank '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f5Done" type="button">Done</button>';
-  var h='<div class="panel"><h2>Hose test and inspection</h2><p>One hose for each tank. Choose Pass or Fail. A hose that fails or has expired is replaced: the office sheet adds a line for the new hose. A second hose can be added only after the first one fails.</p></div>';
+  var h='<div class="panel"><h2>Hose test and inspection</h2><p>One hose for each tank. Choose Pass or Fail. A hose that fails or has expired is replaced: the office sheet adds a line for the new hose. A tank with no hose in the tank list shows Add a hose instead.</p></div>';
   for(var i=0;i<n;i++){
-    var o=f5h(v,i),t=tk[i],tv=t?t.v:{};
+    var o=f5h(v,i),t=tk[i],tv=t?t.v:{},has=f5has(t);
     var info=[tv.V&&('expires '+tv.V),tv.X&&(tv.X+' ft'),tv.W,tv.Y].filter(Boolean).join(', ');
     h+='<div class="panel"><div class="f2h">'+(ud.names[i]?esc(ud.names[i])+' tank hose':'Hose')+'</div>';
-    h+='<p class="count" style="margin:0 0 .5rem">'+(info?esc('On file: '+info):'No hose details in the tank list.')+'</p>';
+    h+='<p class="count" style="margin:0 0 .5rem">'+(info?esc('On file: '+info):'No hose in the tank list for this tank.')+'</p>';
+    if(has){
     h+='<div class="chips"><button type="button" class="chip y'+(o.res==='P'?' on':'')+'" data-f5r="'+i+'" data-v="P">Pass</button><button type="button" class="chip n'+(o.res==='F'?' on':'')+'" data-f5r="'+i+'" data-v="F">Fail</button></div>';
     if(o.res==='F'){
       h+='<p class="count" style="margin:.6rem 0 .3rem">The sheet adds a line for the new hose. Leave the comment empty and it writes "Hose has Expired or Failed, see below for new hose".</p>';
@@ -1652,25 +1657,25 @@ function renderF5(){
       h+='<div class="field" style="margin-top:.5rem"><label>Hose MFG</label><select style="width:100%;min-height:3rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface2);padding:0 .9rem;font:inherit;color:inherit" data-f5s="m'+i+'">'+f5opts('Y',o.mf,tv.Y)+'</select>'+(tv.Y?'<div class="hint">On file: '+esc(tv.Y)+'</div>':'')+'</div>';
       h+='<button type="button" class="chip s'+(o.np?' on':'')+'" style="display:block;width:100%;text-align:left;margin-top:.7rem" data-f5np="'+i+'">'+(o.np?'&#10003; ':'')+'New hose fitted and passed</button>'}
     h+='<div class="field" style="margin-top:.7rem"><label>Comment (optional, short)</label><input type="text" placeholder=" " maxlength="'+F5CM+'" autocomplete="off" data-f5v="c'+i+'" value="'+esc(o.cm||'')+'"></div>';
-    if(o.res!=='F'){}
-    else if(!o.x)h+='<button type="button" class="lnk" style="margin-top:.8rem" data-f5xadd="'+i+'">+ Add another hose (only because the first hose failed and a second hose is on this tank)</button>';
+    }
+    else if(!o.x)h+='<button type="button" class="btn block" style="margin-top:.4rem" data-f5xadd="'+i+'">+ Add a hose</button><p class="count" style="margin:.5rem 0 0">Tap this only if this tank really has a hose. If it has none, leave it.</p>';
     else{var x=o.x;
-      h+='<div class="f2h" style="margin-top:1rem">Extra hose</div><p class="count" style="margin:0 0 .4rem">A second hose on this tank, not in the tank list. It is only added because the first hose failed. The office sheet adds it on the next free line. All the boxes are needed.</p>';
+      h+='<div class="f2h" style="margin-top:.4rem">Added hose</div><p class="count" style="margin:0 0 .4rem">A hose that is not in the tank list. The office sheet puts it on this tank\'s own line. All the boxes are needed except the comment.</p>';
       h+='<div class="chips"><button type="button" class="chip y'+(x.res==='P'?' on':'')+'" data-f5xr="'+i+'" data-v="P">Pass</button><button type="button" class="chip n'+(x.res==='F'?' on':'')+'" data-f5xr="'+i+'" data-v="F">Fail</button></div>';
-      if(x.res==='F')h+='<p class="count" style="margin:.5rem 0 0">If it fails, the sheet adds a line for its replacement, the same as for the first hose.</p>';
+      if(x.res==='F')h+='<p class="count" style="margin:.5rem 0 0">If it fails, the sheet adds a line for its replacement.</p>';
       h+='<div class="field" style="margin-top:.7rem"><label>Hose expiry year (yyyy)</label><input type="text" placeholder=" " inputmode="numeric" autocomplete="off" maxlength="4" data-f5v="xy'+i+'" value="'+esc(x.yr||'')+'"></div>';
       h+='<div class="field" style="margin-top:.5rem"><label>Hose length (ft)</label><input type="text" placeholder=" " inputmode="decimal" autocomplete="off" data-f5v="xl'+i+'" value="'+esc(x.ln||'')+'"></div>';
       h+='<div class="field" style="margin-top:.5rem"><label>Hose diameter</label><select style="width:100%;min-height:3rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface2);padding:0 .9rem;font:inherit;color:inherit" data-f5s="xd'+i+'">'+f5opts('W',x.dia,'','Choose')+'</select></div>';
       h+='<div class="field" style="margin-top:.5rem"><label>Hose MFG</label><select style="width:100%;min-height:3rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface2);padding:0 .9rem;font:inherit;color:inherit" data-f5s="xm'+i+'">'+f5opts('Y',x.mf,'','Choose')+'</select></div>';
       h+='<div class="field" style="margin-top:.7rem"><label>Comment (optional, short)</label><input type="text" placeholder=" " maxlength="'+F5CM+'" autocomplete="off" data-f5v="xc'+i+'" value="'+esc(x.cm||'')+'"></div>';
-      h+='<button type="button" class="lnk" style="margin-top:.7rem" data-f5xrm="'+i+'">Remove this extra hose</button>'}
+      h+='<button type="button" class="lnk" style="margin-top:.7rem" data-f5xrm="'+i+'">Remove this hose</button>'}
     h+='</div>'}
   $('#view').innerHTML=h;
 }
 function f5click(t){
   var v=S.f2v,y=window.scrollY;
   function again(){f2save();renderF5();window.scrollTo(0,y)}
-  var r=t.closest('[data-f5r]');if(r){var i=+r.getAttribute('data-f5r'),x=r.getAttribute('data-v'),o=f5h(v,i);o.res=(o.res===x)?'':x;if(o.res!=='F'){o.np=0;o.x=null}again();return true}
+  var r=t.closest('[data-f5r]');if(r){var i=+r.getAttribute('data-f5r'),x=r.getAttribute('data-v'),o=f5h(v,i);o.res=(o.res===x)?'':x;if(o.res!=='F'){o.np=0}again();return true}
   var xa=t.closest('[data-f5xadd]');if(xa){f5h(v,+xa.getAttribute('data-f5xadd')).x={res:'',yr:'',ln:'',dia:'',mf:'',cm:''};again();return true}
   var xm=t.closest('[data-f5xrm]');if(xm){f5h(v,+xm.getAttribute('data-f5xrm')).x=null;again();return true}
   var xr=t.closest('[data-f5xr]');if(xr){var hx=f5h(v,+xr.getAttribute('data-f5xr')).x,xv=xr.getAttribute('data-v');if(hx)hx.res=(hx.res===xv)?'':xv;again();return true}
