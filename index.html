@@ -164,7 +164,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 4z (Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
+var VERSION='prototype 5a (same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -1603,12 +1603,18 @@ function f5new(){return {h:[]}}
 function f5o(v){return v.f5||{h:[]}}
 function f5n(v){var n=unitDef(v.unit).names.length;return n<1?1:n}
 function f5h(v,i){var f=v.f5||(v.f5={h:[]});f.h=f.h||[];while(f.h.length<=i)f.h.push({res:'',np:0,cm:'',yr:'',ln:'',dia:'',mf:''});return f.h[i]}
+function f5sig(t){var tv=t&&t.v;if(!tv)return '';var a=[tv.V,tv.X,tv.W,tv.Y].map(function(x){return String(x==null?'':x).trim().toLowerCase()});return a.join('|')==='|||'?'':a.join('|')}
+function f5dupOf(v,i){var tk=unitTanks(v.v);if(i<1||f5n(v)<2)return -1;var s0=f5sig(tk[i]);if(!s0)return -1;for(var j=0;j<i;j++){if(f5sig(tk[j])===s0&&f5dupOf(v,j)<0)return j}return -1}
+function f5anyDup(v){for(var i=1;i<f5n(v);i++){if(f5dupOf(v,i)>=0)return true}return false}
+function f5shared(v,i){var j=f5dupOf(v,i);return (j>=0&&f5o(v).sh==='1')?j:-1}
 function f5has(t){var tv=t&&t.v;return !!(tv&&(tv.V||tv.X||tv.W||tv.Y))}
-function f5answered(v){var f=f5o(v),n=0;for(var i=0;i<f5n(v);i++){if(f.h&&f.h[i]&&(f.h[i].res||(f.h[i].x&&f.h[i].x.res)))n++}return n}
+function f5answered(v){var f=f5o(v),n=0;for(var i=0;i<f5n(v);i++){var q=f5shared(v,i);var h=f.h&&f.h[q>=0?q:i];if(h&&(h.res||(h.x&&h.x.res)))n++}return n}
 function f5any(v){var f=f5o(v);return (f.h||[]).some(function(h){return h&&(h.res||h.np||String(h.cm||'').trim()||String(h.yr||'').trim()||String(h.ln||'').trim()||h.dia||h.mf||h.x)})}
 function f5problems(rec){
   var out=[],f=f5o(rec),n=f5n(rec),nm=unitDef(rec.unit).names,tk=unitTanks(rec.v);
+  if(f5anyDup(rec)&&!f.sh)out.push('Answer the question about the same hose on both tanks.');
   for(var i=0;i<n;i++){var h=(f.h||[])[i]||{};var who=n>1?(nm[i].toLowerCase()+' tank hose'):'the hose';
+    if(f5dupOf(rec,i)>=0&&f.sh!=='2')continue;
     if(!f5has(tk[i])){
       var x=h.x;if(!x)continue;
       var wx=n>1?('the added hose of the '+nm[i].toLowerCase()+' tank'):'the added hose',yx=String(x.yr||'').trim(),lx=String(x.ln||'').trim(),cyx=new Date().getFullYear();
@@ -1630,6 +1636,8 @@ function f5problems(rec){
 function buildF5(rec){
   var f=f5o(rec),n=f5n(rec),L=[],tk=unitTanks(rec.v);
   for(var i=0;i<n;i++){var h=(f.h||[])[i]||{};
+    var dj=f5dupOf(rec,i);if(dj>=0&&f.sh==='1'){if(((f.h||[])[dj]||{}).res)L.push(['W',i+1,dj+1].join('|'));continue}
+    if(dj>=0&&f.sh!=='2')continue;
     if(!f5has(tk[i])){var x=h.x;if(!x||!x.res)continue;
       L.push(['X',i+1,x.res,f2c(String(x.cm||'').trim()),f2c(String(x.yr||'').trim()),f2c(String(x.ln||'').trim()),f2c(x.dia||''),f2c(x.mf||'')].join('|'));continue}
     if(!h.res)continue;
@@ -1641,11 +1649,18 @@ function renderF5(){
   $('#tabs').hidden=true;$('#fab').hidden=true;
   $('#top').innerHTML='<button class="hbtn icon" id="f5Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 5 - Tank '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f5Done" type="button">Done</button>';
   var h='<div class="panel"><h2>Hose test and inspection</h2><p>One hose for each tank. Choose Pass or Fail. A hose that fails or has expired is replaced: the office sheet adds a line for the new hose. A tank with no hose in the tank list shows Add a hose instead.</p></div>';
+  var f5f=f5o(v);
+  if(f5anyDup(v)&&!f5f.sh){
+    h+='<div class="panel" style="border:1.5px solid var(--accent,#0a7)"><h2>Same hose on more than one tank</h2><p>The tank list shows the same hose on these tanks. A twin or triple normally has only one hose, so one answer covers all of them.</p><div class="chips" style="flex-direction:column;gap:.5rem"><button type="button" class="btn block" data-f5sh="1">One hose for all the tanks</button><button type="button" class="chip" style="display:block;width:100%" data-f5sh="2">Two different hoses (answer each tank)</button></div></div>'}
   for(var i=0;i<n;i++){
+    var dj=f5dupOf(v,i);
+    if(dj>=0&&!f5f.sh)continue;
+    if(dj>=0&&f5f.sh==='1'){h+='<div class="panel"><div class="f2h">'+(ud.names[i]?esc(ud.names[i])+' tank hose':'Hose')+'</div><p class="count" style="margin:0 0 .5rem">Same hose as the '+esc((ud.names[dj]||'first').toLowerCase())+' tank, so its answer covers this tank too.</p><button type="button" class="lnk" data-f5sh="2">These are two different hoses</button></div>';continue}
     var o=f5h(v,i),t=tk[i],tv=t?t.v:{},has=f5has(t);
     var info=[tv.V&&('expires '+tv.V),tv.X&&(tv.X+' ft'),tv.W,tv.Y].filter(Boolean).join(', ');
     h+='<div class="panel"><div class="f2h">'+(ud.names[i]?esc(ud.names[i])+' tank hose':'Hose')+'</div>';
     h+='<p class="count" style="margin:0 0 .5rem">'+(info?esc('On file: '+info):'No hose in the tank list for this tank.')+'</p>';
+    if(dj>=0&&f5f.sh==='2')h+='<button type="button" class="lnk" style="margin:0 0 .6rem" data-f5sh="1">Same hose as the '+esc((ud.names[dj]||'first').toLowerCase())+' tank: use one answer for both</button>';
     if(has){
     h+='<div class="chips"><button type="button" class="chip y'+(o.res==='P'?' on':'')+'" data-f5r="'+i+'" data-v="P">Pass</button><button type="button" class="chip n'+(o.res==='F'?' on':'')+'" data-f5r="'+i+'" data-v="F">Fail</button></div>';
     if(o.res==='F'){
@@ -1676,6 +1691,7 @@ function f5click(t){
   var v=S.f2v,y=window.scrollY;
   function again(){f2save();renderF5();window.scrollTo(0,y)}
   var r=t.closest('[data-f5r]');if(r){var i=+r.getAttribute('data-f5r'),x=r.getAttribute('data-v'),o=f5h(v,i);o.res=(o.res===x)?'':x;if(o.res!=='F'){o.np=0}again();return true}
+  var sh=t.closest('[data-f5sh]');if(sh){var fv=v.f5||(v.f5={h:[]});fv.sh=sh.getAttribute('data-f5sh');if(fv.sh==='1'){for(var q=1;q<f5n(v);q++){if(f5dupOf(v,q)>=0){var hq=f5h(v,q);hq.res='';hq.np=0;hq.x=null;hq.cm='';hq.yr='';hq.ln='';hq.dia='';hq.mf=''}}}again();return true}
   var xa=t.closest('[data-f5xadd]');if(xa){f5h(v,+xa.getAttribute('data-f5xadd')).x={res:'',yr:'',ln:'',dia:'',mf:'',cm:''};again();return true}
   var xm=t.closest('[data-f5xrm]');if(xm){f5h(v,+xm.getAttribute('data-f5xrm')).x=null;again();return true}
   var xr=t.closest('[data-f5xr]');if(xr){var hx=f5h(v,+xr.getAttribute('data-f5xr')).x,xv=xr.getAttribute('data-v');if(hx)hx.res=(hx.res===xv)?'':xv;again();return true}
