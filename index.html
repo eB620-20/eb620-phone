@@ -164,7 +164,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 5e (three-way status filter: Active / Not active / All, TDU unit opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
+var VERSION='prototype 5g (three-way status filter: Active / Not active / All, TDU unit opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -1694,7 +1694,7 @@ function renderF5(){
       h+='<button type="button" class="chip s'+(o.np?' on':'')+'" style="display:block;width:100%;text-align:left;margin-top:.7rem" data-f5np="'+i+'">'+(o.np?'&#10003; ':'')+'New hose fitted and passed</button>'}
     h+='<div class="field" style="margin-top:.7rem"><label>Comment (optional, short)</label><input type="text" placeholder=" " maxlength="'+F5CM+'" autocomplete="off" data-f5v="c'+i+'" value="'+esc(o.cm||'')+'"></div>';
     }
-    else if(!o.x)h+='<button type="button" class="btn block" style="margin-top:.4rem" data-f5xadd="'+i+'">+ Add a hose</button><p class="count" style="margin:.5rem 0 0">Tap this only if this tank really has a hose. If it has none, leave it.</p>';
+    else if(!o.x)h+='<button type="button" class="btn block" style="margin-top:.4rem" data-f5xadd="'+i+'">+ Add a hose</button><p class="count" style="margin:.5rem 0 0">Tap this only if this nurse wagon has '+(i===1?'a second hose':i===2?'a third hose':'a hose')+'. If it has none, leave it.</p>';
     else{var x=o.x;
       h+='<div class="f2h" style="margin-top:.4rem">Added hose</div><p class="count" style="margin:0 0 .4rem">A hose that is not in the tank list. The office sheet puts it on this tank\'s own line. All the boxes are needed except the comment.</p>';
       h+='<div class="chips"><button type="button" class="chip y'+(x.res==='P'?' on':'')+'" data-f5xr="'+i+'" data-v="P">Pass</button><button type="button" class="chip n'+(x.res==='F'?' on':'')+'" data-f5xr="'+i+'" data-v="F">Fail</button></div>';
@@ -1755,11 +1755,12 @@ function f10open(){
   sl.forEach(function(s){h+='<div class="f2item" style="margin-top:.6rem"><p class="tx" style="margin:0 0 .3rem">'+esc(s.l)+'</p><label class="btn block" style="position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;width:100%;box-sizing:border-box"><span id="f10t'+s.k+'">Take or choose photo</span><input type="file" accept="image/*" data-f10="'+s.k+'" style="position:absolute;left:0;top:0;width:100%;height:100%;opacity:0"></label></div>'});
   h+='<div class="f2item" style="margin-top:.6rem"><p class="tx" style="margin:0 0 .3rem">Other pictures (optional)</p><label class="btn block" style="position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;width:100%;box-sizing:border-box"><span id="f10tx">Choose photos</span><input type="file" accept="image/*" multiple data-f10x="1" style="position:absolute;left:0;top:0;width:100%;height:100%;opacity:0"></label></div>';
   h+='<label for="f10Addr" style="display:block;margin-top:.8rem;font-weight:600;font-size:.9rem">Office email address</label><input id="f10Addr" type="email" inputmode="email" autocomplete="email" autocapitalize="off" placeholder="office@yourcompany.com" style="width:100%;min-height:3rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface2);padding:0 .9rem">';
-  h+='<div class="row" style="margin-top:.7rem"><button class="btn primary" id="f10Send" type="button">Send pictures</button></div><p style="margin:.6rem 0 0;color:var(--muted);font-size:.85rem">Opens your phone\'s share menu with the photos already attached. Choose your mail app, type or paste the office address if it is not filled in, and send.</p><div class="row"><button class="btn" id="f10Draft" type="button">Email without pictures</button><button class="btn" id="f10Close" type="button">Close</button></div><p id="f10Msg" style="margin:.5rem 0 0;color:var(--muted);font-size:.85rem"></p>';
+  h+='<div class="row" style="margin-top:.7rem"><button class="btn primary" id="f10Send" type="button">Send pictures</button></div><p style="margin:.6rem 0 0;color:var(--muted);font-size:.85rem">Opens your phone\'s share menu with the photos already attached. Your phone\'s share menu cannot fill in the To and Subject boxes the way the report email does, so the app copies the subject for you to paste.</p><div class="row"><button class="btn" id="f10Draft" type="button">Email without pictures</button><button class="btn" id="f10Close" type="button">Close</button></div><p id="f10Msg" style="margin:.5rem 0 0;color:var(--muted);font-size:.85rem"></p>';
   openSheet(h,function(w){
     $('#f10Addr').value=lsGet('ebp_office','');
     Array.prototype.forEach.call(w.querySelectorAll('input[type=file]'),function(el){
       el.onchange=function(){
+        F10.ready=null;$('#f10Send').textContent='Send pictures';$('#f10Msg').textContent='';
         var k=el.getAttribute('data-f10'),fl=el.files;
         if(k){var f=fl&&fl[0];if(f){F10.files[k]=f;$('#f10t'+k).textContent='Photo chosen: '+(f.name||'picture')}else{delete F10.files[k];$('#f10t'+k).textContent='Take or choose photo'}}
         else{F10.extra=Array.prototype.slice.call(fl||[]);$('#f10tx').textContent=F10.extra.length?F10.extra.length+(F10.extra.length===1?' photo':' photos')+' chosen':'Choose photos'}
@@ -1770,18 +1771,25 @@ function f10open(){
     $('#f10Draft').onclick=function(){var a=addr();if(!a)return;var sj=f10subject(v),body='Data plate pictures for '+[v.v.C,v.v.D].filter(Boolean).join(' - ')+'.\n\nAttach the pictures to this email, the first tank first, then send.';window.location.href='mailto:'+encodeURIComponent(a).replace(/%40/g,'@')+'?subject='+encodeURIComponent(sj)+'&body='+encodeURIComponent(body)};
     $('#f10Send').onclick=function(){
       var a=addr();if(!a)return;
+      var sj=f10subject(v);
+      if(F10.ready){
+        var fs=F10.ready,text=sj+'\n\nTo: '+a+'\nData plate pictures for the eB620 office import. Please do not rename the pictures.';
+        try{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(sj).catch(function(){})}catch(e){}
+        try{
+          if(navigator.canShare&&navigator.canShare({files:fs})){navigator.share({files:fs,title:sj,text:text}).then(function(){toast('Pictures handed to your mail app. Add the To and Subject there, then send.')},function(){toast('Not sent.')});return}
+        }catch(e){}
+        $('#f10Msg').textContent='This phone cannot attach pictures from here. Use Email without pictures, then attach the photos in your mail app.';
+        return;
+      }
       var keys=Object.keys(F10.files);if(!keys.length&&!F10.extra.length){toast('Choose at least one photo first.');return}
       $('#f10Msg').textContent='Getting the pictures ready...';
       var jobs=[];
       sl.forEach(function(s){if(F10.files[s.k])jobs.push(f10shrink(F10.files[s.k],s.nm+'.jpg'))});
       F10.extra.forEach(function(f,i){jobs.push(f10shrink(f,'extra'+(i+1)+'.jpg'))});
       Promise.all(jobs).then(function(fs){
-        var sj=f10subject(v),text='To: '+a+'\nData plate pictures for the eB620 office import. Please do not rename the pictures.';
-        $('#f10Msg').textContent='';
-        try{
-          if(navigator.canShare&&navigator.canShare({files:fs})){navigator.share({files:fs,title:sj,text:text}).then(function(){toast('Pictures handed to your mail app. Send them there.')},function(){toast('Not sent.')});return}
-        }catch(e){}
-        $('#f10Msg').textContent='This phone cannot attach pictures from here. Use Email without pictures, then attach the photos in your mail app.';
+        F10.ready=fs;
+        $('#f10Send').textContent='Open Mail with the pictures';
+        $('#f10Msg').innerHTML='Pictures are ready. Mail will open with the pictures attached but with the <b>To</b> and <b>Subject</b> boxes empty (a phone limit). When it opens:<br>1. Tap <b>Subject</b>, hold, tap <b>Paste</b> (the subject is copied for you; it is also the first line of the message).<br>2. Type the office address in <b>To</b>: <b>'+esc(a)+'</b>.<br>The office import finds the email by that subject, so please do not skip it.';
       });
     };
   });
