@@ -147,6 +147,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 .chip.on.s{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 .f2item textarea{width:100%;min-height:3.4rem;margin-top:.55rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:.6rem .8rem;font:inherit;resize:vertical}
 .f2item .lnk{margin-top:.4rem;background:none;border:0;color:var(--accent);font-weight:600;padding:.3rem 0}
+.panel .lnk{background:none;border:0;color:var(--accent);font-weight:600;padding:.3rem 0;text-align:left;font-size:.95rem}
 .f2h{font-size:.82rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:1rem 0 .2rem}
 .f2bar{position:sticky;top:3.6rem;z-index:3;background:var(--bg);padding:.5rem 0;display:flex;gap:.5rem;align-items:center}
 .f2bar .btn{flex:1}
@@ -163,7 +164,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 4t (Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
+var VERSION='prototype 4w (Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -714,13 +715,25 @@ function f2refs(items){
   f2def().items.forEach(function(i){var a=items[i.row];if(a&&a.c&&String(a.c).trim()){k++;m[i.row]=k}});
   return m;
 }
-function f2answered(rec){var n=0;f2items().forEach(function(i){var a=rec.items[i.row];if(a&&a.r)n++});return n}
+function f2answered(rec,k){var n=0;k=k||0;f2items().forEach(function(i){if(f2r(rec,i.row,k))n++});return n}
+/* tanks: tank 0 is the first tank (v.items); tanks 1 and 2 are in v.f2t[1], v.f2t[2] and only hold what was changed or typed on their tab */
+function f2nt(v){return unitDef(v.unit).names.length}
+function f2tab(v){var k=+v.f2tab||0;return k>=f2nt(v)?0:k}
+function f2d(v,k){if(!k)return v;return (v.f2t&&v.f2t[k])||{items:{}}}
+function f2dw(v,k){if(!k)return v;var t=v.f2t||(v.f2t={});return t[k]||(t[k]={items:{}})}
+function f2r(v,row,k){k=k||0;var a=((f2d(v,k).items)||{})[row]||{};if(a.r)return a.r;return k?f2r(v,row,0):''}
+function f2cm(v,row,k){k=k||0;var a=((f2d(v,k).items)||{})[row]||{};if(!k)return a.c||'';if(a.c&&String(a.c).trim())return a.c;var t0=(v.items||{})[row]||{};if(a.r&&a.r!==(t0.r||''))return '';return t0.c||''}
+function f2eff(v,k){var m={};f2def().items.forEach(function(i){if(i.h||!i.cols)return;var r=f2r(v,i.row,k),c=f2cm(v,i.row,k);if(r||(c&&String(c).trim()))m[i.row]={r:r,c:c}});return m}
+function f2isdiff(v,row,k){if(!k)return false;var a=((f2d(v,k).items)||{})[row]||{},t0=(v.items||{})[row]||{};if(a.r&&a.r!==(t0.r||''))return true;return !!(a.c&&String(a.c).trim()&&a.c!==(t0.c||''))}
+function f2diffs(v,k){if(!k)return 0;var n=0;f2def().items.forEach(function(i){if(!i.h&&i.cols&&f2isdiff(v,i.row,k))n++});return n}
+function f2tAny(v){return Object.keys(v.f2t||{}).some(function(k){var it=(v.f2t[k]||{}).items||{};return Object.keys(it).some(function(r){var a=it[r];return a&&(a.r||(a.c&&String(a.c).trim()))})})}
+function f2maxRefs(v){var m=0;for(var k=0;k<f2nt(v);k++)m=Math.max(m,Object.keys(f2refs(f2eff(v,k))).length);return m}
 function f2save(){
   var v=S.f2v;if(!v)return;
-  var any=Object.keys(v.items).some(function(r){var a=v.items[r];return a&&(a.r||(a.c&&a.c.trim()))})||!!v.plate||!!v.touched||Object.keys(v.forms||{}).length>0||!!(v.f20&&(v.f20.date||v.f20.res))||f3any(v)||f4any(v)||f13any(v)||f8any(v)||f5any(v);
+  var any=Object.keys(v.items).some(function(r){var a=v.items[r];return a&&(a.r||(a.c&&a.c.trim()))})||!!v.plate||!!v.touched||Object.keys(v.forms||{}).length>0||!!(v.f20&&(v.f20.date||v.f20.res))||f2tAny(v)||f3any(v)||f4any(v)||f13any(v)||f8any(v)||f5any(v);
   var i=S.f2.map(function(x){return x.id}).indexOf(v.id);
   if(!any){if(i>=0){S.f2.splice(i,1);lsSet('ebp_f2',S.f2)}return}
-  var rec={id:v.id,key:v.key,v:v.v,serial:v.serial,items:v.items,unit:v.unit,plate:v.plate||'',forms:v.forms||{},f20:v.f20||{date:'',res:'',auto:0},f3:v.f3||{items:{},vals:{}},f4:v.f4||{items:{},vals:{}},f13:v.f13||{text:''},f8:v.f8||{q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''},f5:v.f5||{h:[]},touched:v.touched?1:0,ts:Date.now(),sent:0};
+  var rec={id:v.id,key:v.key,v:v.v,serial:v.serial,items:v.items,f2t:v.f2t||{},unit:v.unit,plate:v.plate||'',forms:v.forms||{},f20:v.f20||{date:'',res:'',auto:0},f3:v.f3||{items:{},vals:{}},f4:v.f4||{items:{},vals:{}},f13:v.f13||{text:''},f8:v.f8||{q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''},f5:v.f5||{h:[]},touched:v.touched?1:0,ts:Date.now(),sent:0};
   if(i>=0)S.f2[i]=rec;else S.f2.push(rec);
   lsSet('ebp_f2',S.f2);
 }
@@ -738,7 +751,7 @@ function repForms(v){return FORMS_ALL.filter(function(f){return formOn(v,f.n)}).
 function f20done(v){return !!(v.f20&&v.f20.res&&v.f20.date)}
 function todayISO(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function f2state(src,v,serial,id,key){
-  return {id:id,key:key,v:v,serial:serial,items:src?JSON.parse(JSON.stringify(src.items)):{},unit:(src&&src.unit)||unitGuess(v),plate:(src&&src.plate)||'',forms:src&&src.forms?JSON.parse(JSON.stringify(src.forms)):{},f20:src&&src.f20?JSON.parse(JSON.stringify(src.f20)):{date:'',res:'',auto:0},f3:src&&src.f3?JSON.parse(JSON.stringify(src.f3)):{items:{},vals:{}},f4:src&&src.f4?JSON.parse(JSON.stringify(src.f4)):{items:{},vals:{}},f13:src&&src.f13?JSON.parse(JSON.stringify(src.f13)):{text:''},f8:src&&src.f8?JSON.parse(JSON.stringify(src.f8)):{q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''},f5:src&&src.f5?JSON.parse(JSON.stringify(src.f5)):{h:[]},touched:src&&src.touched?1:0,view:'rep'};
+  return {id:id,key:key,v:v,serial:serial,items:src?JSON.parse(JSON.stringify(src.items)):{},f2t:src&&src.f2t?JSON.parse(JSON.stringify(src.f2t)):{},unit:(src&&src.unit)||unitGuess(v),plate:(src&&src.plate)||'',forms:src&&src.forms?JSON.parse(JSON.stringify(src.forms)):{},f20:src&&src.f20?JSON.parse(JSON.stringify(src.f20)):{date:'',res:'',auto:0},f3:src&&src.f3?JSON.parse(JSON.stringify(src.f3)):{items:{},vals:{}},f4:src&&src.f4?JSON.parse(JSON.stringify(src.f4)):{items:{},vals:{}},f13:src&&src.f13?JSON.parse(JSON.stringify(src.f13)):{text:''},f8:src&&src.f8?JSON.parse(JSON.stringify(src.f8)):{q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''},f5:src&&src.f5?JSON.parse(JSON.stringify(src.f5)):{h:[]},touched:src&&src.touched?1:0,view:'rep'};
 }
 function openF2(o){
   var key=keyOf(o),ex=S.f2.filter(function(r){return r.key===key&&!r.sent})[0];
@@ -773,7 +786,7 @@ function renderRep(){
     if(!on&&!f.def)return;
     var row='<div class="f2item"><label class="check"><input type="checkbox" data-form="'+f.n+'"'+(on?' checked':'')+'> '+esc(f.t)+'</label>';
     if(f.n===2){
-      row+=on?'<p class="count" style="margin:.2rem 0 .5rem">'+n+' of '+its.length+' answered</p><button type="button" class="btn block'+(nx==='f2'?' primary':'')+'" id="repF2">'+(n===0?'Start Form 2':(n<its.length?'Continue Form 2':'Edit Form 2'))+'</button>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
+      row+=on?'<p class="count" style="margin:.2rem 0 .5rem">'+n+' of '+its.length+' answered'+(ud.names.length>1?(function(){var nd=0;for(var q=1;q<ud.names.length;q++)nd+=f2diffs(v,q);return nd?' - '+nd+(nd===1?' difference':' differences')+' on the other tank'+(ud.names.length>2?'s':''):' - other tank'+(ud.names.length>2?'s the same':' the same')})():'')+'</p><button type="button" class="btn block'+(nx==='f2'?' primary':'')+'" id="repF2">'+(n===0?'Start Form 2':(n<its.length?'Continue Form 2':'Edit Form 2'))+'</button>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
     }else if(f.n===3){
       if(on){var n3=f3answered(v),t3=f3rows().length;row+='<p class="count" style="margin:.2rem 0 .5rem">'+n3+' of '+t3+' answered'+(ud.names.length>1?(function(){var nd=0;for(var q=1;q<ud.names.length;q++)nd+=f3diffs(v,q);return nd?' - '+nd+(nd===1?' difference':' differences')+' on the other tank'+(ud.names.length>2?'s':''):' - other tank'+(ud.names.length>2?'s the same':' the same')})():'')+'</p>'+(!f3any(v)||(f3o(v).vals&&String(f3o(v).vals.wt||'').trim())?'':'<p class="count" style="margin:0 0 .5rem;color:var(--bad)">Water temperature still to be filled in.</p>')+'<button type="button" class="btn block'+(nx==='f3'?' primary':'')+'" id="repF3">'+(n3===0&&!f3any(v)?'Start Form 3':(n3<t3?'Continue Form 3':'Edit Form 3'))+'</button>'}
       else row+='<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
@@ -784,7 +797,7 @@ function renderRep(){
       if(on){var n5=f5answered(v),t5=f5n(v);row+='<p class="count" style="margin:.2rem 0 .5rem">'+n5+' of '+t5+(t5===1?' hose':' hoses')+' answered</p><button type="button" class="btn block" id="repF5">'+(n5===0&&!f5any(v)?'Start Form 5':(n5<t5?'Continue Form 5':'Edit Form 5'))+'</button>'}
       else row+='<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
     }else if(f.n===8){
-      if(on){var n8=f8answered(v),t8=F8Q.length;row+='<p class="count" style="margin:.2rem 0 .5rem">'+n8+' of '+t8+' checklist questions answered</p><button type="button" class="btn block" id="repF8">'+(n8===0&&!f8any(v)?'Start Form 8':(n8<t8?'Continue Form 8':'Edit Form 8'))+'</button>'}
+      if(on){var n8=f8answered(v),t8=F8Q.length;row+='<p class="count" style="margin:.2rem 0 .5rem">'+n8+' of '+t8+' checklist questions answered'+(ud.names.length>1?(function(){var nd=0;for(var q=1;q<ud.names.length;q++)nd+=f8diffs(v,q);return nd?' - '+nd+(nd===1?' difference':' differences')+' on the other tank'+(ud.names.length>2?'s':''):''})():'')+'</p><button type="button" class="btn block" id="repF8">'+(n8===0&&!f8any(v)?'Start Form 8':(n8<t8?'Continue Form 8':'Edit Form 8'))+'</button>'}
       else row+='<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
     }else if(f.n===10){
       if(on)row+='<p class="count" style="margin:.2rem 0 .5rem">The data plate pictures go in a separate email. Tap below, choose the photos and send.</p><button type="button" class="btn block" id="repF10">Choose and email pictures</button>';
@@ -854,30 +867,32 @@ function f20click(t){
   return false;
 }
 function renderF2(){
-  var v=S.f2v,def=f2def(),refs=f2refs(v.items);
+  var v=S.f2v,def=f2def(),ud=unitDef(v.unit),nt=f2nt(v),k=f2tab(v),fd=f2dw(v,k),refs=f2refs(f2eff(v,k)),n0=ud.names[0].toLowerCase();
   $('#tabs').hidden=true;$('#fab').hidden=true;
-  var its=f2items(),n=f2answered(v);
+  var its=f2items(),n=f2answered(v,k);
   $('#top').innerHTML='<button class="hbtn icon" id="f2Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 2 - Tank '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f2Done" type="button">Done</button>';
-  var h='<div class="panel"><h2>Visual inspection (external)</h2><p>Tap Yes, No or N/A for each item. Add a comment where something needs one; it gets the next Ref # and is printed on the form beside the item. Changes are saved on this phone as you go.</p></div>';
+  var h='';
+  if(nt>1)h+='<div class="ttabs">'+ud.names.map(function(nm,i){var dn=f2diffs(v,i);return '<button type="button" class="ttab'+(i===k?' on':'')+'" data-f2tab="'+i+'">'+esc(nm)+(dn?'<span class="dn">'+dn+(dn===1?' difference':' differences')+'</span>':'')+'</button>'}).join('')+'</div>';
+  h+='<div class="panel"><h2>Visual inspection (external)'+(nt>1?' - '+esc(ud.names[k].toLowerCase())+' tank':'')+'</h2><p>Tap Yes, No or N/A for each item. Add a comment where something needs one; it gets the next Ref # and is printed on the form beside the item. Changes are saved on this phone as you go.</p>'+(nt>1?(k?'<p style="margin:0">This tank is the same as the '+esc(n0)+' tank unless you change an answer or add a comment. Tap an answer to change it; tap it again to go back to "same".</p>':'<p style="margin:0">Answer this first tank. The other tanks start the same; change them on their own tab only where they differ.</p>'):'')+'</div>';
   h+='<div class="f2bar"><span class="count" style="flex:1;margin:0" id="f2cnt">'+n+' of '+its.length+' answered</span><button class="btn sm" id="f2AllYes" type="button">Mark the rest Yes</button></div>';
   var open=false;
   def.items.forEach(function(it){
     if(it.h){if(open)h+='</div>';h+='<div class="panel"><div class="f2h">'+esc(it.t)+'</div>';open=true;return}
     if(!it.cols)return;
-    var a=v.items[it.row]||{},ch='',cols=it.cols;
-    function chip(col,lab,cls,val){return cols.indexOf(col)>=0?'<button type="button" class="chip '+cls+(a.r===val?' on':'')+'" data-f2r="'+it.row+'" data-v="'+val+'">'+lab+'</button>':''}
+    var a=fd.items[it.row]||{},ch='',cols=it.cols,r=f2r(v,it.row,k),df=f2isdiff(v,it.row,k),inc=k?f2cm(v,it.row,k):'';
+    function chip(col,lab,cls,val){return cols.indexOf(col)>=0?'<button type="button" class="chip '+cls+(r===val?' on':'')+'" data-f2r="'+it.row+'" data-v="'+val+'">'+lab+'</button>':''}
     ch=f2hasYes(it)?chip('W','Yes','y','Y')+chip('X','No','n','N')+chip('Z','N/A','a','A'):'';
     var hasC=a.c!=null&&(a.c!==''||a.cOpen);
-    h+='<div class="f2item"><p class="tx">'+esc(it.t)+(refs[it.row]?'<span class="rf">Ref '+refs[it.row]+'</span>':'')+'</p><div class="chips">'+ch+'</div>'+(f2hasYes(it)?'':'<p class="count" style="margin:.2rem 0">Recorded on Form 5. Add a comment here only if there is one.</p>');
+    h+='<div class="f2item'+(df?' df':'')+'"><p class="tx">'+esc(it.t)+(refs[it.row]?'<span class="rf">Ref '+refs[it.row]+'</span>':'')+(df?'<span class="rf df">Differs from '+esc(n0)+'</span>':'')+'</p><div class="chips">'+ch+'</div>'+(f2hasYes(it)?'':'<p class="count" style="margin:.2rem 0">Recorded on Form 5. Add a comment here only if there is one.</p>');
     if(cols.indexOf('Y')>=0){
-      if(hasC||a.r==='N')h+='<textarea data-f2c="'+it.row+'" maxlength="110" placeholder="Comment (short - one line on the form)">'+esc(a.c||'')+'</textarea>';
+      if(hasC||r==='N'||String(inc).trim())h+='<textarea data-f2c="'+it.row+'" maxlength="110" placeholder="'+esc(String(inc).trim()?inc:'Comment (short - one line on the form)')+'">'+esc(a.c||'')+'</textarea>';
       else h+='<button type="button" class="lnk" data-f2add="'+it.row+'">+ Add comment</button>';
     }
     h+='</div>';
   });
   if(open)h+='</div>';
   var nc=Object.keys(refs).length,mx=def.comments.length;
-  h+='<div class="panel"><p style="margin:0;color:'+(nc>mx?'var(--bad)':'var(--muted)')+'">'+nc+' of '+mx+' comment lines used on the form.'+(nc>mx?' There is only room for '+mx+'. Shorten or remove some comments before sending.':'')+'</p></div>';
+  h+='<div class="panel"><p style="margin:0;color:'+(nc>mx?'var(--bad)':'var(--muted)')+'">'+nc+' of '+mx+' comment lines used on the form'+(nt>1?' for this tank':'')+'.'+(nc>mx?' There is only room for '+mx+'. Shorten or remove some comments before sending.':'')+'</p></div>';
   $('#view').innerHTML=h;
 }
 function f2closeCheck(){
@@ -886,7 +901,7 @@ function f2closeCheck(){
   toast(rec?('Report saved'+(formOn(rec,2)||formOn(rec,3)||formOn(rec,4)?' ('+[formOn(rec,2)?'Form 2: '+f2answered(rec)+' of '+its.length:'',formOn(rec,3)?'Form 3: '+f3answered(rec)+' of '+f3rows().length:'',formOn(rec,4)?'Form 4: '+f4answered(rec)+' of '+f4rows().length:''].filter(Boolean).join(', ')+' answered)':'')+'. It is on the To send tab.'):'Nothing entered, so nothing was saved.');
 }
 function f2set(row,val){
-  var v=S.f2v,a=v.items[row]||(v.items[row]={});
+  var v=S.f2v,fd=f2dw(v,f2tab(v)),a=fd.items[row]||(fd.items[row]={});
   a.r=(a.r===val)?'':val;
   if(a.r==='N'&&a.c==null)a.c='';
   f2save();renderF2KeepScroll();
@@ -894,10 +909,13 @@ function f2set(row,val){
 function renderF2KeepScroll(){var y=window.scrollY;renderF2();window.scrollTo(0,y)}
 function f2click(t){
   var r=t.closest('[data-f2r]');if(r){f2set(+r.getAttribute('data-f2r'),r.getAttribute('data-v'));return true}
+  var tb=t.closest('[data-f2tab]');
+  if(tb){var act0=document.activeElement;if(act0&&act0.blur)act0.blur();S.f2v.f2tab=+tb.getAttribute('data-f2tab');renderF2();window.scrollTo(0,0);return true}
   var ad=t.closest('[data-f2add]');
-  if(ad){var row=+ad.getAttribute('data-f2add'),a=S.f2v.items[row]||(S.f2v.items[row]={});a.c=a.c||'';a.cOpen=1;renderF2KeepScroll();setTimeout(function(){var el=$('[data-f2c="'+row+'"]');if(el)el.focus()},30);return true}
+  if(ad){var row=+ad.getAttribute('data-f2add'),fda=f2dw(S.f2v,f2tab(S.f2v)),a=fda.items[row]||(fda.items[row]={});a.c=a.c||'';a.cOpen=1;renderF2KeepScroll();setTimeout(function(){var el=$('[data-f2c="'+row+'"]');if(el)el.focus()},30);return true}
   if(t.closest('#f2AllYes')){
-    f2items().forEach(function(it){if(it.cols.indexOf('W')>=0){var a=S.f2v.items[it.row]||(S.f2v.items[it.row]={});if(!a.r)a.r='Y'}});
+    var kq=f2tab(S.f2v),fdq=f2dw(S.f2v,kq);
+    f2items().forEach(function(it){if(it.cols.indexOf('W')>=0&&!f2r(S.f2v,it.row,kq)){var a=fdq.items[it.row]||(fdq.items[it.row]={});a.r='Y'}});
     f2save();renderF2KeepScroll();return true}
   if(t.closest('#f2Done')||t.closest('#f2Back')){f2save();S.f2v.view='rep';window.scrollTo(0,0);render();return true}
   return false;
@@ -922,6 +940,20 @@ function buildF2(list){
       if(ref)cm.push([ref,f2c(a.c)]);
     });
     cm.forEach(function(c){lines.push(['C',c[0],c[1]].join('|'))});
+    if(formOn(rec,2)){var usedV2=false;
+      for(var k2=1;k2<f2nt(rec);k2++){(function(k2){
+        if(!f2diffs(rec,k2))return;
+        var ef=f2eff(rec,k2),rf2=f2refs(ef),cm2=[],S2=[];
+        f2def().items.forEach(function(it){
+          if(it.h)return;var a=ef[it.row];if(!a)return;var ref=rf2[it.row]||'';
+          if(a.r||ref)S2.push(['I',it.row,a.r||'',ref].join('|'));
+          if(ref)cm2.push([ref,f2c(a.c)]);
+        });
+        cm2.forEach(function(c){S2.push(['C',c[0],c[1]].join('|'))});
+        lines.push('V|'+(k2+1));usedV2=true;S2.forEach(function(x){lines.push(x)});
+      })(k2)}
+      if(usedV2)lines.push('V|1');
+    }
   });
   lines.push('eB620-end');
   return lines.join('\r\n')+'\r\n';
@@ -948,7 +980,7 @@ function sendF2(id){
   if(formOn(list[0],5)){var bad5=f5problems(list[0]);if(bad5.length){toast('Form 5: '+bad5[0]+' Open Form 5 and fix it first.');return}}
   if(formOn(list[0],8)){var bad8=f8problems(list[0]);if(bad8.length){toast('Form 8: '+bad8[0]+' Open Form 8 and fix it first.');return}}
   if(formOn(list[0],13)){var bad13=f13problems(list[0]);if(bad13.length){toast('Form 13: '+bad13[0]+' Open Form 13 and shorten it first.');return}}
-  var nc=0;list.forEach(function(r){nc=Math.max(nc,Object.keys(f2refs(r.items)).length)});
+  var nc=0;list.forEach(function(r){nc=Math.max(nc,f2maxRefs(r))});
   if(nc>f2def().comments.length){toast('A Form 2 has more comments than the form has lines. Shorten them first.');return}
   var text=buildF2(list),name='eB620_form2_'+String(list[0].v.D||'tank').replace(/[^A-Za-z0-9_-]+/g,'')+'_'+stamp()+'.txt',ids=list.map(function(r){return r.id});
   var r0=list[0],sj='eB620 app - '+[r0.v.D||'tank',r0.v.A,new Date(r0.ts).toISOString().slice(0,10)].filter(Boolean).join(' - ');
@@ -1396,61 +1428,101 @@ var F8A=[
 {row:38,t:'Any connecting structures'}];
 var F8L=['F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V'];
 var F8EX=5,F8CM=110,F8AM=30;
-function f8o(v){return v.f8||{q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''}}
+function f8blank(){return {q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''}}
+function f8o(v){return v.f8||f8blank()}
+/* tanks: tank 0 is the first tank (v.f8); tanks 1 and 2 are in v.f8.t[1], v.f8.t[2]. Checklist answers, data plate values, the diagram question and the comment are the same as tank 0 unless changed; measurements (areas, diagram readings) are never copied between tanks */
+function f8nt(v){return unitDef(v.unit).names.length}
+function f8tab(v){var k=+v.f8tab||0;return k>=f8nt(v)?0:k}
+function f8d(v,k){var f=f8o(v);if(!k)return f;return (f.t&&f.t[k])||f8blank()}
+function f8dw(v,k){var f=v.f8||(v.f8=f8blank());if(!k)return f;var t=f.t||(f.t={}),o=t[k]||(t[k]={q:{},vals:{},a:{},rd:{},ex:[],cm:''});o.q=o.q||{};o.vals=o.vals||{};o.a=o.a||{};o.rd=o.rd||{};o.ex=o.ex||[];return o}
 function f8num(s){var t=String(s==null?'':s).trim().replace(/,/g,'.');return /^\d+(\.\d+)?$/.test(t)?String(+t):null}
 function f8ex(f,i){f.ex=f.ex||[];while(f.ex.length<F8EX)f.ex.push({l:'',v:''});return f.ex[i]}
-function f8answered(v){var f=f8o(v),n=0;F8Q.forEach(function(q){if((f.q||{})[q.row])n++});return n}
-function f8any(v){var f=f8o(v);return Object.keys(f.q||{}).some(function(k){return f.q[k]})||Object.keys(f.a||{}).some(function(k){return f.a[k]})||!!f.dg||Object.keys(f.rd||{}).some(function(k){return String(f.rd[k]||'').trim()})||(f.ex||[]).some(function(e){return e&&(String(e.l||'').trim()||String(e.v||'').trim())})||!!String(f.cm||'').trim()||Object.keys(f.vals||{}).some(function(k){return f.vals[k]&&String(f.vals[k].n||'').trim()})}
+function f8q(v,row,k){k=k||0;var a=(f8d(v,k).q||{})[row]||'';if(a||!k)return a;return f8q(v,row,0)}
+function f8vE(v,row,k){k=k||0;var o=(f8d(v,k).vals||{})[row]||{},b=(f8o(v).vals||{})[row]||{};if(!k)return {n:o.n||'',u:o.u||'in'};if(String(o.n||'').trim())return {n:o.n,u:o.u||b.u||'in'};return {n:b.n||'',u:o.u||b.u||'in'}}
+function f8dgE(v,k){k=k||0;var o=f8d(v,k);if(k){if(o.dgs==='Y')return 1;if(o.dgs==='N')return 0}return (f8o(v).dg)?1:0}
+function f8cmE(v,k){k=k||0;var o=f8d(v,k);if(k&&!String(o.cm||'').trim())return f8o(v).cm||'';return o.cm||''}
+function f8answered(v,k){var n=0;F8Q.forEach(function(q){if(f8q(v,q.row,k||0))n++});return n}
+function f8anyd(f){return Object.keys(f.q||{}).some(function(k){return f.q[k]})||Object.keys(f.a||{}).some(function(k){return f.a[k]})||!!f.dg||!!f.dgs||Object.keys(f.rd||{}).some(function(k){return String(f.rd[k]||'').trim()})||(f.ex||[]).some(function(e){return e&&(String(e.l||'').trim()||String(e.v||'').trim())})||!!String(f.cm||'').trim()||Object.keys(f.vals||{}).some(function(k){return f.vals[k]&&String(f.vals[k].n||'').trim()})}
+function f8any(v){var f=f8o(v);if(f8anyd(f))return true;return Object.keys(f.t||{}).some(function(k){return f8anyd(f.t[k])})}
+function f8diffs(v,k){
+  if(!k)return 0;var n=0,o=f8d(v,k),b=f8o(v);
+  F8Q.forEach(function(q){var a=(o.q||{})[q.row];if(a&&a!==((b.q||{})[q.row]||''))n++;
+    if(q.val){var ov=(o.vals||{})[q.row]||{},bv=(b.vals||{})[q.row]||{};if((String(ov.n||'').trim()&&ov.n!==(bv.n||''))||(ov.u&&ov.u!==(bv.u||'in')))n++}});
+  if(o.dgs&&f8dgE(v,k)!==f8dgE(v,0))n++;
+  if(String(o.cm||'').trim()&&o.cm!==(b.cm||''))n++;
+  Object.keys(o.a||{}).forEach(function(r){if(String(o.a[r]||'').trim())n++});
+  Object.keys(o.rd||{}).forEach(function(r){if(String(o.rd[r]||'').trim())n++});
+  (o.ex||[]).forEach(function(e){if(e&&String(e.v||'').trim())n++});
+  return n;
+}
 function f8problems(rec){
-  var out=[],f=f8o(rec);
-  F8Q.forEach(function(q){if(!q.val||(f.q||{})[q.row]!=='Y')return;var o=(f.vals||{})[q.row]||{};if(String(o.n||'').trim()&&f8num(o.n)===null)out.push('Row "'+q.t.split('.')[0]+'": numbers only, then choose the unit.')});
-  if(f.dg){F8L.forEach(function(L){var s=(f.rd||{})[L];if(String(s||'').trim()&&f8num(s)===null)out.push('Reading '+L+': numbers only.')});
-    (f.ex||[]).forEach(function(e,i){if(!e)return;var l=String(e.l||'').trim(),s=String(e.v||'').trim();if(s&&f8num(s)===null)out.push('Extra spot '+(i+1)+': numbers only.');if(s&&!l)out.push('Extra spot '+(i+1)+': type the letter or name of the spot.');if(l&&!s)out.push('Extra spot '+(i+1)+': type the reading.')})}
-  if(String(f.cm||'').length>F8CM)out.push('The comment is longer than '+F8CM+' characters.');
+  var out=[];
+  for(var k=0;k<f8nt(rec);k++){(function(k){
+    var o=f8d(rec,k),pre=k?unitDef(rec.unit).names[k]+' tank: ':'';
+    F8Q.forEach(function(q){if(!q.val||f8q(rec,q.row,k)!=='Y')return;var e=f8vE(rec,q.row,k);if(String(e.n||'').trim()&&f8num(e.n)===null)out.push(pre+'Row "'+q.t.split('.')[0]+'": numbers only, then choose the unit.')});
+    if(f8dgE(rec,k)){F8L.forEach(function(L){var s=(o.rd||{})[L];if(String(s||'').trim()&&f8num(s)===null)out.push(pre+'Reading '+L+': numbers only.')});
+      (o.ex||[]).forEach(function(e,i){if(!e)return;var l=String(e.l||'').trim(),s=String(e.v||'').trim();if(s&&f8num(s)===null)out.push(pre+'Extra spot '+(i+1)+': numbers only.');if(s&&!l)out.push(pre+'Extra spot '+(i+1)+': type the letter or name of the spot.');if(l&&!s)out.push(pre+'Extra spot '+(i+1)+': type the reading.')})}
+    if(String(f8cmE(rec,k)).length>F8CM)out.push(pre+'The comment is longer than '+F8CM+' characters.');
+  })(k)}
   return out;
 }
-function buildF8(rec){
-  var f=f8o(rec),L=[];
-  F8Q.forEach(function(q){var a=(f.q||{})[q.row];if(!a)return;L.push(['Q',q.row,a].join('|'));if(q.val&&a==='Y'){var o=(f.vals||{})[q.row]||{},n=f8num(o.n);if(n!==null)L.push(['M',q.row,n,o.u==='mm'?'mm':'in'].join('|'))}});
-  F8A.forEach(function(q){var at=String((f.a||{})[q.row]||'').replace(/\|/g,' ').replace(/\s+/g,' ').trim();if(at)L.push(['J',q.row,at].join('|'))});
-  if(f.dg){L.push('B|Y');F8L.forEach(function(x){var n=f8num((f.rd||{})[x]);if(n!==null)L.push(['O',x,n].join('|'))});
-    (f.ex||[]).forEach(function(e,i){if(!e)return;var n=f8num(e.v),l=f2c(String(e.l||'').trim()).slice(0,3);if(n!==null&&l)L.push(['Z',i+1,l,n].join('|'))})}
-  if(String(f.cm||'').trim())L.push(['H',f2c(String(f.cm).trim())].join('|'));
+function f8lines(rec,k){
+  var o=f8d(rec,k),L=[];
+  F8Q.forEach(function(q){var a=f8q(rec,q.row,k);if(!a)return;L.push(['Q',q.row,a].join('|'));if(q.val&&a==='Y'){var e=f8vE(rec,q.row,k),n=f8num(e.n);if(n!==null)L.push(['M',q.row,n,e.u==='mm'?'mm':'in'].join('|'))}});
+  F8A.forEach(function(q){var at=String((o.a||{})[q.row]||'').replace(/\|/g,' ').replace(/\s+/g,' ').trim();if(at)L.push(['J',q.row,at].join('|'))});
+  var dg=f8dgE(rec,k);
+  if(dg){L.push('B|Y');F8L.forEach(function(x){var n=f8num((o.rd||{})[x]);if(n!==null)L.push(['O',x,n].join('|'))});
+    (o.ex||[]).forEach(function(e,i){if(!e)return;var n=f8num(e.v),l=f2c(String(e.l||'').trim()).slice(0,3);if(n!==null&&l)L.push(['Z',i+1,l,n].join('|'))})}
+  else if(k)L.push('B|N');
+  var cm=String(f8cmE(rec,k)).trim();
+  if(cm)L.push(['H',f2c(cm)].join('|'));
   return L;
 }
+function buildF8(rec){
+  var L=f8lines(rec,0),used=false;
+  if(f8any(rec))for(var k=1;k<f8nt(rec);k++){L.push('V|'+(k+1));used=true;f8lines(rec,k).forEach(function(x){L.push(x)})}
+  if(used)L.push('V|1');
+  return L;
+}
+function f8inp(attr,val,inh,extra){return '<input type="text" class="'+(inh?'inh':'')+'" placeholder="'+esc(inh||' ')+'" '+(extra||'')+' autocomplete="off" data-f8v="'+attr+'" value="'+esc(val||'')+'">'}
 function renderF8(){
-  var v=S.f2v,f=v.f8||(v.f8={q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''});
+  var v=S.f2v,ud=unitDef(v.unit),nt=f8nt(v),k=f8tab(v),f=f8dw(v,k),n0=ud.names[0].toLowerCase(),b=f8o(v);
   f.q=f.q||{};f.vals=f.vals||{};f.a=f.a||{};f.rd=f.rd||{};f8ex(f,0);
   $('#tabs').hidden=true;$('#fab').hidden=true;
   $('#top').innerHTML='<button class="hbtn icon" id="f8Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 8 - Tank '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f8Done" type="button">Done</button>';
-  var h='<div class="panel"><h2>Thickness test</h2><p>Answer the checklist, tick the areas that were tested, and enter the readings from the tank diagram. Changes are saved on this phone as you go.</p></div>';
+  var h='';
+  if(nt>1)h+='<div class="ttabs">'+ud.names.map(function(nm,i){var dn=f8diffs(v,i);return '<button type="button" class="ttab'+(i===k?' on':'')+'" data-f8tab="'+i+'">'+esc(nm)+(dn?'<span class="dn">'+dn+(dn===1?' difference':' differences')+'</span>':'')+'</button>'}).join('')+'</div>';
+  h+='<div class="panel"><h2>Thickness test'+(nt>1?' - '+esc(ud.names[k].toLowerCase())+' tank':'')+'</h2><p>Answer the checklist, tick the areas that were tested, and enter the readings from the tank diagram. Changes are saved on this phone as you go.</p>'+(nt>1?(k?'<p style="margin:0">Checklist answers, data plate values and the comment are the same as the '+esc(n0)+' tank unless you change them. Measurements (areas and diagram readings) are for this tank only and are never copied from another tank.</p>':'<p style="margin:0">Answer this first tank. For the other tanks, use their tab only where they differ, and enter their own measurements there.</p>'):'')+'</div>';
   h+='<div class="panel"><div class="f2h">Checklist</div>';
   F8Q.forEach(function(q){
-    var a=f.q[q.row]||'';
-    h+='<div class="f2item"><p class="tx">'+esc(q.t)+'</p><div class="chips"><button type="button" class="chip y'+(a==='Y'?' on':'')+'" data-f8q="'+q.row+'" data-v="Y">Yes</button><button type="button" class="chip n'+(a==='N'?' on':'')+'" data-f8q="'+q.row+'" data-v="N">No</button></div>';
-    if(q.val&&a==='Y'){var o=f.vals[q.row]||(f.vals[q.row]={n:'',u:'in'});
-      h+='<div class="field" style="margin-top:.55rem"><label>Thickness value</label><input type="text" placeholder=" " inputmode="decimal" autocomplete="off" data-f8v="v'+q.row+'" value="'+esc(o.n||'')+'"></div><div class="chips" style="margin-top:.4rem"><button type="button" class="chip s'+((o.u||'in')==='in'?' on':'')+'" data-f8u="'+q.row+'" data-v="in">inches</button><button type="button" class="chip s'+(o.u==='mm'?' on':'')+'" data-f8u="'+q.row+'" data-v="mm">mm</button></div>'}
+    var a=f8q(v,q.row,k),df=k&&f.q[q.row]&&f.q[q.row]!==(b.q[q.row]||'');
+    h+='<div class="f2item'+(df?' df':'')+'"><p class="tx">'+esc(q.t)+(df?'<span class="rf df">Differs from '+esc(n0)+'</span>':'')+'</p><div class="chips"><button type="button" class="chip y'+(a==='Y'?' on':'')+'" data-f8q="'+q.row+'" data-v="Y">Yes</button><button type="button" class="chip n'+(a==='N'?' on':'')+'" data-f8q="'+q.row+'" data-v="N">No</button></div>';
+    if(q.val&&a==='Y'){var o=f.vals[q.row]||{n:'',u:''},e=f8vE(v,q.row,k),bn=(k&&(b.vals[q.row]||{}).n)||'';
+      h+='<div class="field" style="margin-top:.55rem"><label>Thickness value</label>'+f8inp('v'+q.row,o.n,bn,'inputmode="decimal"')+'</div><div class="chips" style="margin-top:.4rem"><button type="button" class="chip s'+(e.u==='in'?' on':'')+'" data-f8u="'+q.row+'" data-v="in">inches</button><button type="button" class="chip s'+(e.u==='mm'?' on':'')+'" data-f8u="'+q.row+'" data-v="mm">mm</button></div>'}
     h+='</div>'});
   h+='</div>';
-  h+='<div class="panel"><div class="f2h">Thickness test measurements found at the following areas</div><p class="count" style="margin:0 0 .4rem">Type the measurement(s) for each area tested, for example 0.201 (up to '+F8AM+' characters). Leave the others blank.</p>';
-  F8A.forEach(function(q){h+='<div class="field" style="margin-top:.5rem"><label>'+esc(q.t)+'</label><input type="text" placeholder=" " maxlength="'+F8AM+'" autocomplete="off" data-f8v="a'+q.row+'" value="'+esc(f.a[q.row]||'')+'"></div>'});
+  h+='<div class="panel"><div class="f2h">Thickness test measurements found at the following areas</div><p class="count" style="margin:0 0 .4rem">Type the measurement(s) for each area tested'+(nt>1?' on this tank':'')+', for example 0.201 (up to '+F8AM+' characters). Leave the others blank.</p>';
+  F8A.forEach(function(q){h+='<div class="field" style="margin-top:.5rem"><label>'+esc(q.t)+'</label>'+f8inp('a'+q.row,f.a[q.row],'','maxlength="'+F8AM+'"')+'</div>'});
   h+='</div>';
-  h+='<div class="panel"><div class="f2h">Tank diagram</div><p class="tx" style="margin:0 0 .4rem">Tank diagram with thickness readings attached?</p><div class="chips"><button type="button" class="chip y'+(f.dg?' on':'')+'" data-f8dg="Y">Yes</button><button type="button" class="chip n'+(!f.dg?' on':'')+'" data-f8dg="N">No</button></div>';
-  if(f.dg){
-    h+='<p class="count" style="margin:.6rem 0 .2rem">Thickness reading at each spot on the diagram (numbers only).</p>';
-    F8L.forEach(function(x){h+='<div class="field" style="margin-top:.45rem"><label>Spot '+x+'</label><input type="text" placeholder=" " inputmode="decimal" autocomplete="off" data-f8v="r'+x+'" value="'+esc(f.rd[x]||'')+'"></div>'});
+  var dg=f8dgE(v,k);
+  h+='<div class="panel"><div class="f2h">Tank diagram</div><p class="tx" style="margin:0 0 .4rem">Tank diagram with thickness readings attached?'+(k&&f.dgs&&dg!==f8dgE(v,0)?'<span class="rf df">Differs from '+esc(n0)+'</span>':'')+'</p><div class="chips"><button type="button" class="chip y'+(dg?' on':'')+'" data-f8dg="Y">Yes</button><button type="button" class="chip n'+(!dg?' on':'')+'" data-f8dg="N">No</button></div>';
+  if(dg){
+    h+='<p class="count" style="margin:.6rem 0 .2rem">Thickness reading at each spot on the diagram'+(nt>1?' of this tank':'')+' (numbers only).</p>';
+    F8L.forEach(function(x){h+='<div class="field" style="margin-top:.45rem"><label>Spot '+x+'</label>'+f8inp('r'+x,f.rd[x],'','inputmode="decimal"')+'</div>'});
     h+='<p class="count" style="margin:.8rem 0 .2rem">Other spots (type the letter or name, then the reading).</p>';
-    for(var i=0;i<F8EX;i++){var e=f8ex(f,i);h+='<div style="display:flex;gap:.5rem;margin-top:.45rem"><div class="field" style="flex:1;margin:0"><label>Spot</label><input type="text" placeholder=" " maxlength="3" autocomplete="off" data-f8v="e'+i+'l" value="'+esc(e.l||'')+'"></div><div class="field" style="flex:2;margin:0"><label>Reading</label><input type="text" placeholder=" " inputmode="decimal" autocomplete="off" data-f8v="e'+i+'v" value="'+esc(e.v||'')+'"></div></div>'}}
+    for(var i=0;i<F8EX;i++){var e2=f8ex(f,i);h+='<div style="display:flex;gap:.5rem;margin-top:.45rem"><div class="field" style="flex:1;margin:0"><label>Spot</label><input type="text" placeholder=" " maxlength="3" autocomplete="off" data-f8v="e'+i+'l" value="'+esc(e2.l||'')+'"></div><div class="field" style="flex:2;margin:0"><label>Reading</label><input type="text" placeholder=" " inputmode="decimal" autocomplete="off" data-f8v="e'+i+'v" value="'+esc(e2.v||'')+'"></div></div>'}}
   h+='</div>';
-  h+='<div class="panel"><div class="f2h">Comment</div><p class="count" style="margin:0 0 .3rem">One line on the form (up to '+F8CM+' characters). For more, use Form 13.</p><textarea data-f8v="cm" maxlength="'+F8CM+'" placeholder="Comment (short - one line on the form)">'+esc(f.cm||'')+'</textarea></div>';
+  var inc=k?(b.cm||''):'';
+  h+='<div class="panel"><div class="f2h">Comment</div><p class="count" style="margin:0 0 .3rem">One line on the form (up to '+F8CM+' characters). For more, use Form 13.</p><textarea data-f8v="cm" maxlength="'+F8CM+'" placeholder="'+esc(String(inc).trim()?inc:'Comment (short - one line on the form)')+'">'+esc(f.cm||'')+'</textarea></div>';
   $('#view').innerHTML=h;
 }
 function f8click(t){
-  var v=S.f2v,f=v.f8||(v.f8={q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''}),y=window.scrollY;
+  var v=S.f2v,k=f8tab(v),f=f8dw(v,k),y=window.scrollY;
   function again(){f2save();renderF8();window.scrollTo(0,y)}
+  var tb=t.closest('[data-f8tab]');if(tb){var act1=document.activeElement;if(act1&&act1.getAttribute&&act1.getAttribute('data-f8v'))f8store(act1);if(act1&&act1.blur)act1.blur();f2save();v.f8tab=+tb.getAttribute('data-f8tab');renderF8();window.scrollTo(0,0);return true}
   var q=t.closest('[data-f8q]');if(q){var r=+q.getAttribute('data-f8q'),x=q.getAttribute('data-v');f.q=f.q||{};f.q[r]=(f.q[r]===x)?'':x;if(!f.q[r])delete f.q[r];again();return true}
-  var u=t.closest('[data-f8u]');if(u){var r2=+u.getAttribute('data-f8u');f.vals=f.vals||{};(f.vals[r2]||(f.vals[r2]={n:'',u:'in'})).u=u.getAttribute('data-v');again();return true}
-  var d=t.closest('[data-f8dg]');if(d){var yes=d.getAttribute('data-f8dg')==='Y';f.dg=(yes&&f.dg)?0:(yes?1:0);again();return true}
+  var u=t.closest('[data-f8u]');if(u){var r2=+u.getAttribute('data-f8u'),ux=u.getAttribute('data-v');f.vals=f.vals||{};var vo=f.vals[r2]||(f.vals[r2]={n:'',u:k?'':'in'});if(k)vo.u=(vo.u===ux)?'':ux;else vo.u=ux;again();return true}
+  var d=t.closest('[data-f8dg]');if(d){var yes=d.getAttribute('data-f8dg')==='Y';if(k){var cur=f.dgs;f.dgs=(cur===(yes?'Y':'N'))?'':(yes?'Y':'N')}else f.dg=(yes&&f.dg)?0:(yes?1:0);again();return true}
   if(t.closest('#f8Done')||t.closest('#f8Back')){
     var act=document.activeElement;if(act&&act.getAttribute&&act.getAttribute('data-f8v'))f8store(act);
     f2save();
@@ -1459,12 +1531,12 @@ function f8click(t){
   return false;
 }
 function f8store(el){
-  var v=S.f2v;if(!v)return;var f=v.f8||(v.f8={q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''}),k=el.getAttribute('data-f8v'),val=el.value,m;
-  if(k==='cm'){f.cm=val;return}
-  if((m=/^v(\d+)$/.exec(k))){f.vals=f.vals||{};(f.vals[+m[1]]||(f.vals[+m[1]]={n:'',u:'in'})).n=val;return}
-  if((m=/^a(\d+)$/.exec(k))){f.a=f.a||{};if(String(val).trim())f.a[+m[1]]=val;else delete f.a[+m[1]];return}
-  if((m=/^r([A-Z])$/.exec(k))){f.rd=f.rd||{};f.rd[m[1]]=val;return}
-  if((m=/^e(\d)([lv])$/.exec(k))){f8ex(f,+m[1])[m[2]]=val;return}
+  var v=S.f2v;if(!v)return;var k=f8tab(v),f=f8dw(v,k),key=el.getAttribute('data-f8v'),val=el.value,m;
+  if(key==='cm'){f.cm=val;return}
+  if((m=/^v(\d+)$/.exec(key))){f.vals=f.vals||{};(f.vals[+m[1]]||(f.vals[+m[1]]={n:'',u:k?'':'in'})).n=val;return}
+  if((m=/^a(\d+)$/.exec(key))){f.a=f.a||{};if(String(val).trim())f.a[+m[1]]=val;else delete f.a[+m[1]];return}
+  if((m=/^r([A-Z])$/.exec(key))){f.rd=f.rd||{};f.rd[m[1]]=val;return}
+  if((m=/^e(\d)([lv])$/.exec(key))){f8ex(f,+m[1])[m[2]]=val;return}
 }
 
 /* ---------- Form 5 (hose test) ---------- */
@@ -1474,7 +1546,7 @@ function f5o(v){return v.f5||{h:[]}}
 function f5n(v){var n=unitDef(v.unit).names.length;return n<1?1:n}
 function f5h(v,i){var f=v.f5||(v.f5={h:[]});f.h=f.h||[];while(f.h.length<=i)f.h.push({res:'',np:0,cm:'',yr:'',ln:'',dia:'',mf:''});return f.h[i]}
 function f5answered(v){var f=f5o(v),n=0;for(var i=0;i<f5n(v);i++){if(f.h&&f.h[i]&&f.h[i].res)n++}return n}
-function f5any(v){var f=f5o(v);return (f.h||[]).some(function(h){return h&&(h.res||h.np||String(h.cm||'').trim()||String(h.yr||'').trim()||String(h.ln||'').trim()||h.dia||h.mf)})}
+function f5any(v){var f=f5o(v);return (f.h||[]).some(function(h){return h&&(h.res||h.np||String(h.cm||'').trim()||String(h.yr||'').trim()||String(h.ln||'').trim()||h.dia||h.mf||h.x)})}
 function f5problems(rec){
   var out=[],f=f5o(rec),n=f5n(rec),nm=unitDef(rec.unit).names;
   for(var i=0;i<n;i++){var h=(f.h||[])[i]||{};var who=n>1?(nm[i].toLowerCase()+' tank hose'):'the hose';
@@ -1483,13 +1555,23 @@ function f5problems(rec){
     if(h.res==='F'){
       var yr=String(h.yr||'').trim(),ln=String(h.ln||'').trim(),cy=new Date().getFullYear();
       if(yr&&(!/^\d{4}$/.test(yr)||+yr<cy-2||+yr>cy+10))out.push('New hose expiry year for '+who+' must be a 4-digit year from '+(cy-2)+' to '+(cy+10)+'.');
-      if(ln&&(!/^\d+(\.\d+)?$/.test(ln)||+ln<1||+ln>50))out.push('New hose length for '+who+' must be a number from 1 to 50 (no ft or quotes).')}}
+      if(ln&&(!/^\d+(\.\d+)?$/.test(ln)||+ln<1||+ln>50))out.push('New hose length for '+who+' must be a number from 1 to 50 (no ft or quotes).')}
+    var x=h.x;
+    if(x){var wx='the extra hose of '+(n>1?nm[i].toLowerCase()+' tank':'this tank'),yx=String(x.yr||'').trim(),lx=String(x.ln||'').trim(),cyx=new Date().getFullYear();
+      if(!x.res)out.push('Choose Pass or Fail for '+wx+'.');
+      if(!yx||!/^\d{4}$/.test(yx)||+yx<cyx-2||+yx>cyx+10)out.push('Expiry year of '+wx+' must be a 4-digit year from '+(cyx-2)+' to '+(cyx+10)+'.');
+      if(!lx||!/^\d+(\.\d+)?$/.test(lx)||+lx<1||+lx>50)out.push('Length of '+wx+' must be a number from 1 to 50 (no ft or quotes).');
+      if(!x.dia)out.push('Choose the diameter of '+wx+'.');
+      if(!x.mf)out.push('Choose the manufacturer (MFG) of '+wx+'.');
+      if(String(x.cm||'').length>F5CM)out.push('The comment for '+wx+' is longer than '+F5CM+' characters.')}}
   return out;
 }
 function buildF5(rec){
   var f=f5o(rec),n=f5n(rec),L=[];
   for(var i=0;i<n;i++){var h=(f.h||[])[i]||{};if(!h.res)continue;
     var nh=h.res==='F';L.push(['R',i+1,h.res,(nh&&h.np)?1:0,f2c(String(h.cm||'').trim()),nh?f2c(String(h.yr||'').trim()):'',nh?f2c(String(h.ln||'').trim()):'',nh?f2c(h.dia||''):'',nh?f2c(h.mf||''):''].join('|'))}
+  for(var j=0;j<n;j++){var hx=(f.h||[])[j]||{},x=hx.x;if(!x||!x.res)continue;
+    L.push(['X',j+1,x.res,f2c(String(x.cm||'').trim()),f2c(String(x.yr||'').trim()),f2c(String(x.ln||'').trim()),f2c(x.dia||''),f2c(x.mf||'')].join('|'))}
   return L;
 }
 function renderF5(){
@@ -1505,19 +1587,34 @@ function renderF5(){
     h+='<div class="chips"><button type="button" class="chip y'+(o.res==='P'?' on':'')+'" data-f5r="'+i+'" data-v="P">Pass</button><button type="button" class="chip n'+(o.res==='F'?' on':'')+'" data-f5r="'+i+'" data-v="F">Fail</button></div>';
     if(o.res==='F'){
       h+='<p class="count" style="margin:.6rem 0 .3rem">The sheet adds a line for the new hose. Leave the comment empty and it writes "Hose has Expired or Failed, see below for new hose".</p>';
-      h+='<div class="f2h" style="margin-top:.8rem">New hose</div><p class="count" style="margin:0 0 .3rem">Fill in what you know about the new hose. Empty boxes keep the old hose\'s details.</p>';
-      h+='<div class="field"><label>Hose expiry year (yyyy)</label><input type="text" placeholder=" " inputmode="numeric" autocomplete="off" maxlength="4" data-f5v="y'+i+'" value="'+esc(o.yr||'')+'"></div>';
-      h+='<div class="field" style="margin-top:.5rem"><label>Hose length (ft)</label><input type="text" placeholder=" " inputmode="decimal" autocomplete="off" data-f5v="l'+i+'" value="'+esc(o.ln||'')+'"></div>';
-      h+='<div class="field" style="margin-top:.5rem"><label>Hose diameter</label><select style="width:100%;min-height:3rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface2);padding:0 .9rem;font:inherit;color:inherit" data-f5s="d'+i+'">'+f5opts('W',o.dia)+'</select></div>';
-      h+='<div class="field" style="margin-top:.5rem"><label>Hose MFG</label><select style="width:100%;min-height:3rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface2);padding:0 .9rem;font:inherit;color:inherit" data-f5s="m'+i+'">'+f5opts('Y',o.mf)+'</select></div>';
+      h+='<div class="f2h" style="margin-top:.8rem">New hose</div><p class="count" style="margin:0 0 .3rem">Fill in what you know about the new hose. Leave a box empty to keep the old hose\'s detail shown under it.</p>';
+      h+='<div class="field"><label>Hose expiry year (yyyy)</label><input type="text" placeholder=" " inputmode="numeric" autocomplete="off" maxlength="4" data-f5v="y'+i+'" value="'+esc(o.yr||'')+'">'+(tv.V?'<div class="hint">On file: '+esc(tv.V)+'</div>':'')+'</div>';
+      h+='<div class="field" style="margin-top:.5rem"><label>Hose length (ft)</label><input type="text" placeholder=" " inputmode="decimal" autocomplete="off" data-f5v="l'+i+'" value="'+esc(o.ln||'')+'">'+(tv.X?'<div class="hint">On file: '+esc(tv.X)+' ft</div>':'')+'</div>';
+      h+='<div class="field" style="margin-top:.5rem"><label>Hose diameter</label><select style="width:100%;min-height:3rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface2);padding:0 .9rem;font:inherit;color:inherit" data-f5s="d'+i+'">'+f5opts('W',o.dia,tv.W)+'</select>'+(tv.W?'<div class="hint">On file: '+esc(tv.W)+'</div>':'')+'</div>';
+      h+='<div class="field" style="margin-top:.5rem"><label>Hose MFG</label><select style="width:100%;min-height:3rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface2);padding:0 .9rem;font:inherit;color:inherit" data-f5s="m'+i+'">'+f5opts('Y',o.mf,tv.Y)+'</select>'+(tv.Y?'<div class="hint">On file: '+esc(tv.Y)+'</div>':'')+'</div>';
       h+='<button type="button" class="chip s'+(o.np?' on':'')+'" style="display:block;width:100%;text-align:left;margin-top:.7rem" data-f5np="'+i+'">'+(o.np?'&#10003; ':'')+'New hose fitted and passed</button>'}
-    h+='<div class="field" style="margin-top:.7rem"><label>Comment (optional, short)</label><input type="text" placeholder=" " maxlength="'+F5CM+'" autocomplete="off" data-f5v="c'+i+'" value="'+esc(o.cm||'')+'"></div></div>'}
+    h+='<div class="field" style="margin-top:.7rem"><label>Comment (optional, short)</label><input type="text" placeholder=" " maxlength="'+F5CM+'" autocomplete="off" data-f5v="c'+i+'" value="'+esc(o.cm||'')+'"></div>';
+    if(!o.x)h+='<button type="button" class="lnk" style="margin-top:.8rem" data-f5xadd="'+i+'">+ Add another hose (this tank has a second hose)</button>';
+    else{var x=o.x;
+      h+='<div class="f2h" style="margin-top:1rem">Extra hose</div><p class="count" style="margin:0 0 .4rem">A second hose on this tank, not in the tank list. The office sheet adds it on the next free line. All the boxes are needed.</p>';
+      h+='<div class="chips"><button type="button" class="chip y'+(x.res==='P'?' on':'')+'" data-f5xr="'+i+'" data-v="P">Pass</button><button type="button" class="chip n'+(x.res==='F'?' on':'')+'" data-f5xr="'+i+'" data-v="F">Fail</button></div>';
+      if(x.res==='F')h+='<p class="count" style="margin:.5rem 0 0">If it fails, the sheet adds a line for its replacement, the same as for the first hose.</p>';
+      h+='<div class="field" style="margin-top:.7rem"><label>Hose expiry year (yyyy)</label><input type="text" placeholder=" " inputmode="numeric" autocomplete="off" maxlength="4" data-f5v="xy'+i+'" value="'+esc(x.yr||'')+'"></div>';
+      h+='<div class="field" style="margin-top:.5rem"><label>Hose length (ft)</label><input type="text" placeholder=" " inputmode="decimal" autocomplete="off" data-f5v="xl'+i+'" value="'+esc(x.ln||'')+'"></div>';
+      h+='<div class="field" style="margin-top:.5rem"><label>Hose diameter</label><select style="width:100%;min-height:3rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface2);padding:0 .9rem;font:inherit;color:inherit" data-f5s="xd'+i+'">'+f5opts('W',x.dia,'','Choose')+'</select></div>';
+      h+='<div class="field" style="margin-top:.5rem"><label>Hose MFG</label><select style="width:100%;min-height:3rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface2);padding:0 .9rem;font:inherit;color:inherit" data-f5s="xm'+i+'">'+f5opts('Y',x.mf,'','Choose')+'</select></div>';
+      h+='<div class="field" style="margin-top:.7rem"><label>Comment (optional, short)</label><input type="text" placeholder=" " maxlength="'+F5CM+'" autocomplete="off" data-f5v="xc'+i+'" value="'+esc(x.cm||'')+'"></div>';
+      h+='<button type="button" class="lnk" style="margin-top:.7rem" data-f5xrm="'+i+'">Remove this extra hose</button>'}
+    h+='</div>'}
   $('#view').innerHTML=h;
 }
 function f5click(t){
   var v=S.f2v,y=window.scrollY;
   function again(){f2save();renderF5();window.scrollTo(0,y)}
   var r=t.closest('[data-f5r]');if(r){var i=+r.getAttribute('data-f5r'),x=r.getAttribute('data-v'),o=f5h(v,i);o.res=(o.res===x)?'':x;if(o.res!=='F')o.np=0;again();return true}
+  var xa=t.closest('[data-f5xadd]');if(xa){f5h(v,+xa.getAttribute('data-f5xadd')).x={res:'',yr:'',ln:'',dia:'',mf:'',cm:''};again();return true}
+  var xm=t.closest('[data-f5xrm]');if(xm){f5h(v,+xm.getAttribute('data-f5xrm')).x=null;again();return true}
+  var xr=t.closest('[data-f5xr]');if(xr){var hx=f5h(v,+xr.getAttribute('data-f5xr')).x,xv=xr.getAttribute('data-v');if(hx)hx.res=(hx.res===xv)?'':xv;again();return true}
   var p=t.closest('[data-f5np]');if(p){var o2=f5h(v,+p.getAttribute('data-f5np'));o2.np=o2.np?0:1;again();return true}
   if(t.closest('#f5Done')||t.closest('#f5Back')){
     var act=document.activeElement;if(act&&act.getAttribute&&(act.getAttribute('data-f5v')||act.getAttribute('data-f5s')))f5store(act);
@@ -1526,9 +1623,10 @@ function f5click(t){
     v.view='rep';window.scrollTo(0,0);render();return true}
   return false;
 }
-function f5opts(c,cur){var L=(F[c]&&F[c].list)||[],a=(S.adds&&S.adds[c])||[],all=L.concat(a.filter(function(x){return L.indexOf(x)<0})),h='<option value="">Same as the old hose</option>';all.forEach(function(x){h+='<option value="'+esc(x)+'"'+(x===cur?' selected':'')+'>'+esc(x)+'</option>'});if(cur&&all.indexOf(cur)<0)h+='<option value="'+esc(cur)+'" selected>'+esc(cur)+'</option>';return h}
+function f5opts(c,cur,old,first){var L=(F[c]&&F[c].list)||[],a=(S.adds&&S.adds[c])||[],all=L.concat(a.filter(function(x){return L.indexOf(x)<0})),h='<option value="">'+(first||('Same as the old hose'+(old?' ('+esc(old)+')':'')))+'</option>';all.forEach(function(x){h+='<option value="'+esc(x)+'"'+(x===cur?' selected':'')+'>'+esc(x)+'</option>'});if(cur&&all.indexOf(cur)<0)h+='<option value="'+esc(cur)+'" selected>'+esc(cur)+'</option>';return h}
 function f5store(el){
   var v=S.f2v;if(!v)return;var k=el.getAttribute('data-f5v')||el.getAttribute('data-f5s'),m;
+  if((m=/^x([ylcdm])(\d)$/.exec(k))){var hx=f5h(v,+m[2]).x;if(hx)hx[{y:'yr',l:'ln',c:'cm',d:'dia',m:'mf'}[m[1]]]=el.value;return}
   if((m=/^c(\d)$/.exec(k))){f5h(v,+m[1]).cm=el.value;return}
   if((m=/^y(\d)$/.exec(k))){f5h(v,+m[1]).yr=el.value;return}
   if((m=/^l(\d)$/.exec(k))){f5h(v,+m[1]).ln=el.value;return}
@@ -1670,7 +1768,7 @@ document.addEventListener('input',function(e){
   var f3m=e.target.getAttribute&&e.target.getAttribute('data-f3cm');
   if(f3m&&S.f2v){var f3b=f3dw(S.f2v,f3tab(S.f2v)),a3=f3b.items[+f3m]||(f3b.items[+f3m]={});a3.c=e.target.value;f2save();return}
   var fc=e.target.getAttribute&&e.target.getAttribute('data-f2c');
-  if(fc&&S.f2v){var a=S.f2v.items[+fc]||(S.f2v.items[+fc]={});a.c=e.target.value;f2save();var rf=f2refs(S.f2v.items);return}
+  if(fc&&S.f2v){var fdc=f2dw(S.f2v,f2tab(S.f2v)),a=fdc.items[+fc]||(fdc.items[+fc]={});a.c=e.target.value;f2save();return}
   var c=e.target.getAttribute&&e.target.getAttribute('data-in');
   if(c&&S.form){S.form.v[c]=e.target.value;S.form.dirty=true;saveDraft()}
 });
