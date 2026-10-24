@@ -164,7 +164,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 5m (a sent report stays sent when you leave it; office changes made after the export are never overwritten by an older phone copy: only the fields you changed are sent, with their original values; TDU units: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, TDU unit opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
+var VERSION='prototype 5n (tank entries file ends with eB620-end like the other files; a sent report stays sent when you leave it; office changes made after the export are never overwritten by an older phone copy: only the fields you changed are sent, with their original values; TDU units: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, TDU unit opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -725,6 +725,7 @@ function buildTSV(list){
       cols.map(function(c){return clean(src[c])}),
       cols.map(function(c){return ch&&ch.indexOf(c)>=0?clean(e.base[c]):''}),
       anyPrev?cols.map(function(c){return hasPrev&&ch&&ch.indexOf(c)>=0?clean(e.prev[c]):''}):[]).join('\t'))});
+  lines.push('eB620-end');
   return lines.join('\r\n')+'\r\n';
 }
 function stamp(){var d=new Date();return d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate())+'_'+pad2(d.getHours())+pad2(d.getMinutes())}
