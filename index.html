@@ -164,7 +164,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 5d (three-way status filter: Active / Not active / All, TDU unit opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
+var VERSION='prototype 5e (three-way status filter: Active / Not active / All, TDU unit opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -379,7 +379,7 @@ function matches(t,q){
 }
 function natural(a,b){return String(a).localeCompare(String(b),undefined,{numeric:true,sensitivity:'base'})}
 function stPass(st,isNew){var a=isNew||isActive(st);return S.stF==='all'||(S.stF==='active'?a:!a)}
-function stLabel(){return S.stF==='all'?'Show: All':S.stF==='active'?'Show: Active':'Show: Not active'}
+function stLabel(){return S.stF==='all'?'ALL':S.stF==='active'?'Active':'Non-Active'}
 function isActive(st){return /\bactive\b/i.test(String(st||''))}
 function askInactive(st,go){
   if(isActive(st)){go();return}
