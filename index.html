@@ -164,7 +164,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 5b (TDU unit opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
+var VERSION='prototype 5c (Active only filter, TDU unit opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -176,7 +176,7 @@ function lsDel(k){delete MEM[k];try{localStorage.removeItem(k)}catch(e){}}
 var SAMPLE=JSON.parse($('#sampleData').textContent);
 var S={tab:'tanks',kind:'nurse',q:'',form:null,sheetFn:null,
   data:null,sample:false,entries:lsGet('ebp_entries',[]),adds:lsGet('ebp_adds',{}),draft:lsGet('ebp_draft',null)};
-S.data=lsGet('ebp_data',null);
+S.data=lsGet('ebp_data',null);S.activeOnly=lsGet('ebp_active',true)!==false;
 if(!S.data||!S.data.fields){S.data=SAMPLE;S.sample=true}
 var F={};
 function indexFields(){F={};S.data.fields.forEach(function(f){F[f.c]=f;
@@ -378,11 +378,17 @@ function matches(t,q){
   return q.toLowerCase().split(/\s+/).every(function(w){return hay.indexOf(w)>=0});
 }
 function natural(a,b){return String(a).localeCompare(String(b),undefined,{numeric:true,sensitivity:'base'})}
+function isActive(st){return /\bactive\b/i.test(String(st||''))}
+function askInactive(st,go){
+  if(isActive(st)){go();return}
+  openSheet('<h2>Not an active unit</h2><p style="margin:0;color:var(--muted)">Its status is '+(String(st||'').trim()?'"'+esc(st)+'"':'blank')+'. Inspection reports are normally done on active units.</p><div class="row"><button class="btn primary" id="inaNo" type="button">Cancel</button><button class="btn" id="inaGo" type="button">Start report anyway</button></div>',function(){
+    $('#inaNo').onclick=closeSheet;$('#inaGo').onclick=function(){closeSheet();go()}});
+}
 function renderTanks(){
   var h='';
   if(S.draft){h+='<div class="banner"><b>Unfinished entry.</b> '+esc(S.draft.mode==='quick'?'A quick update':(S.draft.v.D?('Tank '+S.draft.v.D):'A new tank'))+(S.draft.v.A?' at '+esc(S.draft.v.A):'')+' was not saved.<div class="row"><button class="btn primary sm" data-act="resume" type="button">Continue</button><button class="btn sm" data-act="dropdraft" type="button">Discard</button></div></div>'}
   if(S.sample){h+='<div class="banner"><b>Example data.</b> These are the sample tanks from the template. Open the Data tab and load the file exported from the workbook to see your own tanks.</div>'}
-  if(tduRows().length)h+='<div class="chips" style="margin:0 0 .6rem"><button type="button" class="chip s'+(S.kind!=='tdu'?' on':'')+'" data-kind="nurse">Nurse tanks</button><button type="button" class="chip s'+(S.kind==='tdu'?' on':'')+'" data-kind="tdu">TDU</button></div>';
+  h+='<div class="chips" style="margin:0 0 .6rem">'+(tduRows().length?'<button type="button" class="chip s'+(S.kind!=='tdu'?' on':'')+'" data-kind="nurse">Nurse tanks</button><button type="button" class="chip s'+(S.kind==='tdu'?' on':'')+'" data-kind="tdu">TDU</button>':'')+'<button type="button" class="chip s'+(S.activeOnly?' on':'')+'" data-activeonly="1">'+(S.activeOnly?'&#10003; ':'')+'Active only</button></div>';
   h+='<div class="search"><input id="q" type="search" placeholder="Search location, company, tank or serial number" value="'+esc(S.q)+'" autocomplete="off" aria-label="Search tanks"></div><div class="count" id="cnt"></div><ul class="list" id="tl"></ul>';
   $('#view').innerHTML=h;
   fillTankList();
@@ -390,16 +396,16 @@ function renderTanks(){
 }
 function fillTankList(){
   if(S.kind==='tdu'&&tduRows().length){
-    var tl=tduList().filter(function(t){return tduMatches(t,S.q)});
+    var tl0=tduList().filter(function(t){return tduMatches(t,S.q)}),tl=S.activeOnly?tl0.filter(function(t){return isActive(t.v.E)}):tl0;
     tl.sort(function(a,b){return natural(a.v.A||'',b.v.A||'')||natural(a.v.C||'',b.v.C||'')||natural(a.v.D||'',b.v.D||'')});
-    $('#cnt').textContent=tl.length+(tl.length===1?' TDU unit':' TDU units');
+    $('#cnt').textContent=tl.length+(tl.length===1?' TDU unit':' TDU units')+(tl0.length>tl.length?' - '+(tl0.length-tl.length)+' not active hidden':'');
     $('#tl').innerHTML=tl.length?tl.slice(0,150).map(tduRowHtml).join(''):'<li class="empty">No TDU unit matches.</li>';
     return;
   }
-  var all=allTanks().filter(function(t){return matches(t,S.q)});
+  var all0=allTanks().filter(function(t){return matches(t,S.q)}),all=S.activeOnly?all0.filter(function(t){return !t.row||isActive(t.v.F)}):all0;
   all.sort(function(a,b){return natural(a.v.A||'',b.v.A||'')||natural(a.v.C||'',b.v.C||'')||natural(a.v.D||'',b.v.D||'')});
   var cap=150,shown=all.slice(0,cap);
-  $('#cnt').textContent=all.length+(all.length===1?' tank':' tanks')+(all.length>cap?' - showing the first '+cap+', type more to narrow it down':'');
+  $('#cnt').textContent=all.length+(all.length===1?' tank':' tanks')+(all0.length>all.length?' - '+(all0.length-all.length)+' not active hidden':'')+(all.length>cap?' - showing the first '+cap+', type more to narrow it down':'');
   $('#tl').innerHTML=shown.length?shown.map(tankRow).join(''):'<li class="empty">No tank matches. Tap "+ New tank" to add one.</li>';
 }
 function entRow(e){
@@ -1784,8 +1790,8 @@ document.addEventListener('click',function(e){
   var t=e.target;
   if(S.f2v){if(S.f2v.view==='f2')f2click(t);else if(S.f2v.view==='f20')f20click(t);else if(S.f2v.view==='f3')f3click(t);else if(S.f2v.view==='f4')f4click(t);else if(S.f2v.view==='f13')f13click(t);else if(S.f2v.view==='f8')f8click(t);else if(S.f2v.view==='f5')f5click(t);else repClick(t);return}
   if(S.tduDetail&&t.closest('#tduBack')){S.tduDetail=null;window.scrollTo(0,0);render();return}
-  if(S.tduDetail&&t.closest('#tduStart')){var tr=S.tduDetail;S.tduDetail=null;openTdu(tr);return}
-  if(t.closest('#f2Open')&&S.form){var o=S.form.orig;if(S.form.dirty)saveDraft();openF2(Object.assign({},o));return}
+  if(S.tduDetail&&t.closest('#tduStart')){var tr=S.tduDetail,tt=tduRows().filter(function(x){return x.row===tr})[0];askInactive(tt&&tt.v.E,function(){S.tduDetail=null;openTdu(tr)});return}
+  if(t.closest('#f2Open')&&S.form){var o=S.form.orig,fwas=S.form;var goF2=function(){if(S.form&&S.form.dirty)saveDraft();openF2(Object.assign({},o))};if(S.f2.some(function(r){return r.key===S.form.key&&!r.sent})||!S.form.row)goF2();else askInactive(o.F,goF2);return}
   var fe=t.closest('[data-f2edit]');if(fe){var rc=S.f2.filter(function(r){return r.id===fe.getAttribute('data-f2edit')})[0];if(rc){S.f2v=f2state(rc,rc.v,rc.serial,rc.id,rc.key);window.scrollTo(0,0);render()}return}
   var fu=t.closest('[data-f2unsend]');if(fu){S.f2.forEach(function(r){if(r.id===fu.getAttribute('data-f2unsend'))r.sent=0});lsSet('ebp_f2',S.f2);render();return}
   var fd=t.closest('[data-f2del]');
@@ -1800,6 +1806,7 @@ document.addEventListener('click',function(e){
     if(pg){S.form.page=+(pg.getAttribute('data-page')||pg.getAttribute('data-go'));renderForm();window.scrollTo(0,0);return}
     return;
   }
+  var ao=t.closest('[data-activeonly]');if(ao){S.activeOnly=!S.activeOnly;lsSet('ebp_active',S.activeOnly);renderTanks();return}
   var kd=t.closest('[data-kind]');if(kd){S.kind=kd.getAttribute('data-kind');render();return}
   var tb=t.closest('[data-tab]');if(tb){S.tab=tb.getAttribute('data-tab');render();window.scrollTo(0,0);return}
   if(t.closest('#fab')){newTankSheet();return}
