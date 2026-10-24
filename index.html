@@ -164,7 +164,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 5p (the email starts with a plain sentence for mail filters; tank and TDU entries in the email use ~~ instead of tab characters, which mail apps turn into spaces; tank entries file ends with eB620-end like the other files; a sent report stays sent when you leave it; office changes made after the export are never overwritten by an older phone copy: only the fields you changed are sent, with their original values; TDU units: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, TDU unit opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
+var VERSION='prototype 6b (the nurse tank screen has the same compact Tank details panel as the TDU unit screen: key fields, Edit this tank, and a collapsed All details list; the TDU Form 2 (visual) checklist is on the phone, and the workbook fills it in; the email starts with a plain sentence for mail filters; tank and TDU entries in the email use ~~ instead of tab characters, which mail apps turn into spaces; tank entries file ends with eB620-end like the other files; a sent report stays sent when you leave it; office changes made after the export are never overwritten by an older phone copy: only the fields you changed are sent, with their original values; TDU units: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, TDU unit opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -657,12 +657,16 @@ function renderQuick(){
   var hs=[o.V&&('expires '+o.V),o.X&&(o.X+' ft'),o.W,o.Y].filter(Boolean).join(', ');
   var h='';
   h+='<div class="panel"><h2>Inspection report</h2><p>Start the report for this tank: unit type, data plate, forms used and Form 2. No signal needed.</p><button class="btn primary block" id="f2Open" type="button">'+(S.f2.some(function(r){return r.key===S.form.key&&!r.sent})?'Continue inspection report':'Start inspection report')+'</button></div>';
+  var fe=S.entries.filter(function(x){return x.kind!=='quick'&&x.row===f.row})[0],dv=fe?fe.v:o;
+  function drow(l,x){return x?'<p style="margin:.15rem 0"><span class="count">'+esc(l)+'</span><br>'+esc(x)+'</p>':''}
+  function dlab(c){var ff=S.data.fields.filter(function(x){return x.c===c})[0];return ff?ff.label:c}
+  h+='<div class="panel"><h2>Tank details</h2>'+['A','B','C','D','E','F','AB'].map(function(c){return drow(c==='A'?'Location':(c==='B'?'Province':(c==='C'?'Company':(c==='D'?'Tank number':dlab(c)))),dv[c])}).join('')+'<div class="row" style="margin-top:.6rem"><button class="btn primary" id="editTankBtn" type="button">Edit this tank</button></div><details style="margin-top:.7rem"><summary style="font-weight:600;cursor:pointer">All details</summary>'+S.data.fields.map(function(x){return drow(x.label,dv[x.c])}).join('')+'</details></div>';
   h+='<div class="panel"><h2>Quick update</h2><p>Type only what you found or changed. The sheet keeps the old values for the inspection forms, and your entries are listed beside them in the workbook.</p></div>';
   h+='<div class="panel"><h2>PRV</h2><div class="fields">'+qfield('R')+qfield('S')+'</div></div>';
   h+='<div class="panel"><h2>Hose</h2><p>On the sheet: '+esc(hs||'no hose recorded')+'</p><label class="check"><input type="checkbox" id="hoseNew"'+(f.hose?' checked':'')+'> New hose fitted</label>'+(f.hose?'<div class="fields">'+qfield('V')+qfield('X')+qfield('Y')+'</div>':'')+'</div>';
   h+='<div class="panel"><h2>HRV and paint</h2><div class="fields">'+qfield('Z')+qfield('AA')+'</div></div>';
   h+='<div class="panel"><h2>Short note</h2><div class="field"><label for="f_note">Decals replaced, weld cracks, findings (100 characters)</label><input type="text" id="f_note" data-in="note" maxlength="100" value="'+esc(f.v.note||'')+'" autocomplete="off"></div></div>';
-  h+='<div class="pager"><button class="btn" id="allBtn" type="button">All details</button><button class="btn primary" id="saveBtn2" type="button">Save update</button></div>';
+  h+='<div class="pager"><button class="btn primary" id="saveBtn2" type="button">Save update</button></div>';
   $('#view').innerHTML=h;
 }
 function saveQuick(){
@@ -786,16 +790,18 @@ function loadDataText(txt,name){
 
 /* ---------- Form 2 (visual inspection) ---------- */
 S.f2=lsGet('ebp_f2',[]);S.f2v=null;S.tdue=lsGet('ebp_tdue',[]);
-function f2def(){return (S.data&&S.data.form2)||SAMPLE.form2}
+/* TDU Form 2 (sheet 'Form 2 External(V)(TC331-S)' and its copies): one comment line (A36) shared by all comments; rows 25 to 28 are already Yes on the form */
+var TDU_F2={"sheet": "Sheet69", "max": 110, "comments": [36], "items": [{"row": 9, "t": "INSPECT tank", "h": 1, "cols": ""}, {"row": 10, "t": "Painted in light reflecting paint(5.3.2.3) (SR55d B622-20)", "h": 0, "cols": "WXYZ"}, {"row": 11, "t": "Verify Tank Markings: (5.2.2.9, 5.3.1.1, 7.2.1.1e)(5.1k B622)", "h": 0, "cols": "WXYZ"}, {"row": 12, "t": "Wall for corrosion or abrasion (7.2.1.1a)", "h": 0, "cols": "WXYZ"}, {"row": 13, "t": "For cuts, digs, gouges (7.2.1.8a)", "h": 0, "cols": "WXYZ"}, {"row": 14, "t": "Check for dents(>12.7mm deep over a weld,  depth >10% length)(7.2.1.8b,c)", "h": 0, "cols": "WXYZ"}, {"row": 15, "t": "Check for distortions or any structural defects(7.2.1.1a and 7.2.1.8e)", "h": 0, "cols": "WXYZ"}, {"row": 16, "t": "Inspect all vertical welds for cracks, defects or leakage(7.2.1.8d)", "h": 0, "cols": "WXYZ"}, {"row": 17, "t": "Inspect all horizontal welds for cracks, defects or leakage(7.2.1.8d)", "h": 0, "cols": "WXYZ"}, {"row": 18, "t": "INSPECT valves and plumbing (if applicable)", "h": 1, "cols": ""}, {"row": 19, "t": "Verify valves and emergency devices operation: (7.2.1.1c)", "h": 0, "cols": "WXYZ"}, {"row": 20, "t": "Liquid level gauge operational and free of corrosion(5.2.3, 7.2.1.1c)", "h": 0, "cols": "WXYZ"}, {"row": 21, "t": "Verify piping and fittings are free from leaks/defects, mounts secure (7.2.1.1a)", "h": 0, "cols": "WXYZ"}, {"row": 22, "t": "All bolts &/or nuts, fuseible links or elements are in place and secure (7.2.1.1d)", "h": 0, "cols": "WXYZ"}, {"row": 23, "t": "Appurtenances and securement", "h": 1, "cols": ""}, {"row": 24, "t": "Appurtenances, attachments and major connecting structures(7.2.1.1f) are not damaged or corroded", "h": 0, "cols": "WXYZ"}, {"row": 25, "t": "Tank secured by components that draw the tank down tight to the frame.(5.1.3, 7.2.1.1f, SR54Gi of B622-20)", "h": 0, "cols": "WXYZ", "dy": 1}, {"row": 26, "t": "Portable tanks that are loaded and unloaded while on the vehicle now require tank securement that has been designed by a Professional Engineer(5.1l)", "h": 0, "cols": "WXYZ", "dy": 1}, {"row": 27, "t": "Manholes secure (if equipped)(7.2.1.1b)", "h": 0, "cols": "WXYZ", "dy": 1}, {"row": 28, "t": "Upper Coupler Assembly: (7.2.1.1f) Only applies to TANK trailers.  Free of corrosion and damage", "h": 0, "cols": "WXYZ", "dy": 1}, {"row": 29, "t": "Hose and Assembies (if applicable)", "h": 1, "cols": ""}, {"row": 30, "t": "Hose assembly: (7.2.1.1g), see Form 5, Inspected as per Form 5, recorded and tagged.", "h": 0, "cols": "WXYZ"}, {"row": 31, "t": "Safety Relief Valves", "h": 1, "cols": ""}, {"row": 32, "t": "HRV's - Thermal expansion relief installed in correct location (between two closed valves on a TC331 tank) 5.2.4.10.1.  Located to prevent discharge from impinging on the tank, piping, or personnel (TC331 tank 5.2.4.10.2)", "h": 0, "cols": "WXYZ"}, {"row": 33, "t": "PRV's - at least one or more located in vapor space of tank(5.2.4.1a,5.2.4.7), opening of device will not be prevented nor it's discharge restricted(5.2.2.8b)", "h": 0, "cols": "WXYZ"}, {"row": 34, "t": "Off-truck emergency shutdown system tested(7.2.1.6)", "h": 0, "cols": "WXYZ"}]};
+function f2def(v){v=v||S.f2v;return (v&&v.tdu)?TDU_F2:((S.data&&S.data.form2)||SAMPLE.form2)}
 function f2unsent(){return S.f2.filter(function(r){return!r.sent})}
 function f2hasYes(i){return !!i.cols&&i.cols.indexOf('W')>=0}
-function f2items(){return f2def().items.filter(function(i){return!i.h&&f2hasYes(i)})}
-function f2refs(items){
+function f2items(v){return f2def(v).items.filter(function(i){return!i.h&&f2hasYes(i)})}
+function f2refs(items,v){
   var m={},k=0;
-  f2def().items.forEach(function(i){var a=items[i.row];if(a&&a.c&&String(a.c).trim()){k++;m[i.row]=k}});
+  f2def(v).items.forEach(function(i){var a=items[i.row];if(a&&a.c&&String(a.c).trim()){k++;m[i.row]=k}});
   return m;
 }
-function f2answered(rec,k){var n=0;k=k||0;f2items().forEach(function(i){if(f2r(rec,i.row,k))n++});return n}
+function f2answered(rec,k){var n=0;k=k||0;f2items(rec).forEach(function(i){if(f2r(rec,i.row,k))n++});return n}
 /* tanks: tank 0 is the first tank (v.items); tanks 1 and 2 are in v.f2t[1], v.f2t[2] and only hold what was changed or typed on their tab */
 function f2nt(v){return unitDef(v.unit).names.length}
 function f2tab(v){var k=+v.f2tab||0;return k>=f2nt(v)?0:k}
@@ -803,11 +809,16 @@ function f2d(v,k){if(!k)return v;return (v.f2t&&v.f2t[k])||{items:{}}}
 function f2dw(v,k){if(!k)return v;var t=v.f2t||(v.f2t={});return t[k]||(t[k]={items:{}})}
 function f2r(v,row,k){k=k||0;var a=((f2d(v,k).items)||{})[row]||{};if(a.r)return a.r;return k?f2r(v,row,0):''}
 function f2cm(v,row,k){k=k||0;var a=((f2d(v,k).items)||{})[row]||{};if(!k)return a.c||'';if(a.c&&String(a.c).trim())return a.c;var t0=(v.items||{})[row]||{};if(a.r&&a.r!==(t0.r||''))return '';return t0.c||''}
-function f2eff(v,k){var m={};f2def().items.forEach(function(i){if(i.h||!i.cols)return;var r=f2r(v,i.row,k),c=f2cm(v,i.row,k);if(r||(c&&String(c).trim()))m[i.row]={r:r,c:c}});return m}
+function f2eff(v,k){var m={};f2def(v).items.forEach(function(i){if(i.h||!i.cols)return;var r=f2r(v,i.row,k),c=f2cm(v,i.row,k);if(r||(c&&String(c).trim()))m[i.row]={r:r,c:c}});return m}
 function f2isdiff(v,row,k){if(!k)return false;var a=((f2d(v,k).items)||{})[row]||{},t0=(v.items||{})[row]||{};if(a.r&&a.r!==(t0.r||''))return true;return !!(a.c&&String(a.c).trim()&&a.c!==(t0.c||''))}
-function f2diffs(v,k){if(!k)return 0;var n=0;f2def().items.forEach(function(i){if(!i.h&&i.cols&&f2isdiff(v,i.row,k))n++});return n}
+function f2diffs(v,k){if(!k)return 0;var n=0;f2def(v).items.forEach(function(i){if(!i.h&&i.cols&&f2isdiff(v,i.row,k))n++});return n}
 function f2tAny(v){return Object.keys(v.f2t||{}).some(function(k){var it=(v.f2t[k]||{}).items||{};return Object.keys(it).some(function(r){var a=it[r];return a&&(a.r||(a.c&&String(a.c).trim()))})})}
-function f2maxRefs(v){var m=0;for(var k=0;k<f2nt(v);k++)m=Math.max(m,Object.keys(f2refs(f2eff(v,k))).length);return m}
+function f2maxRefs(v){var m=0;for(var k=0;k<f2nt(v);k++)m=Math.max(m,Object.keys(f2refs(f2eff(v,k),v)).length);return m}
+/* TDU Form 2: all comments of a tank go on one line of the form, "1. text  2. text" */
+function f2cmLine(v,k){var ef=f2eff(v,k),rf=f2refs(ef,v),a=[];f2def(v).items.forEach(function(it){if(rf[it.row])a.push([rf[it.row],rf[it.row]+'. '+String(ef[it.row].c||'').trim()])});a.sort(function(x,y){return x[0]-y[0]});return a.map(function(x){return x[1]}).join('  ')}
+function tduLenMsg(v,k){var nc=Object.keys(f2refs(f2eff(v,k),v)).length,cl=f2cmLine(v,k).length,mxc=TDU_F2.max;return {bad:cl>mxc,t:nc+(nc===1?' comment':' comments')+', '+cl+' of '+mxc+' characters used on the form'+(f2nt(v)>1?' for this tank':'')+'.'+(cl>mxc?' There is only room for '+mxc+'. Shorten or remove some comments before sending.':'')}}
+function tduLenUpd(){var el=$('#f2len');if(!el||!S.f2v)return;var lm=tduLenMsg(S.f2v,f2tab(S.f2v));el.textContent=lm.t;el.style.color=lm.bad?'var(--bad)':'var(--muted)'}
+function tduF2problems(v){if(!formOn(v,2))return '';var ud=unitDef(v.unit);for(var k=0;k<f2nt(v);k++){var l=f2cmLine(v,k).length;if(l>TDU_F2.max)return 'Form 2: the comments'+(ud.names[k]?' for the '+ud.names[k].toLowerCase()+' tank':'')+' are '+l+' characters long and the form has room for '+TDU_F2.max+'. Shorten them first.'}return ''}
 function f2save(){
   var v=S.f2v;if(!v)return;
   var any=Object.keys(v.items).some(function(r){var a=v.items[r];return a&&(a.r||(a.c&&a.c.trim()))})||!!v.plate||!!v.touched||(!v.tdu&&Object.keys(v.forms||{}).length>0)||!!(v.f20&&(v.f20.date||v.f20.res))||f2tAny(v)||f3any(v)||f4any(v)||f13any(v)||f8any(v)||f5any(v);
@@ -848,7 +859,7 @@ function openF2(o){
   S.form=null;window.scrollTo(0,0);render();
 }
 function nextForm(v){
-  var its=f2items();
+  var its=f2items(v);
   if(formOn(v,2)&&f2answered(v)<its.length)return 'f2';
   if(formOn(v,3)&&f3answered(v)<f3rows().length)return 'f3';
   if(formOn(v,4)&&f4answered(v)<f4rows().length)return 'f4';
@@ -978,7 +989,7 @@ function openTdu(row){
   var v0={A:t.v.A||'',C:t.v.C||'',D:t.v.D||'',S:''},key='TDU|'+keyOf(v0);
   var ex=S.f2.filter(function(r){return r.key===key&&!r.sent})[0],sent=S.f2.filter(function(r){return r.key===key&&r.sent})[0],src=ex||sent;
   S.f2v=f2state(src,v0,t.v.AJ||'',ex?ex.id:newId(),key);
-  S.f2v.tdu=1;S.f2v.forms={2:0,4:0};
+  S.f2v.tdu=1;S.f2v.forms={4:0};
   if(!src||!/^d/.test(S.f2v.unit))S.f2v.unit=tduUnitRows(v0).length>=2?'dq':(t.v.AK?'dd':'ds');
   S.form=null;window.scrollTo(0,0);render();
 }
@@ -1009,8 +1020,10 @@ function renderRepTdu(){
   h+='<p style="margin:0">'+sl.lines.map(esc).join('<br>')+'</p>';
   if(sl.warn)h+='<p style="margin:0;color:var(--bad)">'+esc(sl.warn)+'</p>';
   h+='</div>';
-  h+='<div class="panel"><h2 style="font-size:1.25rem;text-align:center">Form 1 - Tank Information</h2><div class="f2item"><p class="count" style="margin:.2rem 0 .4rem">Data plate: metal identification plate affixed and legible?</p><div class="chips"><button type="button" class="chip y'+(v.plate==='Y'?' on':'')+'" data-plate="Y">Yes</button><button type="button" class="chip n'+(v.plate==='N'?' on':'')+'" data-plate="N">No, out of service</button></div>'+(v.plate?'':'<p class="count" style="margin:.4rem 0 0;color:var(--bad)">Please choose Yes or No before sending.</p>')+'</div><p class="count" style="margin:.6rem 0 0">The TDU inspection forms are not on the phone yet - the office fills them in. This report tells the office the unit type and the data plate answer, so the import can open the right Form 1 sheets for this unit.</p></div>';
-  h+='<div class="panel"><h2>Send</h2><p>Sends the unit type and the data plate answer to the office.</p><button type="button" class="btn primary block" id="repSend">Send report</button></div>';
+  h+='<div class="panel"><h2 style="font-size:1.25rem;text-align:center">Form 1 - Tank Information</h2><div class="f2item"><p class="count" style="margin:.2rem 0 .4rem">Data plate: metal identification plate affixed and legible?</p><div class="chips"><button type="button" class="chip y'+(v.plate==='Y'?' on':'')+'" data-plate="Y">Yes</button><button type="button" class="chip n'+(v.plate==='N'?' on':'')+'" data-plate="N">No, out of service</button></div>'+(v.plate?'':'<p class="count" style="margin:.4rem 0 0;color:var(--bad)">Please choose Yes or No before sending.</p>')+'</div></div>';
+  var on2=formOn(v,2),its2=f2items(v),n2=f2answered(v),nd2=0;for(var q2=1;q2<f2nt(v);q2++)nd2+=f2diffs(v,q2);
+  h+='<div class="panel"><h2 style="font-size:1.25rem;text-align:center">Forms in this report</h2><div class="f2item"><label class="check"><input type="checkbox" data-form="2"'+(on2?' checked':'')+'> Form 2 - Visual inspection (external)</label>'+(on2?'<p class="count" style="margin:.2rem 0 .5rem">'+n2+' of '+its2.length+' answered'+(f2nt(v)>1?(nd2?' - '+nd2+(nd2===1?' difference':' differences')+' on the other tanks':' - other tanks the same'):'')+'</p><button type="button" class="btn block'+(n2<its2.length?' primary':'')+'" id="repF2">'+(n2===0?'Start Form 2':(n2<its2.length?'Continue Form 2':'Edit Form 2'))+'</button>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><p class="count" style="margin:.6rem 0 0">The other TDU forms are not on the phone yet - the office fills them in. This report tells the office the unit type, the data plate answer and Form 2, so the import can open the right Form 1 sheets for this unit.</p></div>';
+  h+='<div class="panel"><h2>Send</h2><p>Sends the unit type, the data plate answer and Form 2 to the office.</p><button type="button" class="btn primary block" id="repSend">Send report</button></div>';
   $('#view').innerHTML=h;
 }
 function renderRep(){
@@ -1113,13 +1126,13 @@ function f20click(t){
   return false;
 }
 function renderF2(){
-  var v=S.f2v,def=f2def(),ud=unitDef(v.unit),nt=f2nt(v),k=f2tab(v),fd=f2dw(v,k),refs=f2refs(f2eff(v,k)),n0=ud.names[0].toLowerCase();
+  var v=S.f2v,def=f2def(v),ud=unitDef(v.unit),nt=f2nt(v),k=f2tab(v),fd=f2dw(v,k),refs=f2refs(f2eff(v,k),v),n0=ud.names[0].toLowerCase();
   $('#tabs').hidden=true;$('#fab').hidden=true;
   var its=f2items(),n=f2answered(v,k);
-  $('#top').innerHTML='<button class="hbtn icon" id="f2Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 2 - Tank '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f2Done" type="button">Done</button>';
+  $('#top').innerHTML='<button class="hbtn icon" id="f2Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 2 - '+(v.tdu?'TDU unit ':'Tank ')+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f2Done" type="button">Done</button>';
   var h='';
   if(nt>1)h+='<div class="ttabs">'+ud.names.map(function(nm,i){var dn=f2diffs(v,i);return '<button type="button" class="ttab'+(i===k?' on':'')+'" data-f2tab="'+i+'">'+esc(nm)+(dn?'<span class="dn">'+dn+(dn===1?' difference':' differences')+'</span>':'')+'</button>'}).join('')+'</div>';
-  h+='<div class="panel"><h2>Visual inspection (external)'+(nt>1?' - '+esc(ud.names[k].toLowerCase())+' tank':'')+'</h2><p>Tap Yes, No or N/A for each item. Add a comment where something needs one; it gets the next Ref # and is printed on the form beside the item. Changes are saved on this phone as you go.</p>'+(nt>1?(k?'<p style="margin:0">This tank is the same as the '+esc(n0)+' tank unless you change an answer or add a comment. Tap an answer to change it; tap it again to go back to "same".</p>':'<p style="margin:0">Answer this first tank. The other tanks start the same; change them on their own tab only where they differ.</p>'):'')+'</div>';
+  h+='<div class="panel"><h2>Visual inspection (external)'+(nt>1?' - '+esc(ud.names[k].toLowerCase())+' tank':'')+'</h2><p>Tap Yes, No or N/A for each item. Add a comment where something needs one; it gets the next Ref # and is printed on the form beside the item.'+(v.tdu?' The TDU form has one comment line, so all the comments of a tank share it: keep them short.':'')+' Changes are saved on this phone as you go.</p>'+(nt>1?(k?'<p style="margin:0">This tank is the same as the '+esc(n0)+' tank unless you change an answer or add a comment. Tap an answer to change it; tap it again to go back to "same".</p>':'<p style="margin:0">Answer this first tank. The other tanks start the same; change them on their own tab only where they differ.</p>'):'')+'</div>';
   h+='<div class="f2bar"><span class="count" style="flex:1;margin:0" id="f2cnt">'+n+' of '+its.length+' answered</span><button class="btn sm" id="f2AllYes" type="button">Mark the rest Yes</button></div>';
   var open=false;
   def.items.forEach(function(it){
@@ -1129,21 +1142,22 @@ function renderF2(){
     function chip(col,lab,cls,val){return cols.indexOf(col)>=0?'<button type="button" class="chip '+cls+(r===val?' on':'')+'" data-f2r="'+it.row+'" data-v="'+val+'">'+lab+'</button>':''}
     ch=f2hasYes(it)?chip('W','Yes','y','Y')+chip('X','No','n','N')+chip('Z','N/A','a','A'):'';
     var hasC=a.c!=null&&(a.c!==''||a.cOpen);
-    h+='<div class="f2item'+(df?' df':'')+'"><p class="tx">'+esc(it.t)+(refs[it.row]?'<span class="rf">Ref '+refs[it.row]+'</span>':'')+(df?'<span class="rf df">Differs from '+esc(n0)+'</span>':'')+'</p><div class="chips">'+ch+'</div>'+(f2hasYes(it)?'':'<p class="count" style="margin:.2rem 0">Recorded on Form 5. Add a comment here only if there is one.</p>');
+    h+='<div class="f2item'+(df?' df':'')+'"><p class="tx">'+esc(it.t)+(refs[it.row]?'<span class="rf">Ref '+refs[it.row]+'</span>':'')+(it.dy&&!r?'<span class="rf">Yes on the form unless answered</span>':'')+(it.row===30&&S.f2v&&S.f2v.tdu&&!r?'<span class="rf">Left as set on the form unless answered</span>':'')+(df?'<span class="rf df">Differs from '+esc(n0)+'</span>':'')+'</p><div class="chips">'+ch+'</div>'+(f2hasYes(it)?'':'<p class="count" style="margin:.2rem 0">Recorded on Form 5. Add a comment here only if there is one.</p>');
     if(cols.indexOf('Y')>=0){
-      if(hasC||r==='N'||String(inc).trim())h+='<textarea data-f2c="'+it.row+'" maxlength="110" placeholder="'+esc(String(inc).trim()?inc:'Comment (short - one line on the form)')+'">'+esc(a.c||'')+'</textarea>';
+      if(hasC||r==='N'||String(inc).trim())h+='<textarea data-f2c="'+it.row+'" maxlength="'+(v.tdu?TDU_F2.max-4:110)+'" placeholder="'+esc(String(inc).trim()?inc:'Comment (short - one line on the form)')+'">'+esc(a.c||'')+'</textarea>';
       else h+='<button type="button" class="lnk" data-f2add="'+it.row+'">+ Add comment</button>';
     }
     h+='</div>';
   });
   if(open)h+='</div>';
   var nc=Object.keys(refs).length,mx=def.comments.length;
-  h+='<div class="panel"><p style="margin:0;color:'+(nc>mx?'var(--bad)':'var(--muted)')+'">'+nc+' of '+mx+' comment lines used on the form'+(nt>1?' for this tank':'')+'.'+(nc>mx?' There is only room for '+mx+'. Shorten or remove some comments before sending.':'')+'</p></div>';
+  if(v.tdu){var lm=tduLenMsg(v,k);h+='<div class="panel"><p id="f2len" style="margin:0;color:'+(lm.bad?'var(--bad)':'var(--muted)')+'">'+esc(lm.t)+'</p></div>'}
+  else h+='<div class="panel"><p style="margin:0;color:'+(nc>mx?'var(--bad)':'var(--muted)')+'">'+nc+' of '+mx+' comment lines used on the form'+(nt>1?' for this tank':'')+'.'+(nc>mx?' There is only room for '+mx+'. Shorten or remove some comments before sending.':'')+'</p></div>';
   $('#view').innerHTML=h;
 }
 function f2closeCheck(){
   var v=S.f2v;f2save();S.f2v=null;S.tab='tanks';render();
-  var its=f2items(),rec=S.f2.filter(function(r){return r.id===v.id})[0];
+  var rec=S.f2.filter(function(r){return r.id===v.id})[0],its=f2items(rec||v);
   toast(rec?('Report saved'+(formOn(rec,2)||formOn(rec,3)||formOn(rec,4)?' ('+[formOn(rec,2)?'Form 2: '+f2answered(rec)+' of '+its.length:'',formOn(rec,3)?'Form 3: '+f3answered(rec)+' of '+f3rows().length:'',formOn(rec,4)?'Form 4: '+f4answered(rec)+' of '+f4rows().length:''].filter(Boolean).join(', ')+' answered)':'')+'. It is on the To send tab.'):'Nothing entered, so nothing was saved.');
 }
 function f2set(row,val){
@@ -1167,47 +1181,50 @@ function f2click(t){
   return false;
 }
 function f2c(x){return clean(x).replace(/\|/g,'/')}
+function f2lines(rec,lines){
+  var refs=f2refs(rec.items,rec),cm=[];
+  if(!formOn(rec,2))return;
+  f2def(rec).items.forEach(function(it){
+    var a=rec.items[it.row];if(!a||it.h)return;
+    var ref=refs[it.row]||'';
+    if(a.r||ref)lines.push(['I',it.row,a.r||'',ref].join('|'));
+    if(ref)cm.push([ref,f2c(a.c)]);
+  });
+  cm.forEach(function(c){lines.push(['C',c[0],c[1]].join('|'))});
+  var usedV2=false;
+  for(var k2=1;k2<f2nt(rec);k2++){(function(k2){
+    if(!f2diffs(rec,k2))return;
+    var ef=f2eff(rec,k2),rf2=f2refs(ef,rec),cm2=[],S2=[];
+    f2def(rec).items.forEach(function(it){
+      if(it.h)return;var a=ef[it.row];if(!a)return;var ref=rf2[it.row]||'';
+      if(a.r||ref)S2.push(['I',it.row,a.r||'',ref].join('|'));
+      if(ref)cm2.push([ref,f2c(a.c)]);
+    });
+    cm2.forEach(function(c){S2.push(['C',c[0],c[1]].join('|'))});
+    lines.push('V|'+(k2+1));usedV2=true;S2.forEach(function(x){lines.push(x)});
+  })(k2)}
+  if(usedV2)lines.push('V|1');
+}
 function buildF2(list){
   var lines=['eB620-form2-1|'+new Date().toISOString()+'|'+f2c(S.data.book)];
   list.forEach(function(rec){
     lines.push(['T',f2c(rec.v.A),f2c(rec.v.C),f2c(rec.v.D),f2c(rec.serial),new Date(rec.ts).toISOString().slice(0,10)].join('|'));
     lines.push(['U',rec.unit||'S',rec.plate||'',repForms(rec).join(','),'L2'].join('|'));
-    if(rec.tdu)return;
+    if(rec.tdu){f2lines(rec,lines);return}
     if(rec.f20&&rec.f20.res&&rec.f20.date)lines.push(['S','20',rec.f20.date,rec.f20.res].join('|'));
-    var refs=f2refs(rec.items),cm=[];
     var f3l=formOn(rec,3)?buildF3(rec):[];f3l.forEach(function(x){lines.push(x)});
     var f4l=formOn(rec,4)?buildF4(rec):[];f4l.forEach(function(x){lines.push(x)});
     var f5l=formOn(rec,5)?buildF5(rec):[];f5l.forEach(function(x){lines.push(x)});
     var f8l=formOn(rec,8)?buildF8(rec):[];f8l.forEach(function(x){lines.push(x)});
     var f13l=formOn(rec,13)?buildF13(rec):[];f13l.forEach(function(x){lines.push(x)});
-    if(formOn(rec,2))f2def().items.forEach(function(it){
-      var a=rec.items[it.row];if(!a||it.h)return;
-      var ref=refs[it.row]||'';
-      if(a.r||ref)lines.push(['I',it.row,a.r||'',ref].join('|'));
-      if(ref)cm.push([ref,f2c(a.c)]);
-    });
-    cm.forEach(function(c){lines.push(['C',c[0],c[1]].join('|'))});
-    if(formOn(rec,2)){var usedV2=false;
-      for(var k2=1;k2<f2nt(rec);k2++){(function(k2){
-        if(!f2diffs(rec,k2))return;
-        var ef=f2eff(rec,k2),rf2=f2refs(ef),cm2=[],S2=[];
-        f2def().items.forEach(function(it){
-          if(it.h)return;var a=ef[it.row];if(!a)return;var ref=rf2[it.row]||'';
-          if(a.r||ref)S2.push(['I',it.row,a.r||'',ref].join('|'));
-          if(ref)cm2.push([ref,f2c(a.c)]);
-        });
-        cm2.forEach(function(c){S2.push(['C',c[0],c[1]].join('|'))});
-        lines.push('V|'+(k2+1));usedV2=true;S2.forEach(function(x){lines.push(x)});
-      })(k2)}
-      if(usedV2)lines.push('V|1');
-    }
+    f2lines(rec,lines);
   });
   lines.push('eB620-end');
   return lines.join('\r\n')+'\r\n';
 }
 function f2row(rec){
-  var d=new Date(rec.ts),its=f2items();
-  return '<div class="ent"><div><div class="tag" style="font-family:var(--mono);font-weight:700">'+esc(rec.v.D||'(no number)')+' <span class="badge '+(rec.sent?'good':'warn')+'">Report'+(rec.sent?' - sent':'')+'</span></div><div class="count">'+esc([rec.v.A,rec.v.C].filter(Boolean).join(' - '))+' - '+(rec.tdu?'TDU '+unitDef(rec.unit).t.toLowerCase()+' unit - data plate '+(rec.plate==='Y'?'yes':(rec.plate==='N'?'no, out of service':'not answered'))+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})):unitDef(rec.unit).t.toLowerCase()+' unit - '+(formOn(rec,2)?'Form 2: '+f2answered(rec)+' of '+its.length+' answered':'no Form 2')+(formOn(rec,3)?' - Form 3: '+f3answered(rec)+' of '+f3rows().length+' answered':'')+(rec.f20&&rec.f20.res?' - Form 20 '+(rec.f20.res==='P'?'pass':'fail'):' - Form 20 open')+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})))+'</div></div><div class="row">'+
+  var d=new Date(rec.ts),its=f2items(rec);
+  return '<div class="ent"><div><div class="tag" style="font-family:var(--mono);font-weight:700">'+esc(rec.v.D||'(no number)')+' <span class="badge '+(rec.sent?'good':'warn')+'">Report'+(rec.sent?' - sent':'')+'</span></div><div class="count">'+esc([rec.v.A,rec.v.C].filter(Boolean).join(' - '))+' - '+(rec.tdu?'TDU '+unitDef(rec.unit).t.toLowerCase()+' unit - data plate '+(rec.plate==='Y'?'yes':(rec.plate==='N'?'no, out of service':'not answered'))+(formOn(rec,2)?' - Form 2: '+f2answered(rec)+' of '+its.length+' answered':'')+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})):unitDef(rec.unit).t.toLowerCase()+' unit - '+(formOn(rec,2)?'Form 2: '+f2answered(rec)+' of '+its.length+' answered':'no Form 2')+(formOn(rec,3)?' - Form 3: '+f3answered(rec)+' of '+f3rows().length+' answered':'')+(rec.f20&&rec.f20.res?' - Form 20 '+(rec.f20.res==='P'?'pass':'fail'):' - Form 20 open')+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})))+'</div></div><div class="row">'+
     (rec.sent?'':'<button class="btn sm primary" data-f2send="'+esc(rec.id)+'" type="button">Send</button>')+'<button class="btn sm" data-f2edit="'+esc(rec.id)+'" type="button">Open</button>'+(rec.sent?'<button class="btn sm" data-f2unsend="'+esc(rec.id)+'" type="button">Send again</button>':'')+'<button class="btn sm danger" data-f2del="'+esc(rec.id)+'" type="button">Delete</button></div></div>';
 }
 function f2sendPanel(){
@@ -1227,8 +1244,9 @@ function sendF2(id){
   if(formOn(list[0],5)){var bad5=f5problems(list[0]);if(bad5.length){toast('Form 5: '+bad5[0]+' Open Form 5 and fix it first.');return}}
   if(formOn(list[0],8)){var bad8=f8problems(list[0]);if(bad8.length){toast('Form 8: '+bad8[0]+' Open Form 8 and fix it first.');return}}
   if(formOn(list[0],13)){var bad13=f13problems(list[0]);if(bad13.length){toast('Form 13: '+bad13[0]+' Open Form 13 and shorten it first.');return}}
-  var nc=0;list.forEach(function(r){nc=Math.max(nc,f2maxRefs(r))});
-  if(nc>f2def().comments.length){toast('A Form 2 has more comments than the form has lines. Shorten them first.');return}
+  if(list[0].tdu){var bt=tduF2problems(list[0]);if(bt){toast(bt);return}}
+  else{var nc=0;list.forEach(function(r){nc=Math.max(nc,f2maxRefs(r))});
+  if(nc>f2def(list[0]).comments.length){toast('A Form 2 has more comments than the form has lines. Shorten them first.');return}}
   var text=buildF2(list),name='eB620_form2_'+String(list[0].v.D||'tank').replace(/[^A-Za-z0-9_-]+/g,'')+'_'+stamp()+'.txt',ids=list.map(function(r){return r.id});
   var r0=list[0],sj='eB620 app - '+[r0.v.D||'tank',r0.v.A,new Date(r0.ts).toISOString().slice(0,10)].filter(Boolean).join(' - ');
   shareFile(text,name,'eB620 Form 2',list.length+(list.length===1?' inspection':' inspections'),function(){S.f2.forEach(function(r){if(ids.indexOf(r.id)>=0)r.sent=Date.now()});lsSet('ebp_f2',S.f2)},sj);
@@ -2041,7 +2059,7 @@ document.addEventListener('click',function(e){
   var fs=t.closest('[data-f2send]');if(fs){sendF2(fs.getAttribute('data-f2send'));return}
   if(S.form){
     var pk=t.closest('[data-pick]');if(pk){openPicker(pk.getAttribute('data-pick'));return}
-    if(t.closest('#allBtn')){var rr=S.form.row;S.form=null;dropDraft();openFull(rr);return}
+    if(t.closest('#allBtn')||t.closest('#editTankBtn')){var rr=S.form.row;S.form=null;dropDraft();openFull(rr);return}
     if(t.closest('#backBtn')){leaveForm();return}
     if(t.closest('#saveRear')){saveForm(true);return}
     if(t.closest('#saveBtn')||t.closest('#saveBtn2')){if(S.form.mode==='quick')saveQuick();else saveForm();return}
@@ -2122,7 +2140,7 @@ document.addEventListener('input',function(e){
   var f3m=e.target.getAttribute&&e.target.getAttribute('data-f3cm');
   if(f3m&&S.f2v){var f3b=f3dw(S.f2v,f3tab(S.f2v)),a3=f3b.items[+f3m]||(f3b.items[+f3m]={});a3.c=e.target.value;f2save();return}
   var fc=e.target.getAttribute&&e.target.getAttribute('data-f2c');
-  if(fc&&S.f2v){var fdc=f2dw(S.f2v,f2tab(S.f2v)),a=fdc.items[+fc]||(fdc.items[+fc]={});a.c=e.target.value;f2save();return}
+  if(fc&&S.f2v){var fdc=f2dw(S.f2v,f2tab(S.f2v)),a=fdc.items[+fc]||(fdc.items[+fc]={});a.c=e.target.value;f2save();if(S.f2v.tdu)tduLenUpd();return}
   var c=e.target.getAttribute&&e.target.getAttribute('data-in');
   if(c&&S.form){S.form.v[c]=e.target.value;S.form.dirty=true;saveDraft()}
 });
