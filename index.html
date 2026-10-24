@@ -164,7 +164,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 4w (Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
+var VERSION='prototype 4x (TDU units, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -174,7 +174,7 @@ function lsDel(k){delete MEM[k];try{localStorage.removeItem(k)}catch(e){}}
 
 /* ---------- data ---------- */
 var SAMPLE=JSON.parse($('#sampleData').textContent);
-var S={tab:'tanks',q:'',form:null,sheetFn:null,
+var S={tab:'tanks',kind:'nurse',q:'',form:null,sheetFn:null,
   data:null,sample:false,entries:lsGet('ebp_entries',[]),adds:lsGet('ebp_adds',{}),draft:lsGet('ebp_draft',null)};
 S.data=lsGet('ebp_data',null);
 if(!S.data||!S.data.fields){S.data=SAMPLE;S.sample=true}
@@ -360,7 +360,7 @@ function render(){
   var tabs=$('#tabs');tabs.hidden=false;
   tabs.innerHTML=[['tanks','Tanks',0],['send','To send',n],['data','Data',0]].map(function(t){
     return '<button type="button" data-tab="'+t[0]+'"'+(S.tab===t[0]?' aria-current="page"':'')+'>'+t[1]+(t[2]?'<span class="n">'+t[2]+'</span>':'')+'</button>'}).join('');
-  $('#fab').hidden=S.tab!=='tanks';
+  $('#fab').hidden=S.tab!=='tanks'||S.kind==='tdu';
   if(S.tab==='tanks')renderTanks();else if(S.tab==='send')renderSend();else renderData();
 }
 function tankRow(t){
@@ -381,12 +381,20 @@ function renderTanks(){
   var h='';
   if(S.draft){h+='<div class="banner"><b>Unfinished entry.</b> '+esc(S.draft.mode==='quick'?'A quick update':(S.draft.v.D?('Tank '+S.draft.v.D):'A new tank'))+(S.draft.v.A?' at '+esc(S.draft.v.A):'')+' was not saved.<div class="row"><button class="btn primary sm" data-act="resume" type="button">Continue</button><button class="btn sm" data-act="dropdraft" type="button">Discard</button></div></div>'}
   if(S.sample){h+='<div class="banner"><b>Example data.</b> These are the sample tanks from the template. Open the Data tab and load the file exported from the workbook to see your own tanks.</div>'}
+  if(tduRows().length)h+='<div class="chips" style="margin:0 0 .6rem"><button type="button" class="chip s'+(S.kind!=='tdu'?' on':'')+'" data-kind="nurse">Nurse tanks</button><button type="button" class="chip s'+(S.kind==='tdu'?' on':'')+'" data-kind="tdu">TDU</button></div>';
   h+='<div class="search"><input id="q" type="search" placeholder="Search location, company, tank or serial number" value="'+esc(S.q)+'" autocomplete="off" aria-label="Search tanks"></div><div class="count" id="cnt"></div><ul class="list" id="tl"></ul>';
   $('#view').innerHTML=h;
   fillTankList();
   $('#q').addEventListener('input',function(e){S.q=e.target.value;fillTankList()});
 }
 function fillTankList(){
+  if(S.kind==='tdu'&&tduRows().length){
+    var tl=tduList().filter(function(t){return tduMatches(t,S.q)});
+    tl.sort(function(a,b){return natural(a.v.A||'',b.v.A||'')||natural(a.v.C||'',b.v.C||'')||natural(a.v.D||'',b.v.D||'')});
+    $('#cnt').textContent=tl.length+(tl.length===1?' TDU unit':' TDU units');
+    $('#tl').innerHTML=tl.length?tl.slice(0,150).map(tduRowHtml).join(''):'<li class="empty">No TDU unit matches.</li>';
+    return;
+  }
   var all=allTanks().filter(function(t){return matches(t,S.q)});
   all.sort(function(a,b){return natural(a.v.A||'',b.v.A||'')||natural(a.v.C||'',b.v.C||'')||natural(a.v.D||'',b.v.D||'')});
   var cap=150,shown=all.slice(0,cap);
@@ -410,7 +418,7 @@ function renderSend(){
 }
 function renderData(){
   var D=S.data;
-  var h='<div class="panel"><h2>Tank and drop-down data</h2><dl class="kv"><dt>Source</dt><dd>'+(S.sample?'Example data built into this page':esc(D.book||'Workbook'))+'</dd><dt>Exported</dt><dd>'+esc(D.made||'-')+'</dd><dt>Tanks</dt><dd>'+D.tanks.length+'</dd><dt>Fields</dt><dd>'+D.fields.length+'</dd></dl>'+
+  var h='<div class="panel"><h2>Tank and drop-down data</h2><dl class="kv"><dt>Source</dt><dd>'+(S.sample?'Example data built into this page':esc(D.book||'Workbook'))+'</dd><dt>Exported</dt><dd>'+esc(D.made||'-')+'</dd><dt>Tanks</dt><dd>'+D.tanks.length+'</dd>'+(D.tdu&&D.tdu.tanks?'<dt>TDU rows</dt><dd>'+D.tdu.tanks.length+'</dd>':'')+'<dt>Fields</dt><dd>'+D.fields.length+'</dd></dl>'+
     '<p>In the workbook, open the Nurse tank form and click "Export for phone". Send the file it saves to this phone, then load it here. Loading new data does not delete tanks that are waiting to send.</p>'+
     '<input type="file" id="fileIn" accept=".json,application/json,text/plain" hidden><button class="btn primary block" id="loadBtn" type="button">Load data file</button></div>';
   h+='<div class="panel"><h2>On this phone</h2><dl class="kv"><dt>Waiting to send</dt><dd>'+unsent().length+'</dd><dt>Sent</dt><dd>'+S.entries.filter(function(e){return e.sent}).length+'</dd><dt>Version</dt><dd>'+VERSION+'</dd></dl><p>Everything on this page works with no signal. Entries stay on the phone until you delete them.</p>'+
@@ -733,12 +741,13 @@ function f2save(){
   var any=Object.keys(v.items).some(function(r){var a=v.items[r];return a&&(a.r||(a.c&&a.c.trim()))})||!!v.plate||!!v.touched||Object.keys(v.forms||{}).length>0||!!(v.f20&&(v.f20.date||v.f20.res))||f2tAny(v)||f3any(v)||f4any(v)||f13any(v)||f8any(v)||f5any(v);
   var i=S.f2.map(function(x){return x.id}).indexOf(v.id);
   if(!any){if(i>=0){S.f2.splice(i,1);lsSet('ebp_f2',S.f2)}return}
-  var rec={id:v.id,key:v.key,v:v.v,serial:v.serial,items:v.items,f2t:v.f2t||{},unit:v.unit,plate:v.plate||'',forms:v.forms||{},f20:v.f20||{date:'',res:'',auto:0},f3:v.f3||{items:{},vals:{}},f4:v.f4||{items:{},vals:{}},f13:v.f13||{text:''},f8:v.f8||{q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''},f5:v.f5||{h:[]},touched:v.touched?1:0,ts:Date.now(),sent:0};
+  var rec={id:v.id,key:v.key,v:v.v,serial:v.serial,items:v.items,f2t:v.f2t||{},unit:v.unit,plate:v.plate||'',forms:v.forms||{},f20:v.f20||{date:'',res:'',auto:0},f3:v.f3||{items:{},vals:{}},f4:v.f4||{items:{},vals:{}},f13:v.f13||{text:''},f8:v.f8||{q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''},f5:v.f5||{h:[]},touched:v.touched?1:0,tdu:v.tdu?1:0,ts:Date.now(),sent:0};
   if(i>=0)S.f2[i]=rec;else S.f2.push(rec);
   lsSet('ebp_f2',S.f2);
 }
 /* ---------- Form 1 (the report's first page): unit type, data plate, forms used ---------- */
 var UNITS=[{k:'S',t:'Single',names:['']},{k:'T',t:'Twin',names:['Left','Right']},{k:'3',t:'Triple',names:['Left','Center','Right']}];
+var TUNITS=[{k:'ds',t:'Single',names:['']},{k:'dd',t:'Double',names:['Left','Right']},{k:'dq',t:'Quad',names:['Front left','Front right','Rear left','Rear right']}];
 var FORMS_ALL=[{n:2,t:'Form 2 - Visual inspection (external)',def:1},{n:3,t:'Form 3 - Pressure test (3 or 5 yr)',s:'Pressure test'},{n:4,t:'Form 4 - Leakage (K)',def:1},{n:5,t:'Form 5 - Hose test and inspection',s:'Hose test'},{n:8,t:'Form 8 - Thickness',s:'Thickness'},{n:10,t:'Form 10 - Data plate pictures',s:'Data plate pictures'},{n:13,t:'Form 13 - Additional comments',s:'Additional comments'}];
 function formOn(v,n){var f=v.forms||{};if(n===1||n===20)return true;if(n===2||n===4)return f[n]!==0;return !!f[n]}
 function unitTanks(v){
@@ -746,12 +755,12 @@ function unitTanks(v){
   return S.data.tanks.filter(function(t){return norm(t.v.C)===c&&norm(t.v.D)===d}).sort(function(a,b){return a.row-b.row});
 }
 function unitGuess(v){var n=unitTanks(v).length;return n>=3?'3':(n===2?'T':'S')}
-function unitDef(k){return UNITS.filter(function(u){return u.k===k})[0]||UNITS[0]}
+function unitDef(k){return UNITS.concat(TUNITS).filter(function(u){return u.k===k})[0]||UNITS[0]}
 function repForms(v){return FORMS_ALL.filter(function(f){return formOn(v,f.n)}).map(function(f){return f.n})}
 function f20done(v){return !!(v.f20&&v.f20.res&&v.f20.date)}
 function todayISO(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function f2state(src,v,serial,id,key){
-  return {id:id,key:key,v:v,serial:serial,items:src?JSON.parse(JSON.stringify(src.items)):{},f2t:src&&src.f2t?JSON.parse(JSON.stringify(src.f2t)):{},unit:(src&&src.unit)||unitGuess(v),plate:(src&&src.plate)||'',forms:src&&src.forms?JSON.parse(JSON.stringify(src.forms)):{},f20:src&&src.f20?JSON.parse(JSON.stringify(src.f20)):{date:'',res:'',auto:0},f3:src&&src.f3?JSON.parse(JSON.stringify(src.f3)):{items:{},vals:{}},f4:src&&src.f4?JSON.parse(JSON.stringify(src.f4)):{items:{},vals:{}},f13:src&&src.f13?JSON.parse(JSON.stringify(src.f13)):{text:''},f8:src&&src.f8?JSON.parse(JSON.stringify(src.f8)):{q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''},f5:src&&src.f5?JSON.parse(JSON.stringify(src.f5)):{h:[]},touched:src&&src.touched?1:0,view:'rep'};
+  return {id:id,key:key,v:v,serial:serial,items:src?JSON.parse(JSON.stringify(src.items)):{},f2t:src&&src.f2t?JSON.parse(JSON.stringify(src.f2t)):{},unit:(src&&src.unit)||unitGuess(v),plate:(src&&src.plate)||'',forms:src&&src.forms?JSON.parse(JSON.stringify(src.forms)):{},f20:src&&src.f20?JSON.parse(JSON.stringify(src.f20)):{date:'',res:'',auto:0},f3:src&&src.f3?JSON.parse(JSON.stringify(src.f3)):{items:{},vals:{}},f4:src&&src.f4?JSON.parse(JSON.stringify(src.f4)):{items:{},vals:{}},f13:src&&src.f13?JSON.parse(JSON.stringify(src.f13)):{text:''},f8:src&&src.f8?JSON.parse(JSON.stringify(src.f8)):{q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''},f5:src&&src.f5?JSON.parse(JSON.stringify(src.f5)):{h:[]},touched:src&&src.touched?1:0,tdu:src&&src.tdu?1:0,view:'rep'};
 }
 function openF2(o){
   var key=keyOf(o),ex=S.f2.filter(function(r){return r.key===key&&!r.sent})[0];
@@ -768,7 +777,55 @@ function nextForm(v){
   if(!f20done(v))return 'f20';
   return '';
 }
+
+/* ---------- TDU units (Form 1 only for now): the TDU Tanks list is in the data file as d.tdu ---------- */
+function tduRows(){return (S.data&&S.data.tdu&&S.data.tdu.tanks)||[]}
+function tduUnitRows(v){var a=norm(v.A),c=norm(v.C),d=norm(v.D);return tduRows().filter(function(t){return norm(t.v.A)===a&&norm(t.v.C)===c&&norm(t.v.D)===d}).sort(function(x,y){return x.row-y.row})}
+function tduList(){var seen={},out=[];tduRows().slice().sort(function(a,b){return a.row-b.row}).forEach(function(t){var k=keyOf(t.v);if(seen[k])return;seen[k]=1;out.push(t)});return out}
+function tduMatches(t,q){if(!q)return true;var hay=[t.v.A,t.v.B,t.v.C,t.v.D,t.v.E,t.v.F,t.v.AJ,t.v.AK].join(' ').toLowerCase();return q.toLowerCase().split(/\s+/).every(function(w){return hay.indexOf(w)>=0})}
+function tduRowHtml(t){
+  var v=t.v,rec=S.f2.filter(function(r){return r.key==='TDU|'+keyOf(v)}).sort(function(a,b){return b.ts-a.ts})[0],badge='';
+  if(rec)badge=rec.sent?'<span class="badge good">Report sent</span>':'<span class="badge warn">Report</span>';
+  var sub=[v.A,v.C].filter(Boolean).join(' - ');
+  return '<li><button type="button" class="tank" data-open="t:'+t.row+'"><span class="tag">'+esc(v.D||'(no number)')+'</span>'+(badge||'<span></span>')+'<span class="sub">'+esc(sub)+'</span><span></span>'+(v.F?'<span class="sub">'+esc(v.F)+'</span>':'')+'</button></li>';
+}
+/* tank serial lines for the unit type chosen: a quad is two rows of the TDU list with the same location, company and unit number (front, then rear) */
+function tduSerials(v,k){
+  var rows=tduUnitRows(v),r1=rows[0]?rows[0].v:null,r2=rows[1]?rows[1].v:null,ln=[],warn='';
+  function ser(r,c){return r?(r[c]||'(no serial in the list)'):'not in the TDU list'}
+  if(k==='ds')ln.push('Tank: '+ser(r1,'AJ'));
+  else if(k==='dd'){ln.push('Left tank: '+ser(r1,'AJ'));ln.push('Right tank: '+ser(r1,'AK'))}
+  else{
+    ln.push('Front left tank: '+ser(r1,'AJ'));ln.push('Front right tank: '+ser(r1,'AK'));
+    ln.push('Rear left tank: '+ser(r2,'AJ'));ln.push('Rear right tank: '+ser(r2,'AK'));
+    if(!r2)warn='A quad is two rows in the TDU Tanks list with the same location, company and unit number (front, then rear). Only '+rows.length+(rows.length===1?' row was':' rows were')+' found. Add the rear row to the TDU list first, or choose a different unit type.';
+  }
+  if(k==='dd'&&r1&&!r1.AK)warn='The TDU list has no right-tank serial for this unit.';
+  return {lines:ln,warn:warn};
+}
+function openTdu(row){
+  var t=tduRows().filter(function(x){return x.row===row})[0];if(!t)return;
+  var v0={A:t.v.A||'',C:t.v.C||'',D:t.v.D||'',S:''},key='TDU|'+keyOf(v0);
+  var ex=S.f2.filter(function(r){return r.key===key&&!r.sent})[0],sent=S.f2.filter(function(r){return r.key===key&&r.sent})[0],src=ex||sent;
+  S.f2v=f2state(src,v0,t.v.AJ||'',ex?ex.id:newId(),key);
+  S.f2v.tdu=1;S.f2v.forms={2:0,4:0};
+  if(!src||!/^d/.test(S.f2v.unit))S.f2v.unit=tduUnitRows(v0).length>=2?'dq':(t.v.AK?'dd':'ds');
+  S.form=null;window.scrollTo(0,0);render();
+}
+function renderRepTdu(){
+  var v=S.f2v,sl=tduSerials(v.v,v.unit);
+  $('#tabs').hidden=true;$('#fab').hidden=true;
+  $('#top').innerHTML='<button class="hbtn icon" id="repBack" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>TDU report - Unit '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="repDone" type="button">Done</button>';
+  var h='<div class="panel"><h2>Unit</h2><p>What kind of TDU is this?</p><div class="chips">'+TUNITS.map(function(u){return '<button type="button" class="chip s'+(v.unit===u.k?' on':'')+'" data-unit="'+u.k+'">'+u.t+'</button>'}).join('')+'</div>';
+  h+='<p style="margin:0">'+sl.lines.map(esc).join('<br>')+'</p>';
+  if(sl.warn)h+='<p style="margin:0;color:var(--bad)">'+esc(sl.warn)+'</p>';
+  h+='</div>';
+  h+='<div class="panel"><h2 style="font-size:1.25rem;text-align:center">Form 1 - Tank Information</h2><div class="f2item"><p class="count" style="margin:.2rem 0 .4rem">Data plate: metal identification plate affixed and legible?</p><div class="chips"><button type="button" class="chip y'+(v.plate==='Y'?' on':'')+'" data-plate="Y">Yes</button><button type="button" class="chip n'+(v.plate==='N'?' on':'')+'" data-plate="N">No, out of service</button></div>'+(v.plate?'':'<p class="count" style="margin:.4rem 0 0;color:var(--bad)">Please choose Yes or No before sending.</p>')+'</div><p class="count" style="margin:.6rem 0 0">The TDU inspection forms are not on the phone yet - the office fills them in. This report tells the office the unit type and the data plate answer, so the import can open the right Form 1 sheets for this unit.</p></div>';
+  h+='<div class="panel"><h2>Send</h2><p>Sends the unit type and the data plate answer to the office.</p><button type="button" class="btn primary block" id="repSend">Send report</button></div>';
+  $('#view').innerHTML=h;
+}
 function renderRep(){
+  if(S.f2v&&S.f2v.tdu){renderRepTdu();return}
   var v=S.f2v,ud=unitDef(v.unit),tk=unitTanks(v.v),its=f2items(),n=f2answered(v),nx=nextForm(v);
   $('#tabs').hidden=true;$('#fab').hidden=true;
   $('#top').innerHTML='<button class="hbtn icon" id="repBack" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Inspection report - Tank '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="repDone" type="button">Done</button>';
@@ -926,6 +983,7 @@ function buildF2(list){
   list.forEach(function(rec){
     lines.push(['T',f2c(rec.v.A),f2c(rec.v.C),f2c(rec.v.D),f2c(rec.serial),new Date(rec.ts).toISOString().slice(0,10)].join('|'));
     lines.push(['U',rec.unit||'S',rec.plate||'',repForms(rec).join(','),'L2'].join('|'));
+    if(rec.tdu)return;
     if(rec.f20&&rec.f20.res&&rec.f20.date)lines.push(['S','20',rec.f20.date,rec.f20.res].join('|'));
     var refs=f2refs(rec.items),cm=[];
     var f3l=formOn(rec,3)?buildF3(rec):[];f3l.forEach(function(x){lines.push(x)});
@@ -960,7 +1018,7 @@ function buildF2(list){
 }
 function f2row(rec){
   var d=new Date(rec.ts),its=f2items();
-  return '<div class="ent"><div><div class="tag" style="font-family:var(--mono);font-weight:700">'+esc(rec.v.D||'(no number)')+' <span class="badge '+(rec.sent?'good':'warn')+'">Report'+(rec.sent?' - sent':'')+'</span></div><div class="count">'+esc([rec.v.A,rec.v.C].filter(Boolean).join(' - '))+' - '+unitDef(rec.unit).t.toLowerCase()+' unit - '+(formOn(rec,2)?'Form 2: '+f2answered(rec)+' of '+its.length+' answered':'no Form 2')+(formOn(rec,3)?' - Form 3: '+f3answered(rec)+' of '+f3rows().length+' answered':'')+(rec.f20&&rec.f20.res?' - Form 20 '+(rec.f20.res==='P'?'pass':'fail'):' - Form 20 open')+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'}))+'</div></div><div class="row">'+
+  return '<div class="ent"><div><div class="tag" style="font-family:var(--mono);font-weight:700">'+esc(rec.v.D||'(no number)')+' <span class="badge '+(rec.sent?'good':'warn')+'">Report'+(rec.sent?' - sent':'')+'</span></div><div class="count">'+esc([rec.v.A,rec.v.C].filter(Boolean).join(' - '))+' - '+(rec.tdu?'TDU '+unitDef(rec.unit).t.toLowerCase()+' unit - data plate '+(rec.plate==='Y'?'yes':(rec.plate==='N'?'no, out of service':'not answered'))+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})):unitDef(rec.unit).t.toLowerCase()+' unit - '+(formOn(rec,2)?'Form 2: '+f2answered(rec)+' of '+its.length+' answered':'no Form 2')+(formOn(rec,3)?' - Form 3: '+f3answered(rec)+' of '+f3rows().length+' answered':'')+(rec.f20&&rec.f20.res?' - Form 20 '+(rec.f20.res==='P'?'pass':'fail'):' - Form 20 open')+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})))+'</div></div><div class="row">'+
     (rec.sent?'':'<button class="btn sm primary" data-f2send="'+esc(rec.id)+'" type="button">Send</button>')+'<button class="btn sm" data-f2edit="'+esc(rec.id)+'" type="button">Open</button>'+(rec.sent?'<button class="btn sm" data-f2unsend="'+esc(rec.id)+'" type="button">Send again</button>':'')+'<button class="btn sm danger" data-f2del="'+esc(rec.id)+'" type="button">Delete</button></div></div>';
 }
 function f2sendPanel(){
@@ -974,7 +1032,7 @@ function f2sendPanel(){
 function sendF2(id){
   var list=f2unsent().filter(function(r){return r.id===id});if(!list.length)return;
   if(!list[0].plate){toast('Answer the data plate question (Yes or No) on the report first.');return}
-  if(!f20done(list[0])){toast('Answer Form 20 (date and Pass or Fail) on the report first.');return}
+  if(!list[0].tdu&&!f20done(list[0])){toast('Answer Form 20 (date and Pass or Fail) on the report first.');return}
   if(formOn(list[0],3)){var bad3=f3problems(list[0]);if(bad3.length){toast('Form 3: '+bad3[0]+' Open Form 3 and fix it first.');return}}
   if(formOn(list[0],4)){var bad4=f4problems(list[0]);if(bad4.length){toast('Form 4: '+bad4[0]+' Open Form 4 and fix it first.');return}}
   if(formOn(list[0],5)){var bad5=f5problems(list[0]);if(bad5.length){toast('Form 5: '+bad5[0]+' Open Form 5 and fix it first.');return}}
@@ -1705,12 +1763,13 @@ document.addEventListener('click',function(e){
     if(pg){S.form.page=+(pg.getAttribute('data-page')||pg.getAttribute('data-go'));renderForm();window.scrollTo(0,0);return}
     return;
   }
+  var kd=t.closest('[data-kind]');if(kd){S.kind=kd.getAttribute('data-kind');render();return}
   var tb=t.closest('[data-tab]');if(tb){S.tab=tb.getAttribute('data-tab');render();window.scrollTo(0,0);return}
   if(t.closest('#fab')){newTankSheet();return}
   var op=t.closest('[data-open]');
   if(op){
     var k=op.getAttribute('data-open');
-    if(k.indexOf('e:')===0)openEntry(k.slice(2));else openRow(+k.slice(2));
+    if(k.indexOf('t:')===0)openTdu(+k.slice(2));else if(k.indexOf('e:')===0)openEntry(k.slice(2));else openRow(+k.slice(2));
     return;
   }
   var ed=t.closest('[data-edit]');if(ed){openEntry(ed.getAttribute('data-edit'));return}
