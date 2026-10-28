@@ -59,6 +59,16 @@ main{padding-top:1rem;display:flex;flex-direction:column;gap:.9rem;min-width:0}
 .tank{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.15rem .75rem;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:.8rem;padding:.7rem .85rem;min-height:3.6rem}
 .tank .tag{font-family:var(--mono);font-weight:700;font-size:1.02rem;letter-spacing:.01em;overflow-wrap:anywhere}
 .tank .sub{grid-column:1;font-size:.86rem;color:var(--muted);overflow-wrap:anywhere}
+.unit{background:var(--surface);border:1px solid var(--line);border-radius:.8rem;padding:.7rem .6rem .5rem;display:flex;flex-direction:column;gap:.15rem}
+.unit .uh{display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding:0 .25rem}
+.unit .tag{font-family:var(--mono);font-weight:700;font-size:1.02rem;letter-spacing:.01em;overflow-wrap:anywhere}
+.unit .utype{font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.unit .sub{font-size:.86rem;color:var(--muted);padding:0 .25rem .25rem;overflow-wrap:anywhere}
+.trow{display:grid;grid-template-columns:1.6rem minmax(0,1fr) auto;gap:.5rem;align-items:center;width:100%;text-align:left;background:var(--surface2);border:0;border-radius:.6rem;padding:.55rem .6rem;margin-top:.3rem;min-height:3rem}
+.trow .pos{font-family:var(--mono);font-weight:700;color:var(--accent)}
+.trow .tinfo{display:flex;flex-direction:column;gap:.1rem;font-size:.9rem;overflow-wrap:anywhere}
+.trow .sn{font-size:.8rem;color:var(--muted)}
+.trow .chev{color:var(--muted);font-size:1.3rem}
 .badge{align-self:start;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:.4rem;padding:.15rem .45rem;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
 .badge.warn{background:var(--warn-soft);color:var(--warn)}
 .badge.good{background:var(--good-soft);color:var(--good)}
@@ -164,7 +174,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 6j (a choice added on this phone has a Remove button in the drop-down list: asks Yes/No, refused while a saved entry still uses it; the plain Sent badge on unit entries now reads Details sent; required fields: no (required) in the label, grey Required inside the empty field, red with a message when saved blank; wording: Unit instead of Tank in the headers, Company/Owner, Unit number, shorter search box text; Send screen headings say what each part is: nurse tanks, inspection reports, DUs; DU Form 5: liquid, vapour and 3rd hose cards, add a missing hose; the delivery units are now called DU everywhere on the phone (single, twin or quad); an inspection report is only saved when something was entered - choosing the unit type alone or just looking no longer leaves an unfinished report; Form 5 no longer says one hose for each tank; the nurse tank screen has the same compact Tank details panel as the DU screen: key fields, Edit this tank, and a collapsed All details list; the DU Form 2 (visual) checklist is on the phone, and the workbook fills it in; the email starts with a plain sentence for mail filters; tank and DU entries in the email use ~~ instead of tab characters, which mail apps turn into spaces; tank entries file ends with eB620-end like the other files; a sent report stays sent when you leave it; office changes made after the export are never overwritten by an older phone copy: only the fields you changed are sent, with their original values; DUs: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, DU opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, DUs, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
+var VERSION='prototype 6k (the tank list shows one tile per unit: a single tank is a card with its serial, a twin or triple has a row per tank (L, C, R) with size, make, year and serial; a choice added on this phone has a Remove button in the drop-down list: asks Yes/No, refused while a saved entry still uses it; the plain Sent badge on unit entries now reads Details sent; required fields: no (required) in the label, grey Required inside the empty field, red with a message when saved blank; wording: Unit instead of Tank in the headers, Company/Owner, Unit number, shorter search box text; Send screen headings say what each part is: nurse tanks, inspection reports, DUs; DU Form 5: liquid, vapour and 3rd hose cards, add a missing hose; the delivery units are now called DU everywhere on the phone (single, twin or quad); an inspection report is only saved when something was entered - choosing the unit type alone or just looking no longer leaves an unfinished report; Form 5 no longer says one hose for each tank; the nurse tank screen has the same compact Tank details panel as the DU screen: key fields, Edit this tank, and a collapsed All details list; the DU Form 2 (visual) checklist is on the phone, and the workbook fills it in; the email starts with a plain sentence for mail filters; tank and DU entries in the email use ~~ instead of tab characters, which mail apps turn into spaces; tank entries file ends with eB620-end like the other files; a sent report stays sent when you leave it; office changes made after the export are never overwritten by an older phone copy: only the fields you changed are sent, with their original values; DUs: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, DU opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, DUs, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -399,12 +409,35 @@ function render(){
   $('#fab').textContent=fabT?'+ New DU':'+ New tank';
   if(S.tab==='tanks')renderTanks();else if(S.tab==='send')renderSend();else renderData();
 }
-function tankRow(t){
-  var v=t.v,badge='';
+function tankBadge(t){
+  var badge='';
   if(t.entry){badge=t.entry.sent?'<span class="badge good">Details sent</span>':(t.row?'<span class="badge warn">Changed</span>':'<span class="badge warn">New</span>')}
   else if(t.q){badge=t.q.sent?'<span class="badge good">Update sent</span>':'<span class="badge warn">Update</span>'}
+  return badge;
+}
+function tid(t){return t.row?'r'+t.row:'e'+(t.entry?t.entry.id:'')}
+function tankOpenKey(t){return t.row?'r:'+t.row:'e:'+esc(t.entry.id)}
+/* one tile per unit (location + company + unit number): a single tank looks like a card, a twin or triple has a slim row per tank (L / C / R) */
+function unitGroups(list,fullList){
+  var order=[],map={};
+  fullList.forEach(function(t){var k=keyOf(t.v);if(!map[k]){map[k]={key:k,all:[],show:[]};order.push(map[k])}map[k].all.push(t)});
+  list.forEach(function(t){var g=map[keyOf(t.v)];if(g)g.show.push(t)});
+  return order.filter(function(g){return g.show.length});
+}
+function unitTile(g){
+  var n=g.all.length,v0=g.show[0].v;
+  if(n===1)return tankRow(g.show[0]);
+  var typ=n===2?'Twin':(n===3?'Triple':n+' tanks'),pos=n===2?['L','R']:(n===3?['L','C','R']:[]);
+  var rows=g.show.map(function(t){
+    var i=g.all.map(tid).indexOf(tid(t)),v=t.v,info=[v.AD,v.AF,v.AE].filter(Boolean).join(' \u00b7 ');
+    return '<button type="button" class="trow" data-open="'+tankOpenKey(t)+'"><span class="pos">'+esc(pos[i]||String(i+1))+'</span><span class="tinfo"><span>'+esc(info||'-')+'</span>'+(v.AB?'<span class="sn">S/N '+esc(v.AB)+'</span>':'')+'</span>'+(tankBadge(t)||'<span class="chev">&#8250;</span>')+'</button>';
+  }).join('');
+  return '<li class="unit"><div class="uh"><span class="tag">'+esc(v0.D||'(no number)')+'</span><span class="utype">'+typ+'</span></div><div class="sub">'+esc([v0.A,v0.C].filter(Boolean).join(' - '))+'</div>'+rows+'</li>';
+}
+function tankRow(t){
+  var v=t.v,badge=tankBadge(t);
   var sub=[v.A,v.C].filter(Boolean).join(' - ');
-  var sub2=[v.AD,v.AF,v.AE].filter(Boolean).join(' - ');
+  var sub2=[v.AD,v.AF,v.AE].filter(Boolean).join(' - ')+(v.AB?((v.AD||v.AF||v.AE)?' \u00b7 ':'')+'S/N '+v.AB:'');
   return '<li><button type="button" class="tank" data-open="'+(t.row?'r:'+t.row:'e:'+esc(t.entry.id))+'"><span class="tag">'+esc(v.D||'(no number)')+'</span>'+(badge||'<span></span>')+'<span class="sub">'+esc(sub)+'</span><span></span>'+(sub2?'<span class="sub">'+esc(sub2)+'</span>':'')+'</button></li>';
 }
 function matches(t,q){
@@ -441,9 +474,10 @@ function fillTankList(){
   }
   var all0=allTanks().filter(function(t){return matches(t,S.q)}),all=all0.filter(function(t){return stPass(t.v.F,!t.row)});
   all.sort(function(a,b){return natural(a.v.A||'',b.v.A||'')||natural(a.v.C||'',b.v.C||'')||natural(a.v.D||'',b.v.D||'')});
-  var cap=150,shown=all.slice(0,cap);
-  $('#cnt').textContent=all.length+(all.length===1?' tank':' tanks')+(all0.length>all.length?' - '+(all0.length-all.length)+' hidden by the status filter':'')+(all.length>cap?' - showing the first '+cap+', type more to narrow it down':'');
-  $('#tl').innerHTML=shown.length?shown.map(tankRow).join(''):'<li class="empty">No tank matches. Tap "+ New tank" to add one.</li>';
+  var cap=150,grp=unitGroups(all,allTanks()),shown=[],cnt=0;
+  grp.forEach(function(g){if(cnt<cap){shown.push(g);cnt+=g.show.length}});
+  $('#cnt').textContent=all.length+(all.length===1?' tank':' tanks')+(all0.length>all.length?' - '+(all0.length-all.length)+' hidden by the status filter':'')+(all.length>cnt?' - showing the first '+cnt+', type more to narrow it down':'');
+  $('#tl').innerHTML=shown.length?shown.map(unitTile).join(''):'<li class="empty">No tank matches. Tap "+ New tank" to add one.</li>';
 }
 function entRow(e){
   var v=e.v,d=new Date(e.ts),q=e.kind==='quick';
