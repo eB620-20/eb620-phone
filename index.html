@@ -164,7 +164,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 6g (Send screen headings say what each part is: nurse tanks, inspection reports, DUs; DU Form 5: liquid, vapour and 3rd hose cards, add a missing hose; the delivery units are now called DU everywhere on the phone (single, twin or quad); an inspection report is only saved when something was entered - choosing the unit type alone or just looking no longer leaves an unfinished report; Form 5 no longer says one hose for each tank; the nurse tank screen has the same compact Tank details panel as the DU screen: key fields, Edit this tank, and a collapsed All details list; the DU Form 2 (visual) checklist is on the phone, and the workbook fills it in; the email starts with a plain sentence for mail filters; tank and DU entries in the email use ~~ instead of tab characters, which mail apps turn into spaces; tank entries file ends with eB620-end like the other files; a sent report stays sent when you leave it; office changes made after the export are never overwritten by an older phone copy: only the fields you changed are sent, with their original values; DUs: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, DU opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, DUs, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
+var VERSION='prototype 6i (the plain Sent badge on unit entries now reads Details sent; required fields: no (required) in the label, grey Required inside the empty field, red with a message when saved blank; wording: Unit instead of Tank in the headers, Company/Owner, Unit number, shorter search box text; Send screen headings say what each part is: nurse tanks, inspection reports, DUs; DU Form 5: liquid, vapour and 3rd hose cards, add a missing hose; the delivery units are now called DU everywhere on the phone (single, twin or quad); an inspection report is only saved when something was entered - choosing the unit type alone or just looking no longer leaves an unfinished report; Form 5 no longer says one hose for each tank; the nurse tank screen has the same compact Tank details panel as the DU screen: key fields, Edit this tank, and a collapsed All details list; the DU Form 2 (visual) checklist is on the phone, and the workbook fills it in; the email starts with a plain sentence for mail filters; tank and DU entries in the email use ~~ instead of tab characters, which mail apps turn into spaces; tank entries file ends with eB620-end like the other files; a sent report stays sent when you leave it; office changes made after the export are never overwritten by an older phone copy: only the fields you changed are sent, with their original values; DUs: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, DU opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, DUs, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -194,6 +194,8 @@ function AK(c){return (isT()?'T:':'')+c}
 var PAGES=[{n:1,t:'Tank'},{n:2,t:'Inspections'},{n:3,t:'Hose'},{n:4,t:'Other'}];
 var TPAGES=[{n:1,t:'Unit'},{n:2,t:'Tests'},{n:3,t:'Hoses'},{n:4,t:'Plate'},{n:5,t:'Meter'}];
 var REQ_LABEL='Required';
+var LABOVR={C:'Company/Owner',D:'Unit number'};
+function flab(x){return LABOVR[x.c]||x.label}
 /* DU columns the inspection forms keep up to date (visual, hydro, PRV, hoses): never changed from the phone for an existing unit */
 var VOLT={G:1,K:1,L:1,M:1,Q:1,R:1,S:1,V:1,W:1,X:1,Y:1,Z:1,AA:1,AB:1,AC:1,AD:1,AE:1,AF:1,AG:1,AH:1};
 /* fields the inspection forms keep up to date: never changed from the phone for an existing tank */
@@ -266,7 +268,7 @@ function norm(s){return String(s||'').trim().toLowerCase()}
 /* returns {msg, value, note} for one field */
 function check(c,raw,form){
   var f=FM()[c],v=String(raw==null?'':raw).trim(),res={value:v,msg:'',note:''};
-  if(!v){if(f.req)res.msg=f.label+' is needed.';return res}
+  if(!v){if(f.req)res.msg='Required - '+flab(f)+' is needed.';return res}
   if(form.orig&&norm(form.orig[c])===norm(v))return res;
   var val=f.val;
   if(f.kind==='M'){
@@ -386,7 +388,7 @@ function render(){
 }
 function tankRow(t){
   var v=t.v,badge='';
-  if(t.entry){badge=t.entry.sent?'<span class="badge good">Sent</span>':(t.row?'<span class="badge warn">Changed</span>':'<span class="badge warn">New</span>')}
+  if(t.entry){badge=t.entry.sent?'<span class="badge good">Details sent</span>':(t.row?'<span class="badge warn">Changed</span>':'<span class="badge warn">New</span>')}
   else if(t.q){badge=t.q.sent?'<span class="badge good">Update sent</span>':'<span class="badge warn">Update</span>'}
   var sub=[v.A,v.C].filter(Boolean).join(' - ');
   var sub2=[v.AD,v.AF,v.AE].filter(Boolean).join(' - ');
@@ -408,10 +410,10 @@ function askInactive(st,go){
 }
 function renderTanks(){
   var h='';
-  if(S.draft){h+='<div class="banner"><b>Unfinished entry.</b> '+esc(S.draft.kind==='tdu'?(S.draft.v.D?('DU '+S.draft.v.D):'A new DU'):S.draft.mode==='quick'?'A quick update':(S.draft.v.D?('Tank '+S.draft.v.D):'A new tank'))+(S.draft.v.A?' at '+esc(S.draft.v.A):'')+' was not saved.<div class="row"><button class="btn primary sm" data-act="resume" type="button">Continue</button><button class="btn sm" data-act="dropdraft" type="button">Discard</button></div></div>'}
+  if(S.draft){h+='<div class="banner"><b>Unfinished entry.</b> '+esc(S.draft.kind==='tdu'?(S.draft.v.D?('DU '+S.draft.v.D):'A new DU'):S.draft.mode==='quick'?'A quick update':(S.draft.v.D?('Unit '+S.draft.v.D):'A new tank'))+(S.draft.v.A?' at '+esc(S.draft.v.A):'')+' was not saved.<div class="row"><button class="btn primary sm" data-act="resume" type="button">Continue</button><button class="btn sm" data-act="dropdraft" type="button">Discard</button></div></div>'}
   if(S.sample){h+='<div class="banner"><b>Example data.</b> These are the sample tanks from the template. Open the Data tab and load the file exported from the workbook to see your own tanks.</div>'}
   h+='<div class="chips" style="margin:0 0 .6rem">'+((tduRows().length||tduFields().length)?'<button type="button" class="chip s'+(S.kind!=='tdu'?' on':'')+'" data-kind="nurse">Nurse tanks</button><button type="button" class="chip s'+(S.kind==='tdu'?' on':'')+'" data-kind="tdu">DU</button>':'')+'<button type="button" class="chip s'+(S.activeOnly?' on':'')+'" data-activeonly="1">'+stLabel()+'</button></div>';
-  h+='<div class="search"><input id="q" type="search" placeholder="Search location, company, tank or serial number" value="'+esc(S.q)+'" autocomplete="off" aria-label="Search tanks"></div><div class="count" id="cnt"></div><ul class="list" id="tl"></ul>';
+  h+='<div class="search"><input id="q" type="search" placeholder="Search unit, serial, location, company" value="'+esc(S.q)+'" autocomplete="off" aria-label="Search tanks"></div><div class="count" id="cnt"></div><ul class="list" id="tl"></ul>';
   $('#view').innerHTML=h;
   fillTankList();
   $('#q').addEventListener('input',function(e){S.q=e.target.value;fillTankList()});
@@ -432,7 +434,7 @@ function fillTankList(){
 }
 function entRow(e){
   var v=e.v,d=new Date(e.ts),q=e.kind==='quick';
-  return '<div class="ent"><div><div class="tag" style="font-family:var(--mono);font-weight:700">'+esc(v.D||'(no number)')+' <span class="badge '+(e.sent?'good':'warn')+'">'+(e.sent?'Sent':(q?'Quick update':(e.row?'Changed':'New')))+'</span></div><div class="count">'+esc([v.A,v.C].filter(Boolean).join(' - '))+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'}))+'</div>'+(q?'<div class="count" style="color:var(--ink)">'+esc(quickSummary(e))+'</div>':'')+'</div><div class="acts">'+
+  return '<div class="ent"><div><div class="tag" style="font-family:var(--mono);font-weight:700">'+esc(v.D||'(no number)')+' <span class="badge '+(e.sent?'good':'warn')+'">'+(e.sent?'Details sent':(q?'Quick update':(e.row?'Changed':'New')))+'</span></div><div class="count">'+esc([v.A,v.C].filter(Boolean).join(' - '))+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'}))+'</div>'+(q?'<div class="count" style="color:var(--ink)">'+esc(quickSummary(e))+'</div>':'')+'</div><div class="acts">'+
     (e.sent&&!e.row?'':'<button class="btn sm" data-edit="'+esc(e.id)+'" type="button">Open</button>')+
     (e.sent?'<button class="btn sm" data-unsend="'+esc(e.id)+'" type="button">Send again</button>':'')+
     '<button class="btn sm danger" data-del="'+esc(e.id)+'" type="button">Delete</button></div></div>';
@@ -474,7 +476,7 @@ function renderForm(){
   var f=S.form,t=$('#top');
   $('#tabs').hidden=true;$('#fab').hidden=true;
   var tdu=f.kind==='tdu';
-  var title=tdu?(f.v.D?('DU '+f.v.D):(f.isNew?'New DU':'DU')):(f.v.D?('Tank '+f.v.D):(f.isNew?'New tank':'Tank'));
+  var title=tdu?(f.v.D?('DU '+f.v.D):(f.isNew?'New DU':'DU')):(f.v.D?('Unit '+f.v.D):(f.isNew?'New tank':'Tank'));
   t.innerHTML='<button class="hbtn icon" id="backBtn" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>'+esc(title)+'</h1><p>'+esc([f.v.A,f.v.C].filter(Boolean).join(' - ')||(f.isNew?'Not saved yet':''))+'</p></div><button class="hbtn solid" id="saveBtn" type="button">Save</button>';
   var steps='<div class="steps" role="tablist">'+PG().map(function(p){
     var bad=FL().some(function(x){return x.page===p.n&&f.errs[x.c]});
@@ -489,17 +491,17 @@ function renderForm(){
 }
 function fieldHtml(x){
   var f=S.form,c=x.c,v=f.v[c]||'',err=f.errs[c],note=f.notes[c];
-  var lab='<label for="f_'+c+'">'+esc((f.mode==='quick'&&QLAB[c])||x.label)+(x.req?' <span class="req">'+REQ_LABEL+'</span>':'')+'</label>';
+  var lab='<label for="f_'+c+'">'+esc((f.mode==='quick'&&QLAB[c])||flab(x))+'</label>';
   var ctl;
   if(x.combo){
-    ctl='<button type="button" class="pick" id="f_'+c+'" data-pick="'+c+'"><span class="'+(v?'':'ph')+'">'+esc(v||'Choose')+'</span>'+chev()+'</button>';
+    ctl='<button type="button" class="pick" id="f_'+c+'" data-pick="'+c+'"><span class="'+(v?'':'ph')+'">'+esc(v||(x.req?'Required':'Choose'))+'</span>'+chev()+'</button>';
   }else{
     var im=x.kind==='M'||x.kind==='Y'?'numeric':(x.val&&x.val.t===1?'numeric':(x.val&&x.val.t===2?'decimal':'text'));
-    ctl='<input type="text" id="f_'+c+'" data-in="'+c+'" value="'+esc(v)+'" inputmode="'+im+'" autocomplete="off" autocapitalize="off" enterkeyhint="next"'+(x.kind==='M'?' placeholder="mm-yyyy, e.g. 1026"':(x.kind==='Y'?' placeholder="yyyy"':''))+'>';
+    ctl='<input type="text" id="f_'+c+'" data-in="'+c+'" value="'+esc(v)+'" inputmode="'+im+'" autocomplete="off" autocapitalize="off" enterkeyhint="next"'+(x.kind==='M'?' placeholder="'+(x.req?'Required - ':'')+'mm-yyyy, e.g. 1026"':(x.kind==='Y'?' placeholder="'+(x.req?'Required - ':'')+'yyyy"':(x.req?' placeholder="Required"':'')))+'>';
   }
   var hint='';
   if(f.row&&f.mode!=='quick'&&VOLM()[c]){
-    return '<div class="field" id="w_'+c+'"><label>'+esc(x.label)+'</label><div class="ro">'+esc(v||'-')+'</div></div>';
+    return '<div class="field" id="w_'+c+'"><label>'+esc(flab(x))+'</label><div class="ro">'+esc(v||'-')+'</div></div>';
   }
   if(f.mode==='quick'){var ov=f.orig[c];hint='<div class="hint">On the sheet: '+esc(ov||'nothing')+'</div>'}
   return '<div class="field'+(err?' bad':'')+'" id="w_'+c+'">'+lab+ctl+hint+(err?'<div class="msg" role="alert">'+esc(err)+'</div>':'')+(note&&!err?'<div class="note">'+esc(note)+'</div>':'')+'</div>';
@@ -653,14 +655,14 @@ function qfield(c){var x=Object.assign({},F[c]);return fieldHtml(x)}
 function renderQuick(){
   var f=S.form,t=$('#top'),o=f.orig;
   $('#tabs').hidden=true;$('#fab').hidden=true;
-  t.innerHTML='<button class="hbtn icon" id="backBtn" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Tank '+esc(o.D||'')+'</h1><p>'+esc([o.A,o.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="saveBtn" type="button">Save</button>';
+  t.innerHTML='<button class="hbtn icon" id="backBtn" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Unit '+esc(o.D||'')+'</h1><p>'+esc([o.A,o.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="saveBtn" type="button">Save</button>';
   var hs=[o.V&&('expires '+o.V),o.X&&(o.X+' ft'),o.W,o.Y].filter(Boolean).join(', ');
   var h='';
   h+='<div class="panel"><h2>Inspection report</h2><p>Start the report for this tank: unit type, data plate, forms used and Form 2. No signal needed.</p><button class="btn primary block" id="f2Open" type="button">'+(S.f2.some(function(r){return r.key===S.form.key&&!r.sent})?'Continue inspection report':'Start inspection report')+'</button></div>';
   var fe=S.entries.filter(function(x){return x.kind!=='quick'&&x.row===f.row})[0],dv=fe?fe.v:o;
   function drow(l,x){return x?'<p style="margin:.15rem 0"><span class="count">'+esc(l)+'</span><br>'+esc(x)+'</p>':''}
   function dlab(c){var ff=S.data.fields.filter(function(x){return x.c===c})[0];return ff?ff.label:c}
-  h+='<div class="panel"><h2>Tank details</h2>'+['A','B','C','D','E','F','AB'].map(function(c){return drow(c==='A'?'Location':(c==='B'?'Province':(c==='C'?'Company':(c==='D'?'Tank number':dlab(c)))),dv[c])}).join('')+'<div class="row" style="margin-top:.6rem"><button class="btn primary" id="editTankBtn" type="button">Edit this tank</button></div><details style="margin-top:.7rem"><summary style="font-weight:600;cursor:pointer">All details</summary>'+S.data.fields.map(function(x){return drow(x.label,dv[x.c])}).join('')+'</details></div>';
+  h+='<div class="panel"><h2>Tank details</h2>'+['A','B','C','D','E','F','AB'].map(function(c){return drow(c==='A'?'Location':(c==='B'?'Province':(c==='C'?'Company/Owner':(c==='D'?'Unit number':dlab(c)))),dv[c])}).join('')+'<div class="row" style="margin-top:.6rem"><button class="btn primary" id="editTankBtn" type="button">Edit this tank</button></div><details style="margin-top:.7rem"><summary style="font-weight:600;cursor:pointer">All details</summary>'+S.data.fields.map(function(x){return drow(x.label,dv[x.c])}).join('')+'</details></div>';
   h+='<div class="panel"><h2>Quick update</h2><p>Type only what you found or changed. The sheet keeps the old values for the inspection forms, and your entries are listed beside them in the workbook.</p></div>';
   h+='<div class="panel"><h2>PRV</h2><div class="fields">'+qfield('R')+qfield('S')+'</div></div>';
   h+='<div class="panel"><h2>Hose</h2><p>On the sheet: '+esc(hs||'no hose recorded')+'</p><label class="check"><input type="checkbox" id="hoseNew"'+(f.hose?' checked':'')+'> New hose fitted</label>'+(f.hose?'<div class="fields">'+qfield('V')+qfield('X')+qfield('Y')+'</div>':'')+'</div>';
@@ -901,7 +903,7 @@ function tduMatches(t,q){if(!q)return true;var hay=[t.v.A,t.v.B,t.v.C,t.v.D,t.v.
 function tduRowHtml(t){
   var v=t.v,rec=S.f2.filter(function(r){return r.key==='TDU|'+keyOf(v)}).sort(function(a,b){return b.ts-a.ts})[0],badge='';
   if(rec)badge=rec.sent?'<span class="badge good">Report sent</span>':'<span class="badge warn">Report</span>';
-  if(t.entry)badge=t.entry.sent?'<span class="badge good">Sent</span>':(t.entry.row?'<span class="badge warn">Changed</span>':'<span class="badge warn">New</span>');
+  if(t.entry)badge=t.entry.sent?'<span class="badge good">Details sent</span>':(t.entry.row?'<span class="badge warn">Changed</span>':'<span class="badge warn">New</span>');
   var sub=[v.A,v.C].filter(Boolean).join(' - ');
   return '<li><button type="button" class="tank" data-open="t:'+t.row+'"><span class="tag">'+esc(v.D||'(no number)')+'</span>'+(badge||'<span></span>')+'<span class="sub">'+esc(sub)+'</span><span></span>'+(v.F?'<span class="sub">'+esc(v.F)+'</span>':'')+'</button></li>';
 }
@@ -940,7 +942,7 @@ function tduCopyPicker(){
 function tduUnsent(){return S.tdue.filter(function(e){return!e.sent})}
 function tduEntRow(e){
   var v=e.v,d=new Date(e.ts);
-  return '<div class="ent"><div><div class="tag" style="font-family:var(--mono);font-weight:700">DU '+esc(v.D||'(no number)')+' <span class="badge '+(e.sent?'good':'warn')+'">'+(e.sent?'Sent':(e.row?'Changed':'New'))+'</span></div><div class="count">'+esc([v.A,v.C].filter(Boolean).join(' - '))+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'}))+'</div></div><div class="acts">'+
+  return '<div class="ent"><div><div class="tag" style="font-family:var(--mono);font-weight:700">DU '+esc(v.D||'(no number)')+' <span class="badge '+(e.sent?'good':'warn')+'">'+(e.sent?'Details sent':(e.row?'Changed':'New'))+'</span></div><div class="count">'+esc([v.A,v.C].filter(Boolean).join(' - '))+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'}))+'</div></div><div class="acts">'+
     (e.sent&&!e.row?'':'<button class="btn sm" data-tdue-open="'+esc(e.id)+'" type="button">Open</button>')+
     (e.sent?'<button class="btn sm" data-tdue-unsend="'+esc(e.id)+'" type="button">Send again</button>':'')+
     '<button class="btn sm danger" data-tdue-del="'+esc(e.id)+'" type="button">Delete</button></div></div>';
@@ -1004,7 +1006,7 @@ function renderTduDetail(){
   var te=t.entry,h='';
   if(te)h+='<div class="banner"><b>'+(te.sent?'Sent to the office.':(te.row?'Changed on this phone.':'New unit on this phone.'))+'</b> '+(te.sent?'The change shows here until you load a new data file.':'It is waiting on the To send tab.')+'</div>';
   h+='<div class="panel"><h2>Inspection report</h2><p>Start the report for this unit: unit type and data plate. No signal needed. Nothing is saved until you start.</p><button class="btn primary block" id="tduStart" type="button">'+(cont?'Continue inspection report':'Start inspection report')+'</button></div>';
-  h+='<div class="panel"><h2>Unit details</h2>'+row('Location',v.A)+row('Province',v.B)+row('Company',v.C)+row('Unit number',v.D)+row('Status',v.E)+row('Description',v.F)+row(r2?'Front tank serial (left)':'Left / single tank serial',v.AJ)+row(r2?'Front tank serial (right)':'Right tank serial',v.AK)+(r2?row('Rear tank serial (left)',r2.AJ)+row('Rear tank serial (right)',r2.AK):'')+'<p class="count" style="margin:.5rem 0 0">'+(rows.length>1?'Two rows in the DU list: a quad.':'')+'</p>';
+  h+='<div class="panel"><h2>Unit details</h2>'+row('Location',v.A)+row('Province',v.B)+row('Company/Owner',v.C)+row('Unit number',v.D)+row('Status',v.E)+row('Description',v.F)+row(r2?'Front tank serial (left)':'Left / single tank serial',v.AJ)+row(r2?'Front tank serial (right)':'Right tank serial',v.AK)+(r2?row('Rear tank serial (left)',r2.AJ)+row('Rear tank serial (right)',r2.AK):'')+'<p class="count" style="margin:.5rem 0 0">'+(rows.length>1?'Two rows in the DU list: a quad.':'')+'</p>';
   if(tduFields().length){
     h+='<div class="row" style="margin-top:.6rem"><button class="btn primary" data-tduedit="'+t.row+'" type="button">Edit this unit</button>'+(rows.length>1?'<button class="btn" data-tduedit="'+rows[1].row+'" type="button">Edit rear row</button>':'')+'</div>';
     h+='<details style="margin-top:.7rem"><summary style="font-weight:600;cursor:pointer">All details</summary>'+tduFields().map(function(x){return row(x.label,v[x.c])}).join('')+'</details>';
@@ -1030,7 +1032,7 @@ function renderRep(){
   if(S.f2v&&S.f2v.tdu){renderRepTdu();return}
   var v=S.f2v,ud=unitDef(v.unit),tk=unitTanks(v.v),its=f2items(),n=f2answered(v),nx=nextForm(v);
   $('#tabs').hidden=true;$('#fab').hidden=true;
-  $('#top').innerHTML='<button class="hbtn icon" id="repBack" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Inspection report - Tank '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="repDone" type="button">Done</button>';
+  $('#top').innerHTML='<button class="hbtn icon" id="repBack" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Inspection report - Unit '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="repDone" type="button">Done</button>';
   var h='';
   h+='<div class="panel"><h2>Unit</h2><p>How many tanks are on this unit?</p><div class="chips">'+UNITS.map(function(u){return '<button type="button" class="chip s'+(v.unit===u.k?' on':'')+'" data-unit="'+u.k+'">'+u.t+'</button>'}).join('')+'</div>';
   var lines=[];
@@ -1112,7 +1114,7 @@ function repClick(t){
 function renderF20(){
   var v=S.f2v,f=v.f20||(v.f20={date:'',res:'',auto:0});
   $('#tabs').hidden=true;$('#fab').hidden=true;
-  $('#top').innerHTML='<button class="hbtn icon" id="f20Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 20 - Tank '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f20Done" type="button">Done</button>';
+  $('#top').innerHTML='<button class="hbtn icon" id="f20Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 20 - Unit '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f20Done" type="button">Done</button>';
   var h='<div class="panel"><h2>Statement of certification</h2><p>Two questions. Signature and the rest of the form are done at the office.</p></div>';
   h+='<div class="panel"><h2>Date of inspection</h2><div class="field"><input type="date" id="f20date" value="'+esc(f.date||'')+'"></div></div>';
   h+='<div class="panel"><h2>Result</h2><p>Pass: tank returned to service. Fail: tank out of service.</p><div class="chips"><button type="button" class="chip y'+(f.res==='P'?' on':'')+'" data-f20res="P">Pass</button><button type="button" class="chip n'+(f.res==='F'?' on':'')+'" data-f20res="F">Fail</button></div>'+(v.plate==='N'&&f.res==='F'&&f.auto?'<p style="margin:0">Set to Fail because the data plate answer is No, out of service.</p>':'')+'</div>';
@@ -1129,7 +1131,7 @@ function renderF2(){
   var v=S.f2v,def=f2def(v),ud=unitDef(v.unit),nt=f2nt(v),k=f2tab(v),fd=f2dw(v,k),refs=f2refs(f2eff(v,k),v),n0=ud.names[0].toLowerCase();
   $('#tabs').hidden=true;$('#fab').hidden=true;
   var its=f2items(),n=f2answered(v,k);
-  $('#top').innerHTML='<button class="hbtn icon" id="f2Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 2 - '+(v.tdu?'DU ':'Tank ')+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f2Done" type="button">Done</button>';
+  $('#top').innerHTML='<button class="hbtn icon" id="f2Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 2 - '+(v.tdu?'DU ':'Unit ')+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f2Done" type="button">Done</button>';
   var h='';
   if(nt>1)h+='<div class="ttabs">'+ud.names.map(function(nm,i){var dn=f2diffs(v,i);return '<button type="button" class="ttab'+(i===k?' on':'')+'" data-f2tab="'+i+'">'+esc(nm)+(dn?'<span class="dn">'+dn+(dn===1?' difference':' differences')+'</span>':'')+'</button>'}).join('')+'</div>';
   h+='<div class="panel"><h2>Visual inspection (external)'+(nt>1?' - '+esc(ud.names[k].toLowerCase())+' tank':'')+'</h2><p>Tap Yes, No or N/A for each item. Add a comment where something needs one; it gets the next Ref # and is printed on the form beside the item.'+(v.tdu?' The DU form has one comment line, so all the comments of a tank share it: keep them short.':'')+' Changes are saved on this phone as you go.</p>'+(nt>1?(k?'<p style="margin:0">This tank is the same as the '+esc(n0)+' tank unless you change an answer or add a comment. Tap an answer to change it; tap it again to go back to "same".</p>':'<p style="margin:0">Answer this first tank. The other tanks start the same; change them on their own tab only where they differ.</p>'):'')+'</div>';
@@ -1363,7 +1365,7 @@ function renderF3(){
   var v=S.f2v,def=f3def(),f=v.f3||(v.f3={items:{},vals:{}}),ud=unitDef(v.unit),nt=f3nt(v),k=f3tab(v),fd=f3dw(v,k),refs=f3refs(fd),n0=ud.names[0].toLowerCase();
   $('#tabs').hidden=true;$('#fab').hidden=true;
   var rows=f3rows(),n=f3answered(v,k);
-  $('#top').innerHTML='<button class="hbtn icon" id="f3Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 3 - Tank '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f3Done" type="button">Done</button>';
+  $('#top').innerHTML='<button class="hbtn icon" id="f3Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 3 - Unit '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f3Done" type="button">Done</button>';
   var h='';
   if(nt>1)h+='<div class="ttabs">'+ud.names.map(function(nm,i){var dn=f3diffs(v,i);return '<button type="button" class="ttab'+(i===k?' on':'')+'" data-f3tab="'+i+'">'+esc(nm)+(dn?'<span class="dn">'+dn+(dn===1?' difference':' differences')+'</span>':'')+'</button>'}).join('')+'</div>';
   h+='<div class="panel"><h2>Pressure test'+(nt>1?' - '+esc(ud.names[k].toLowerCase())+' tank':'')+'</h2><p>Tap Yes, No or N/A for each item and type the numbers where they are asked for. A comment gets the next Ref # and is printed on the form beside the item. Changes are saved on this phone as you go.</p>'+(nt>1?(k?'<p style="margin:0">This tank is the same as the '+esc(n0)+' tank unless you change an answer or a number here. Anything you change is marked as a difference. Numbers left empty are the same as the '+esc(n0)+' tank (shown in grey).</p>':'<p style="margin:0">The other tank'+(nt>2?'s start':' starts')+' the same as this one. Open the other tab'+(nt>2?'s':'')+' only to record anything that is different on that tank.</p>'):'')+'<p style="margin:0">The tank design pressure is taken from the data plate on Form 1 at the office.</p></div>';
@@ -1551,7 +1553,7 @@ function renderF4(){
   f.vals=f.vals||{};if(!f.rpDone){f.rpDone=1;var rm=/\d+(\.\d+)?/.exec(String((v.v||{}).S||''));if(rm&&!String(f.vals.rp||'').trim()){f.vals.rp=rm[0];f.rpAuto=rm[0]}f2save()}
   $('#tabs').hidden=true;$('#fab').hidden=true;
   var rows=f4rows(),n=f4answered(v,k);
-  $('#top').innerHTML='<button class="hbtn icon" id="f4Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 4 - Tank '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f4Done" type="button">Done</button>';
+  $('#top').innerHTML='<button class="hbtn icon" id="f4Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 4 - Unit '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f4Done" type="button">Done</button>';
   var h='';
   if(nt>1)h+='<div class="ttabs">'+ud.names.map(function(nm,i){var dn=f4diffs(v,i);return '<button type="button" class="ttab'+(i===k?' on':'')+'" data-f4tab="'+i+'">'+esc(nm)+(dn?'<span class="dn">'+dn+(dn===1?' difference':' differences')+'</span>':'')+'</button>'}).join('')+'</div>';
   h+='<div class="panel"><h2>Leakage test'+(nt>1?' - '+esc(ud.names[k].toLowerCase())+' tank':'')+'</h2><p>Tap Yes, No or N/A for each item and type the numbers where they are asked for. A comment gets the next Ref # and is printed on the form beside the item. Changes are saved on this phone as you go.</p>'+(nt>1?(k?'<p style="margin:0">This tank is the same as the '+esc(n0)+' tank unless you change an answer or a number here. Anything you change is marked as a difference. Numbers left empty are the same as the '+esc(n0)+' tank (shown in grey).</p>':'<p style="margin:0">The other tank'+(nt>2?'s start':' starts')+' the same as this one. Open the other tab'+(nt>2?'s':'')+' only to record anything that is different on that tank.</p>'):'')+'</div>';
@@ -1754,7 +1756,7 @@ function renderF8(){
   var v=S.f2v,ud=unitDef(v.unit),nt=f8nt(v),k=f8tab(v),f=f8dw(v,k),n0=ud.names[0].toLowerCase(),b=f8o(v);
   f.q=f.q||{};f.vals=f.vals||{};f.a=f.a||{};f.rd=f.rd||{};f8ex(f,0);
   $('#tabs').hidden=true;$('#fab').hidden=true;
-  $('#top').innerHTML='<button class="hbtn icon" id="f8Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 8 - Tank '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f8Done" type="button">Done</button>';
+  $('#top').innerHTML='<button class="hbtn icon" id="f8Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 8 - Unit '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f8Done" type="button">Done</button>';
   var h='';
   if(nt>1)h+='<div class="ttabs">'+ud.names.map(function(nm,i){var dn=f8diffs(v,i);return '<button type="button" class="ttab'+(i===k?' on':'')+'" data-f8tab="'+i+'">'+esc(nm)+(dn?'<span class="dn">'+dn+(dn===1?' difference':' differences')+'</span>':'')+'</button>'}).join('')+'</div>';
   h+='<div class="panel"><h2>Thickness test'+(nt>1?' - '+esc(ud.names[k].toLowerCase())+' tank':'')+'</h2><p>Answer the checklist, tick the areas that were tested, and enter the readings from the tank diagram. Changes are saved on this phone as you go.</p>'+(nt>1?(k?'<p style="margin:0">Checklist answers, data plate values and the comment are the same as the '+esc(n0)+' tank unless you change them. Measurements (areas and diagram readings) are for this tank only and are never copied from another tank.</p>':'<p style="margin:0">Answer this first tank. For the other tanks, use their tab only where they differ, and enter their own measurements there.</p>'):'')+'</div>';
@@ -1861,7 +1863,7 @@ function buildF5(rec){
 function renderF5(){
   var v=S.f2v,ud=unitDef(v.unit),tk=f5tk(v),n=f5n(v);
   $('#tabs').hidden=true;$('#fab').hidden=true;
-  $('#top').innerHTML='<button class="hbtn icon" id="f5Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 5 - '+(v.tdu?'DU ':'Tank ')+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f5Done" type="button">Done</button>';
+  $('#top').innerHTML='<button class="hbtn icon" id="f5Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 5 - '+(v.tdu?'DU ':'Unit ')+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f5Done" type="button">Done</button>';
   var h='<div class="panel"><h2>Hose test and inspection</h2><p>Choose Pass or Fail. A hose that fails or has expired is replaced: the office sheet adds a line for the new hose. '+(v.tdu?'A hose that is not in the DU list shows Add a hose instead.':'A tank with no hose in the tank list shows Add a hose instead.')+'</p></div>';
   var f5f=f5o(v);
   if(f5anyDup(v)&&!f5f.sh){
