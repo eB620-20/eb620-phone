@@ -164,7 +164,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 6i (the plain Sent badge on unit entries now reads Details sent; required fields: no (required) in the label, grey Required inside the empty field, red with a message when saved blank; wording: Unit instead of Tank in the headers, Company/Owner, Unit number, shorter search box text; Send screen headings say what each part is: nurse tanks, inspection reports, DUs; DU Form 5: liquid, vapour and 3rd hose cards, add a missing hose; the delivery units are now called DU everywhere on the phone (single, twin or quad); an inspection report is only saved when something was entered - choosing the unit type alone or just looking no longer leaves an unfinished report; Form 5 no longer says one hose for each tank; the nurse tank screen has the same compact Tank details panel as the DU screen: key fields, Edit this tank, and a collapsed All details list; the DU Form 2 (visual) checklist is on the phone, and the workbook fills it in; the email starts with a plain sentence for mail filters; tank and DU entries in the email use ~~ instead of tab characters, which mail apps turn into spaces; tank entries file ends with eB620-end like the other files; a sent report stays sent when you leave it; office changes made after the export are never overwritten by an older phone copy: only the fields you changed are sent, with their original values; DUs: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, DU opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, DUs, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
+var VERSION='prototype 6j (a choice added on this phone has a Remove button in the drop-down list: asks Yes/No, refused while a saved entry still uses it; the plain Sent badge on unit entries now reads Details sent; required fields: no (required) in the label, grey Required inside the empty field, red with a message when saved blank; wording: Unit instead of Tank in the headers, Company/Owner, Unit number, shorter search box text; Send screen headings say what each part is: nurse tanks, inspection reports, DUs; DU Form 5: liquid, vapour and 3rd hose cards, add a missing hose; the delivery units are now called DU everywhere on the phone (single, twin or quad); an inspection report is only saved when something was entered - choosing the unit type alone or just looking no longer leaves an unfinished report; Form 5 no longer says one hose for each tank; the nurse tank screen has the same compact Tank details panel as the DU screen: key fields, Edit this tank, and a collapsed All details list; the DU Form 2 (visual) checklist is on the phone, and the workbook fills it in; the email starts with a plain sentence for mail filters; tank and DU entries in the email use ~~ instead of tab characters, which mail apps turn into spaces; tank entries file ends with eB620-end like the other files; a sent report stays sent when you leave it; office changes made after the export are never overwritten by an older phone copy: only the fields you changed are sent, with their original values; DUs: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, DU opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, DUs, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -342,6 +342,19 @@ function newChoiceCheck(c,text){
 function listFor(c){
   var f=FM()[c],base=(f.list||[]).slice(),adds=(S.adds[AK(c)]||[]).filter(function(a){return!base.some(function(b){return norm(b)===norm(a)})});
   return{base:base,adds:adds};
+}
+/* a choice added on this phone can be removed again, unless a saved entry or the open draft still uses it */
+function choiceUsedBy(c,v){
+  var n=norm(v),hit='',lists=[S.entries||[],S.tdue||[]];
+  lists.forEach(function(L){L.forEach(function(e){if(!hit&&e.v&&norm(e.v[c])===n)hit=(e.v.D?'the entry for unit '+e.v.D:'a saved entry')})});
+  if(!hit&&S.draft&&S.draft.v&&norm(S.draft.v[c])===n)hit='the unfinished entry';
+  if(!hit&&S.form&&S.form.v&&norm(S.form.v[c])===n)hit='the entry you are editing';
+  return hit;
+}
+function removeChoice(c,v){
+  var k=AK(c),n=norm(v);
+  S.adds[k]=(S.adds[k]||[]).filter(function(a){return norm(a)!==n});
+  lsSet('ebp_adds',S.adds);
 }
 function noteAdd(c,v){
   var f=FM()[c];if(!f||!f.combo||!f.open||!v)return;
@@ -537,11 +550,12 @@ function openPicker(c){
     var seen={};top.forEach(function(t){seen[norm(t)]=1});
     items=[{g:'At '+f.v.A}].concat(top.map(function(t){return{v:t}}));
     var rest=L.adds.concat(L.base).filter(function(b){return!seen[norm(b)]});
-    if(rest.length)items=items.concat([{g:'All companies'}]).concat(rest.map(function(t){return{v:t}}));
-    if(!top.length)items=rest.map(function(t){return{v:t}});
+    if(rest.length)items=items.concat([{g:'All companies'}]).concat(rest.map(function(t){return L.adds.indexOf(t)>=0?{v:t,s:'added on this phone'}:{v:t}}));
+    if(!top.length)items=rest.map(function(t){return L.adds.indexOf(t)>=0?{v:t,s:'added on this phone'}:{v:t}});
   }else{
     items=L.adds.map(function(t){return{v:t,s:'added on this phone'}}).concat(L.base.map(function(t){return{v:t}}));
   }
+  var rmAsk='';
   function draw(q){
     var ql=q.trim().toLowerCase(),html='',exact=false,any=0,pending='';
     items.forEach(function(it){
@@ -550,7 +564,8 @@ function openPicker(c){
       if(norm(it.v)===ql)exact=true;
       if(pending){html+=pending;pending=''}
       any++;
-      html+='<button type="button" class="opt" role="option" data-val="'+esc(it.v)+'" aria-selected="'+(norm(it.v)===norm(cur))+'"><span>'+esc(it.v)+'</span>'+(it.s?'<span class="small">'+esc(it.s)+'</span>':'')+'</button>';
+      if(it.s&&rmAsk===it.v){html+='<div class="opt" style="flex:none;flex-wrap:wrap;height:auto;padding:.5rem .7rem"><span style="flex:1 1 100%">Remove &#8220;'+esc(it.v)+'&#8221; from this list?</span><button type="button" class="btn" data-rmyes="'+esc(it.v)+'">Yes, remove</button><button type="button" class="btn" data-rmno="1">No</button></div>';return}
+      html+='<div class="optrow" style="flex:none;display:flex;align-items:center;gap:.3rem"><button type="button" class="opt" style="flex:1" role="option" data-val="'+esc(it.v)+'" aria-selected="'+(norm(it.v)===norm(cur))+'"><span>'+esc(it.v)+'</span>'+(it.s?'<span class="small">'+esc(it.s)+'</span>':'')+'</button>'+(it.s?'<button type="button" class="btn" style="min-height:2.2rem;padding:0 .7rem;color:var(--bad)" data-rm="'+esc(it.v)+'" aria-label="Remove '+esc(it.v)+' from the list">Remove</button>':'')+'</div>';
     });
     if(x.open&&ql&&!exact)html='<button type="button" class="opt add" data-add="'+esc(q.trim())+'"><span>+ Add &#8220;'+esc(q.trim())+'&#8221; to the list</span></button>'+html;
     if(!any&&!(x.open&&ql))html+='<div class="empty">'+(x.open?'Nothing in the list yet. Type the new choice above.':'No match. '+(c==='A'?'New locations are added in the workbook first.':'Pick from the list.'))+'</div>';
@@ -562,6 +577,15 @@ function openPicker(c){
     $('#pq').addEventListener('input',function(e){draw(e.target.value)});
     $('#pq').addEventListener('keydown',function(e){if(e.key==='Enter'){var a=$('#plist .opt.add')||$('#plist .opt[data-val]');if(a)a.click()}});
     $('#plist').addEventListener('click',function(e){
+      var rb=e.target.closest('[data-rm],[data-rmyes],[data-rmno]');
+      if(rb){
+        var old=$('#pmsg');if(old)old.remove();
+        if(rb.hasAttribute('data-rmno')){rmAsk='';draw($('#pq').value);return}
+        if(rb.hasAttribute('data-rm')){
+          var rv=rb.getAttribute('data-rm'),use=choiceUsedBy(c,rv);
+          if(use){$('#plist').insertAdjacentHTML('beforebegin','<div class="msg" id="pmsg" role="alert" style="color:var(--bad);font-size:.88rem">Cannot remove &#8220;'+esc(rv)+'&#8221;: '+esc(use)+' still uses it. Change or delete that entry first.</div>');return}
+          rmAsk=rv;draw($('#pq').value);return}
+        var gone=rb.getAttribute('data-rmyes');removeChoice(c,gone);items=items.filter(function(it){return!(it.s&&norm(it.v)===norm(gone))});rmAsk='';draw($('#pq').value);return}
       var b=e.target.closest('.opt');if(!b)return;
       var val=b.hasAttribute('data-add')?b.getAttribute('data-add'):b.getAttribute('data-val');
       if(b.hasAttribute('data-add')){
