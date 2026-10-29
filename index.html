@@ -1939,7 +1939,7 @@ function f5show(v,i){if(!v.tdu||i<2)return true;var tk=f5tk(v),f=v.f5||{h:[]},a=
 function f5h(v,i){var f=v.f5||(v.f5={h:[]});f.h=f.h||[];while(f.h.length<=i)f.h.push({res:'',np:0,cm:'',yr:'',ln:'',dia:'',mf:''});return f.h[i]}
 function f5corCh(v,i){var o=((v.f5&&v.f5.h)||[])[i],c=o&&o.cor;if(!c||!v.tdu)return null;var t=f5tk(v)[i],tv=(t&&t.v)||{},r={},n=0,nz=function(x){return String(x==null?'':x).trim()},ne=function(a,b){return nz(a).toLowerCase()!==nz(b).toLowerCase()};
   if(ne(c.yr,tv.V)){r.yr=nz(c.yr);n++}if(ne(c.ln,tv.X)){r.ln=nz(c.ln);n++}if(ne(c.dia,tv.W)){r.dia=nz(c.dia);n++}if(ne(c.mf,tv.Y)){r.mf=nz(c.mf);n++}
-  return n?r:null}
+  r.o={yr:nz(tv.V),ln:nz(tv.X),dia:nz(tv.W),mf:nz(tv.Y)};return n?r:null}
 function f5sig(t){var tv=t&&t.v;if(!tv)return '';var a=[tv.V,tv.X,tv.W,tv.Y].map(function(x){return String(x==null?'':x).trim().toLowerCase()});return a.join('|')==='|||'?'':a.join('|')}
 function f5dupOf(v,i){if(v.tdu)return -1;var tk=unitTanks(v.v);if(i<1||f5n(v)<2)return -1;var s0=f5sig(tk[i]);if(!s0)return -1;for(var j=0;j<i;j++){if(f5sig(tk[j])===s0&&f5dupOf(v,j)<0)return j}return -1}
 function f5anyDup(v){for(var i=1;i<f5n(v);i++){if(f5dupOf(v,i)>=0)return true}return false}
@@ -1982,7 +1982,7 @@ function buildF5(rec){
     if(dj>=0&&f.sh!=='2')continue;
     if(!f5has(tk[i])){var x=h.x;if(!x||!x.res)continue;
       L.push(['X',i+1,x.res,f2c(String(x.cm||'').trim()),f2c(String(x.yr||'').trim()),f2c(String(x.ln||'').trim()),f2c(x.dia||''),f2c(x.mf||'')].join('|'));continue}
-    var cy5=f5corCh(rec,i);if(cy5)L.push(['S','HC',i+1,f2c(cy5.yr||''),f2c(cy5.ln||''),f2c(cy5.dia||''),f2c(cy5.mf||'')].join('|'));
+    var cy5=f5corCh(rec,i);if(cy5)L.push(['S','HC',i+1,f2c(cy5.yr||''),f2c(cy5.ln||''),f2c(cy5.dia||''),f2c(cy5.mf||''),f2c(cy5.o.yr),f2c(cy5.o.ln),f2c(cy5.o.dia),f2c(cy5.o.mf)].join('|'));
     if(!h.res)continue;
     var nh=h.res==='F';L.push(['R',i+1,h.res,(nh&&h.np)?1:0,f2c(String(h.cm||'').trim()),nh?f2c(String(h.yr||'').trim()):'',nh?f2c(String(h.ln||'').trim()):'',nh?f2c(h.dia||''):'',nh?f2c(h.mf||''):''].join('|'))}
   return L;
