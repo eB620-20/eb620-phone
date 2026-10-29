@@ -159,6 +159,8 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 .f2item textarea{width:100%;min-height:3.4rem;margin-top:.55rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:.6rem .8rem;font:inherit;resize:vertical}
 .f2item .lnk{margin-top:.4rem;background:none;border:0;color:var(--accent);font-weight:600;padding:.3rem 0}
 .panel .lnk{background:none;border:0;color:var(--accent);font-weight:600;padding:.3rem 0;text-align:left;font-size:.95rem}
+.f2note{font-size:.88rem;line-height:1.35;color:var(--muted);margin:.1rem 0 .6rem}
+.f2au{margin:.1rem 0 .3rem;font-size:.88rem;font-weight:600;color:var(--accent)}
 .f2h{font-size:.82rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:1rem 0 .2rem}
 .f2bar{position:sticky;top:3.6rem;z-index:3;background:var(--bg);padding:.5rem 0;display:flex;gap:.5rem;align-items:center}
 .f2bar .btn{flex:1}
@@ -175,7 +177,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 7a (a DU report now has Form 4 - the leakage test, one checklist per tank (left / right, or the four tanks of a quad), same as for nurse tanks; 6z: (a DU report now has Form 2a - discharge control devices and rear end protection, one checklist per DU; a saved DU report keeps its Form 5 tick when reopened; 6y: (a DU report now has Form 20: date, Pass or Fail and, on a Fail, up to 3 comment lines; 6x: (a new tank or DU: picking the Description such as S2000 or T1450 Tandem fills in the Size (2000 USG) when it is in the list; a size you chose is never replaced; 6w: (Form 5: Correct the details on file on each hose card of nurse tanks too, a twin / triple with one shared hose corrects all its tanks; 6v: DU Form 5: Correct the details on file on each hose card - fix a wrong year, length, diameter or MFG without a Fail; travels as an S|HC line; Form 20: when the result is Fail a comment box (3 short lines) asks why; it travels as S|CM lines; on a nurse tank screen Quick update is a button beside Edit this tank; the PRV, hose, HRV and note boxes appear when you tap it (and stay open if there is something typed or a saved quick update); Forms 2, 3, 4 and 8 show which tank you are on: the tank name (Left / Centre / Right), its serial number and size / make / year under the form heading; the Sent badges (Details sent, Update sent, Report sent) on the tank and DU tiles disappear 30 days after the send; nothing is deleted and the To send list is unchanged; a small heading with the location name between locations in the tank and DU lists, DU list ordered like the tank list; the tank list is ordered by location, then unit number (company only breaks a tie); spaces in a unit number are ignored when sorting the tank list, so Pro1521 and Pro 1521 sort together; the tank list is ordered by location, then company, then unit number (numbers in natural order: 2 before 10, Pro 1527 before Pro 1528); before this it followed the workbook row order; Form 20: after Pass or Fail you can set the unit status when the status on file does not match - Pass offers the Active choices, Fail the not-active ones, default Active / Out of Service, or leave it; the report carries it as an S|ST line and the workbook changes the Nurse Tanks list; every inspection report email ends with a check line (eB620-check) so the office import can tell if a line was lost or changed; the tank list shows one tile per unit: a single tank is a card with its serial, a twin or triple has a row per tank (L, C, R) with size, make, year and serial; a choice added on this phone has a Remove button in the drop-down list: asks Yes/No, refused while a saved entry still uses it; the plain Sent badge on unit entries now reads Details sent; required fields: no (required) in the label, grey Required inside the empty field, red with a message when saved blank; wording: Unit instead of Tank in the headers, Company/Owner, Unit number, shorter search box text; Send screen headings say what each part is: nurse tanks, inspection reports, DUs; DU Form 5: liquid, vapour and 3rd hose cards, add a missing hose; the delivery units are now called DU everywhere on the phone (single, twin or quad); an inspection report is only saved when something was entered - choosing the unit type alone or just looking no longer leaves an unfinished report; Form 5 no longer says one hose for each tank; the nurse tank screen has the same compact Tank details panel as the DU screen: key fields, Edit this tank, and a collapsed All details list; the DU Form 2 (visual) checklist is on the phone, and the workbook fills it in; the email starts with a plain sentence for mail filters; tank and DU entries in the email use ~~ instead of tab characters, which mail apps turn into spaces; tank entries file ends with eB620-end like the other files; a sent report stays sent when you leave it; office changes made after the export are never overwritten by an older phone copy: only the fields you changed are sent, with their original values; DUs: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, DU opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, DUs, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
+var VERSION='prototype 7c (DU Form 3 pressure test on the phone, one tab per tank; DU Form 2a reworked: only the section that fits the tank size (over / 13,250 L or less) is asked, the other is N/A by itself; the emergency discharge control questions ask first whether the statement applies to the DU; page 2 has all the rear end protection questions, the next four are N/A after a No on the first, and the deemed-to-comply line fills itself in like the sheet; comments are numbered and printed per page (page 1: 4 lines, page 2: 2 lines); 7a: a DU report now has Form 4 - the leakage test, one checklist per tank (left / right, or the four tanks of a quad), same as for nurse tanks; 6z: (a DU report now has Form 2a - discharge control devices and rear end protection, one checklist per DU; a saved DU report keeps its Form 5 tick when reopened; 6y: (a DU report now has Form 20: date, Pass or Fail and, on a Fail, up to 3 comment lines; 6x: (a new tank or DU: picking the Description such as S2000 or T1450 Tandem fills in the Size (2000 USG) when it is in the list; a size you chose is never replaced; 6w: (Form 5: Correct the details on file on each hose card of nurse tanks too, a twin / triple with one shared hose corrects all its tanks; 6v: DU Form 5: Correct the details on file on each hose card - fix a wrong year, length, diameter or MFG without a Fail; travels as an S|HC line; Form 20: when the result is Fail a comment box (3 short lines) asks why; it travels as S|CM lines; on a nurse tank screen Quick update is a button beside Edit this tank; the PRV, hose, HRV and note boxes appear when you tap it (and stay open if there is something typed or a saved quick update); Forms 2, 3, 4 and 8 show which tank you are on: the tank name (Left / Centre / Right), its serial number and size / make / year under the form heading; the Sent badges (Details sent, Update sent, Report sent) on the tank and DU tiles disappear 30 days after the send; nothing is deleted and the To send list is unchanged; a small heading with the location name between locations in the tank and DU lists, DU list ordered like the tank list; the tank list is ordered by location, then unit number (company only breaks a tie); spaces in a unit number are ignored when sorting the tank list, so Pro1521 and Pro 1521 sort together; the tank list is ordered by location, then company, then unit number (numbers in natural order: 2 before 10, Pro 1527 before Pro 1528); before this it followed the workbook row order; Form 20: after Pass or Fail you can set the unit status when the status on file does not match - Pass offers the Active choices, Fail the not-active ones, default Active / Out of Service, or leave it; the report carries it as an S|ST line and the workbook changes the Nurse Tanks list; every inspection report email ends with a check line (eB620-check) so the office import can tell if a line was lost or changed; the tank list shows one tile per unit: a single tank is a card with its serial, a twin or triple has a row per tank (L, C, R) with size, make, year and serial; a choice added on this phone has a Remove button in the drop-down list: asks Yes/No, refused while a saved entry still uses it; the plain Sent badge on unit entries now reads Details sent; required fields: no (required) in the label, grey Required inside the empty field, red with a message when saved blank; wording: Unit instead of Tank in the headers, Company/Owner, Unit number, shorter search box text; Send screen headings say what each part is: nurse tanks, inspection reports, DUs; DU Form 5: liquid, vapour and 3rd hose cards, add a missing hose; the delivery units are now called DU everywhere on the phone (single, twin or quad); an inspection report is only saved when something was entered - choosing the unit type alone or just looking no longer leaves an unfinished report; Form 5 no longer says one hose for each tank; the nurse tank screen has the same compact Tank details panel as the DU screen: key fields, Edit this tank, and a collapsed All details list; the DU Form 2 (visual) checklist is on the phone, and the workbook fills it in; the email starts with a plain sentence for mail filters; tank and DU entries in the email use ~~ instead of tab characters, which mail apps turn into spaces; tank entries file ends with eB620-end like the other files; a sent report stays sent when you leave it; office changes made after the export are never overwritten by an older phone copy: only the fields you changed are sent, with their original values; DUs: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, DU opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, DUs, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -1124,68 +1126,160 @@ function renderTduDetail(){
   h+='</div>';
   $('#view').innerHTML=h;
 }
-/* ---------- DU Form 2a: discharge control devices (sheet Sheet62, page 1) and rear end protection (Sheet23, page 2) - one checklist per DU ---------- */
-var F2ADEF={max:106,lines:4,items:[
-{h:1,t:'Discharge control devices (TC331)'},
-{row:11,t:'Each line is provided with a remotely controlled self-closing shut-off valve located close to the tank(5.2.2.1.2, 6.2.9.3d)'},
-{row:13,t:'Each fill and discharge line shall be provided with a manual shut-off valve located close to the tank as practible.(5.2.2.11, 6.2.9.2)'},
-{row:15,t:'When an automatically closing ISC valve is used, a manual shut-off valve shall be located in the line ahead of the hose connection. (5.2.2.11, 6.2.9.2)'},
-{h:1,t:'Tank over 13,250 L (3500 US gal, 2915 Imp gal) water capacity'},
-{row:18,t:'Each of the valves shall be provided with a mechanical means and thermal  means  of automatic closure(5.2.2.1.2c)'},
-{row:20,t:'The remote control for the thermal and mechanical means of closure shall be installed at the ends of the tank in at least two diagnally opposite directions.(5.2.2.1c) ALSO require "Emergency Shutoff" marking(5.1k B622)'},
-{h:1,t:'Tank 13,250 L (3500 US gal, 2915 Imp gal) water capacity or less'},
-{row:23,t:'Each of the valves shall be provided with a mechanical means and thermal  means  of automatic closure(5.2.2.1.2d)'},
-{row:25,t:'The remote control for the thermal and mechanical means of closure shall be installed at the end of the tank opposite the main control station.  A thermal means of remote closure shall also be installed at or near the ISC.(5.2.2.1d) ALSO require "Emergency Shutoff" marking(5.1k B622)'},
-{h:1,t:'Emergency discharge control (off-truck emergency shutdown system / passive ESS)'},
-{row:30,t:'Highway tanks used to deliver Class 2.3 toxic gases shall be equiped with an off-truck emergency shutdown system and either(5.3.2.5d)(5.5.1f,g B622)'},
-{row:33,t:'A passive emergency shutdown system(5.3.2.5di)'},
-{row:35,t:'A monitoring feature(5.3.2.5dii)'},
-{h:1,t:'Rear end protection - tank protection and bumpers (5.1.5.2)'},
-{row:48,t:'Is the tank body at the rear end more than 30" (760 mm) from the ground when empty? (5.1.5.2) If NO, next four statements are N/A'},
-{row:49,t:'Clearance between the effective bottom of the bumpers or devices and the ground is less than 30" (760 mm) when empty(5.1.5.2a)'},
-{row:50,t:'If more than one bumper or device is used, the distance between bumpers must be no greater than 24" (590 mm)(5.2.5.2b)'},
-{row:51,t:'Distance between the widest part of the rear of the vehicle and the outboard edge of the bumper or device does not exceed 18" (460 mm) (5.1.5.2c)'},
-{row:52,t:'Bumpers or devices is located not more than 24" (590 mm)forward of extreme rear of the vehicle(5.1.5.2d)'},
-{row:53,t:'Bumpers or devices are substantially contructed and firmly attached?(5.1.5.2e)'},
-{h:1,t:'Rear end protection (REP) (5.1.5.4)'},
-{row:64,t:'"REP" be designed so that it can deflect at least 6" (15 cm) horizontally forward without any contact between the REP device and any part containing lading during transit OR a vertical plane passing through the outboard surface of the tank (5.1.5.4.1a)'}
+/* ---------- DU Form 2a: discharge control devices (page 1 = sheet Sheet62) and rear end protection (page 2 = Sheet23) - one checklist per DU ----------
+   Page 1 has 4 comment lines, page 2 has 2; each page numbers its own Ref # from 1.
+   The form decides some answers itself, and the phone does the same:
+   - tank over / not over 13,250 L: only the section that fits the tank size is asked, the other is N/A (when the size on file is missing or mixed both show, and answering one turns the other N/A)
+   - emergency discharge control: "does this apply to this DU?"; No makes the three questions N/A
+   - page 2: if the first question is No the next four are N/A; the "deemed to comply" line is Yes when all six above are Yes and No when any is No (same formula as the sheet) */
+var F2ADEF={max:106,lines:{1:4,2:2},items:[
+{h:1,pg:1,t:'Page 1 of 2 - Discharge control devices (TC331)',n:'Applies to TC331 (5.2.2.1.2) and non-spec highway tanks built before July 1, 1998 (SR54d,giii - B622-20). Applies to non-spec portable (skid package) tanks built before July 1, 1998 (5.2.6b, SR54giii - B622-20).'},
+{row:11,pg:1,t:'Each line is provided with a remotely controlled self-closing shut-off valve located close to the tank(5.2.2.1.2, 6.2.9.3d)'},
+{row:13,pg:1,t:'Each fill and discharge line shall be provided with a manual shut-off valve located close to the tank as practible.(5.2.2.11, 6.2.9.2)'},
+{row:15,pg:1,t:'When an automatically closing ISC valve is used, a manual shut-off valve shall be located in the line ahead of the hose connection. (5.2.2.11, 6.2.9.2)'},
+{h:1,pg:1,sec:'O',t:'Tank over 13,250 L (3500 US gal, 2915 Imp gal) water capacity'},
+{row:18,pg:1,sec:'O',t:'Each of the valves shall be provided with a mechanical means and thermal means of automatic closure(5.2.2.1.2c)'},
+{row:20,pg:1,sec:'O',t:'The remote control for the thermal and mechanical means of closure shall be installed at the ends of the tank in at least two diagnally opposite directions.(5.2.2.1c) ALSO require "Emergency Shutoff" marking(5.1k B622)'},
+{h:1,pg:1,sec:'S',t:'Tank 13,250 L (3500 US gal, 2915 Imp gal) water capacity or less'},
+{row:23,pg:1,sec:'S',t:'Each of the valves shall be provided with a mechanical means and thermal means of automatic closure(5.2.2.1.2d)'},
+{row:25,pg:1,sec:'S',t:'The remote control for the thermal and mechanical means of closure shall be installed at the end of the tank opposite the main control station. A thermal means of remote closure shall also be installed at or near the ISC.(5.2.2.1d) ALSO require "Emergency Shutoff" marking(5.1k B622)'},
+{h:1,pg:1,ess:1,t:'Emergency discharge control (off-truck emergency shutdown system / passive ESS)',n:'Emergency discharge control system for highway and portable tanks tested to TC331 requirements (Annex D.1 metered, Annex D.2 non-metered). Off-truck emergency shutdown system (ESS) / passive ESS (7.2.1.6, 7.2.9). Applies to TC331 and non-spec highway tanks built before July 1/98 (SR54d,e - B622-20)(5.3.2.5) and non-spec portable (skid package) tanks built before July 1/98 (SR54d,e,j - B622-20)(5.3.2.5).'},
+{row:30,pg:1,ess:1,t:'Highway tanks used to deliver Class 2.3 toxic gases shall be equiped with an off-truck emergency shutdown system and either(5.3.2.5d)(5.5.1f,g B622)'},
+{row:33,pg:1,ess:1,t:'A passive emergency shutdown system(5.3.2.5di)'},
+{row:35,pg:1,ess:1,t:'A monitoring feature(5.3.2.5dii)'},
+{h:1,pg:2,t:'Page 2 of 2 - Rear end protection: tank protection and bumpers (5.1.5.2)',n:'This page is for inspection of rear end protection on all TC331 and non-spec highway tanks, as well as non-spec portable tanks mounted on a skid package tested to TC331 requirements. Non-spec highway tanks must be built before July 1, 1998 (SR54gii of B622-20). Non-spec portable tanks mounted on a skid package must be built before July 1, 1998 (SR54gii of B622-20).'},
+{row:48,pg:2,t:'Is the tank body at the rear end more than 30" (760 mm) from the ground when empty? (5.1.5.2) If NO, next four statements are N/A'},
+{row:49,pg:2,n48:1,fm:1,t:'Clearance between the effective bottom of the bumpers or devices and the ground is less than 30" (760 mm) when empty(5.1.5.2a)'},
+{row:50,pg:2,n48:1,t:'If more than one bumper or device is used, the distance between bumpers must be no greater than 24" (590 mm)(5.2.5.2b)'},
+{row:51,pg:2,n48:1,fm:1,t:'Distance between the widest part of the rear of the vehicle and the outboard edge of the bumper or device does not exceed 18" (460 mm) (5.1.5.2c)'},
+{row:52,pg:2,n48:1,fm:1,t:'Bumpers or devices is located not more than 24" (590 mm)forward of extreme rear of the vehicle(5.1.5.2d)'},
+{row:53,pg:2,t:'Bumpers or devices are substantially contructed and firmly attached?(5.1.5.2e)'},
+{row:54,pg:2,auto:1,t:'Highway tank/s constructed and maintained so that the body, chassis or other parts of the vehicle afford the rear-end protection provided by the bumpers or other devices specified in Clause 5.1.5.2 shall be deemed to be in compliance with that clause.(5.1.5.3) If the above 5 statements are "Yes", then this statement will be true.'},
+{h:1,pg:2,t:'Rear end protection (REP) (5.1.5.4)'},
+{row:64,pg:2,t:'"REP" be designed so that it can deflect at least 6" (15 cm) horizontally forward without any contact between the REP device and any part containing lading during transit OR a vertical plane passing through the outboard surface of the tank (5.1.5.4.1a)'},
+{row:67,pg:2,t:'The bottom surface of the REP device is at least 4" (10 cm) below the lower surface of parts containing lading during transit and not more than 60" (152 cm) from the ground while vehicle is empty (5.1.5.4.1bi)'},
+{row:70,pg:2,t:'Maximum width of a notch, indentation, or separation between sections of a REP device shall not exceed 61 cm (24 in). Note: This type of REP device may be used only when the piping at the rear of the tank is equipped with a sacrificial device outboard of a shut-off valve(5.1.5.4.1bii)'},
+{row:73,pg:2,t:'Widest part of vehicle at the rear shall not extend more than 18"(460mm) beyond outermost ends of the device(s) on either side of the vehicle.(5.1.5.4.1biii)'}
 ]};
 function f2aItems(){return F2ADEF.items.filter(function(i){return !i.h})}
+function f2aDef(row){return F2ADEF.items.filter(function(i){return i.row===row})[0]}
 function f2aD(v){return v.f2a||(v.f2a={items:{}})}
-function f2aR(v,row){var a=(f2aD(v).items||{})[row]||{};return a.r||''}
-function f2aAnswered(v){var n=0;f2aItems().forEach(function(i){if(f2aR(v,i.row))n++});return n}
-function f2aAny(v){var it=(v.f2a&&v.f2a.items)||{};return Object.keys(it).some(function(r){var a=it[r];return a&&(a.r||(a.c&&String(a.c).trim()))})}
-function f2aRefs(v){var m={},k=0,it=f2aD(v).items;F2ADEF.items.forEach(function(i){if(i.h)return;var a=it[i.row];if(a&&a.c&&String(a.c).trim()){k++;m[i.row]=k}});return m}
-function f2aNc(v){return Object.keys(f2aRefs(v)).length}
-function f2aProblems(v){var nc=f2aNc(v);if(nc>F2ADEF.lines)return 'Form 2a: '+nc+' comments, but the form has only '+F2ADEF.lines+' comment lines. Shorten or remove some comments first.';return ''}
+/* a tank size such as 1750 USG, 8000 USG, 4600 litres, 30.4m3, 1693.8 IMP, 133 cu.ft. in litres; 0 when it cannot be read */
+function f2aLitres(s){
+  var m=/^\s*([0-9][0-9,]*\.?[0-9]*)\s*([A-Za-z.][A-Za-z.0-9\s]*)?$/.exec(String(s||''));if(!m)return 0;
+  var n=parseFloat(m[1].replace(/,/g,''));if(!n)return 0;
+  var u=(m[2]||'').toLowerCase().replace(/\s+/g,'');
+  if(u==='usg'||u==='usgal'||u==='usgallons'||u==='gal')return n*3.785411784;
+  if(u==='imp'||u==='impgal'||u==='imp.')return n*4.54609;
+  if(/^lit(re|er)s?$/.test(u)||u==='l'||u==='lt')return n;
+  if(u==='m3')return n*1000;
+  if(/^cu\.?ft\.?$/.test(u)||u==='ft3')return n*28.316847;
+  return 0;
+}
+/* what the phone knows about this DU: tank size section (O = over 13,250 L, S = 13,250 L or less), and whether the emergency discharge control statement applies */
+function f2aSt(v){
+  var fd=f2aD(v),rows=v.tdu?tduUnitRows(v.v):[],ls=[],sz=[],bg='',yr='';
+  rows.forEach(function(t){var l=f2aLitres(t.v.AM);if(l)ls.push(l);if(t.v.AM)sz.push(String(t.v.AM));if(t.v.BG&&!bg)bg=String(t.v.BG);if(t.v.AN&&!yr)yr=String(t.v.AN)});
+  var der='';
+  if(ls.length){var big=ls.filter(function(x){return x>13250}).length;der=big===ls.length?'O':(big===0?'S':'')}
+  var bgU=bg.toUpperCase().replace(/[^A-Z0-9]/g,''),y=parseInt(yr,10)||0,ed='';
+  if(bgU==='TC331')ed='Y';
+  else if(bgU==='NONSPEC'&&y)ed=y<=1997?'Y':(y>=1999?'N':'');
+  return {der:der,sec:fd.sec||der,lit:ls.length?Math.max.apply(null,ls):0,sz:sz.join(' / '),bg:bg,yr:yr,ed:ed,ess:fd.ess||ed};
+}
+function f2aSecActive(v,s){var it=f2aD(v).items;return f2aItems().some(function(i){var a=it[i.row];return i.sec===s&&a&&(a.r==='Y'||a.r==='N')})}
+/* the answer that counts for a row: what was tapped, or what the form fills in by itself */
+function f2aEff(v,it){
+  var a=f2aD(v).items[it.row]||{},st=f2aSt(v),r=a.r||'';
+  if(it.sec){
+    if(st.sec&&st.sec!==it.sec)return 'A';
+    if(!st.sec&&r!=='Y'&&r!=='N'&&f2aSecActive(v,it.sec==='O'?'S':'O'))return 'A';
+  }
+  if(it.ess&&st.ess==='N')return 'A';
+  if(it.n48&&f2aEff(v,f2aDef(48))==='N')return 'A';
+  if(it.auto){
+    var rs=[48,49,50,51,52,53].map(function(x){return f2aEff(v,f2aDef(x))});
+    if(rs.some(function(x){return x==='N'}))return 'N';
+    if(rs.every(function(x){return x==='Y'}))return 'Y';
+    return '';
+  }
+  return r;
+}
+/* '' = the person answers it; otherwise why the form answers it (size / ess / n48 / auto) */
+function f2aHard(v,it){
+  var st=f2aSt(v);
+  if(it.auto)return 'auto';
+  if(it.sec&&st.sec&&st.sec!==it.sec)return 'size';
+  if(it.ess&&st.ess==='N')return 'ess';
+  if(it.n48&&f2aEff(v,f2aDef(48))==='N')return 'n48';
+  return '';
+}
+function f2aNeed(v){return f2aItems().filter(function(i){return !f2aHard(v,i)})}
+function f2aAnswered(v){var n=0;f2aNeed(v).forEach(function(i){if(f2aEff(v,i))n++});return n}
+function f2aAny(v){var d=v.f2a;if(!d)return false;if(d.sec||d.ess)return true;var it=d.items||{};return Object.keys(it).some(function(r){var a=it[r];return a&&(a.r||(a.c&&String(a.c).trim()))})}
+function f2aRefs(v){var m={},k={1:0,2:0},it=f2aD(v).items;F2ADEF.items.forEach(function(i){if(i.h)return;if(f2aHard(v,i)&&!i.auto)return;var a=it[i.row];if(a&&a.c&&String(a.c).trim()){k[i.pg]++;m[i.row]=k[i.pg]}});return m}
+function f2aNc(v,pg){var m=f2aRefs(v),n=0;f2aItems().forEach(function(i){if(i.pg===pg&&m[i.row])n++});return n}
+function f2aProblems(v){for(var pg=1;pg<=2;pg++){var nc=f2aNc(v,pg);if(nc>F2ADEF.lines[pg])return 'Form 2a page '+pg+': '+nc+' comments, but that page has only '+F2ADEF.lines[pg]+' comment lines. Shorten or remove some comments first.'}return ''}
+function f2aLen(v){var a=f2aNc(v,1),b=f2aNc(v,2),bad=a>F2ADEF.lines[1]||b>F2ADEF.lines[2];return {bad:bad,t:'Comment lines used - page 1: '+a+' of '+F2ADEF.lines[1]+', page 2: '+b+' of '+F2ADEF.lines[2]+'.'+(bad?' A page has fewer lines than comments. Shorten or remove some comments before sending.':'')}}
 function buildF2a(rec){
-  var f=rec.f2a||{items:{}},refs=f2aRefs(rec),L=[],cm=[];
+  var f=rec.f2a||{items:{}},refs=f2aRefs(rec),L=[],cm={1:[],2:[]};
   F2ADEF.items.forEach(function(it){
-    if(it.h)return;var a=f.items[it.row];if(!a)return;var ref=refs[it.row]||'';
-    if(a.r||ref)L.push(['S','A2',it.row,a.r||'',ref].join('|'));
-    if(ref)cm.push([ref,f2c(String(a.c||'').trim()).slice(0,F2ADEF.max)]);
+    if(it.h)return;var a=f.items[it.row]||{},ref=refs[it.row]||'',eff=f2aEff(rec,it);
+    if(it.auto){if(ref)L.push(['S','A2',it.row,'',ref].join('|'))}
+    else if(it.fm&&f2aHard(rec,it)==='n48'){}
+    else if(eff||ref)L.push(['S','A2',it.row,eff,ref].join('|'));
+    if(ref)cm[it.pg].push([ref,f2c(String(a.c||'').trim()).slice(0,F2ADEF.max)]);
   });
-  cm.forEach(function(c){L.push(['S','A2C',c[0],c[1]].join('|'))});
+  cm[1].forEach(function(c){L.push(['S','A2C',c[0],c[1]].join('|'))});
+  cm[2].forEach(function(c){L.push(['S','A2P',c[0],c[1]].join('|'))});
   return L;
 }
 function renderF2a(){
-  var v=S.f2v,fd=f2aD(v),refs=f2aRefs(v),its=f2aItems(),n=f2aAnswered(v),nc=f2aNc(v);
+  var v=S.f2v,fd=f2aD(v),refs=f2aRefs(v),st=f2aSt(v),need=f2aNeed(v),n=f2aAnswered(v),len=f2aLen(v);
   $('#tabs').hidden=true;$('#fab').hidden=true;
   $('#top').innerHTML='<button class="hbtn icon" id="f2aBack" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 2a - DU '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f2aDone" type="button">Done</button>';
-  var h='<div class="panel"><h2>Discharge control devices and rear end protection</h2><p>One checklist for the whole DU. Tap Yes, No or N/A for each item. Add a comment where something needs one; it gets the next Ref # and is printed on the form (the form has '+F2ADEF.lines+' comment lines). Changes are saved on this phone as you go.</p></div>';
-  h+='<div class="f2bar"><span class="count" style="flex:1;margin:0" id="f2cnt">'+n+' of '+its.length+' answered</span><button class="btn sm" id="f2aAllYes" type="button">Mark the rest Yes</button></div>';
-  var open=false;
-  F2ADEF.items.forEach(function(it){
-    if(it.h){if(open)h+='</div>';h+='<div class="panel"><div class="f2h">'+esc(it.t)+'</div>';open=true;return}
-    var a=fd.items[it.row]||{},r=a.r||'';
-    function chip(lab,cls,val){return '<button type="button" class="chip '+cls+(r===val?' on':'')+'" data-f2ar="'+it.row+'" data-v="'+val+'">'+lab+'</button>'}
-    h+='<div class="f2item"><p class="tx">'+esc(it.t)+(refs[it.row]?'<span class="rf">Ref '+refs[it.row]+'</span>':'')+'</p><div class="chips">'+chip('Yes','y','Y')+chip('No','n','N')+chip('N/A','a','A')+'</div>';
-    if((a.c!=null&&(a.c!==''||a.cOpen))||r==='N')h+='<textarea data-f2ac="'+it.row+'" maxlength="'+F2ADEF.max+'" placeholder="Comment (short - one line on the form)">'+esc(a.c||'')+'</textarea>';
-    else h+='<button type="button" class="lnk" data-f2aadd="'+it.row+'">+ Add comment</button>';
+  var h='<div class="panel"><h2>Discharge control devices and rear end protection</h2><p>One checklist for the whole DU, in two pages: page 1 discharge control devices, page 2 rear end protection. Tap Yes, No or N/A. Add a comment where something needs one; it gets the next Ref # for its page and is printed on that page. Some answers fill themselves in, the way the form does. Changes are saved on this phone as you go.</p></div>';
+  h+='<div class="f2bar"><span class="count" style="flex:1;margin:0" id="f2cnt">'+n+' of '+need.length+' answered</span><button class="btn sm" id="f2aAllYes" type="button">Mark the rest Yes</button></div>';
+  var blocks=[],cur=null;
+  F2ADEF.items.forEach(function(it){if(it.h){cur={h:it,rows:[]};blocks.push(cur)}else cur.rows.push(it)});
+  function chip(it,eff,lab,cls,val){return '<button type="button" class="chip '+cls+(eff===val?' on':'')+'" data-f2ar="'+it.row+'" data-v="'+val+'">'+lab+'</button>'}
+  blocks.forEach(function(b){
+    var hd=b.h;
+    h+='<div class="panel"><div class="f2h">'+esc(hd.t)+'</div>';
+    if(hd.n)h+='<p class="f2note">'+esc(hd.n)+'</p>';
+    if(hd.sec){
+      var nm=(hd.sec==='O'?'over':'13,250 L or less'),other=(hd.sec==='O'?'S':'O');
+      if(st.sec&&st.sec!==hd.sec){
+        h+='<p class="f2au">N/A - '+(fd.sec?'you chose the other size':'this DU\'s tank is '+esc(st.sz)+(st.lit?' ('+Math.round(st.lit).toLocaleString('en-US')+' L)':'')+', which is '+(st.sec==='O'?'over':'13,250 L or less'))+', so these two questions are N/A.</p><button type="button" class="lnk" data-f2asec="'+hd.sec+'">Use these questions instead</button></div>';
+        return;
+      }
+      if(st.sec)h+='<p class="f2note">This DU\'s tank: '+esc(st.sz||'size on file')+(st.lit?' ('+Math.round(st.lit).toLocaleString('en-US')+' L)':'')+'.'+(fd.sec&&fd.sec!==st.der?' You chose this size.':'')+'</p><button type="button" class="lnk" style="margin:0 0 .4rem" data-f2asec="'+(fd.sec?'':other)+'">'+(fd.sec?'Go by the tank size on file':'Not right? Use the other size questions')+'</button>';
+      else h+='<p class="f2note">'+(st.sz?'The size on file ('+esc(st.sz)+') does not settle it.':'No tank size on file.')+' Answer only the section that fits; when you answer one, the other turns N/A by itself.</p>';
+    }
+    if(hd.ess){
+      h+='<div class="f2item"><p class="tx">Does this apply to this DU?'+(st.ess&&!fd.ess?'<span class="rf">From the records: '+(st.ess==='Y'?'applies':'does not apply')+'</span>':'')+'</p><div class="chips"><button type="button" class="chip y'+(st.ess==='Y'?' on':'')+'" data-f2aess="Y">Yes</button><button type="button" class="chip n'+(st.ess==='N'?' on':'')+'" data-f2aess="N">No</button></div>'+((st.bg||st.yr)?'<p class="count" style="margin:.4rem 0 0">On file: '+esc(st.bg||'no designation')+(st.yr?', built '+esc(st.yr):'')+'.</p>':'')+'</div>';
+    }
+    b.rows.forEach(function(it){
+      var a=fd.items[it.row]||{},eff=f2aEff(v,it),hard=f2aHard(v,it);
+      h+='<div class="f2item"><p class="tx">'+esc(it.t)+(refs[it.row]?'<span class="rf">Ref '+refs[it.row]+'</span>':'')+'</p>';
+      if(hard==='auto'){
+        h+='<p class="f2au">'+(eff==='Y'?'Automatic: Yes - all the statements above are Yes.':(eff==='N'?'Automatic: No - one of the statements above is No.':'Fills in by itself once the statements above are answered.'))+'</p>';
+      }else if(hard){
+        h+='<p class="f2au">N/A - '+(hard==='ess'?'the statement above does not apply to this DU.':(hard==='n48'?'the first question is No, so this one is N/A.':'not for this tank size.'))+'</p>';
+      }else{
+        h+='<div class="chips">'+chip(it,eff,'Yes','y','Y')+chip(it,eff,'No','n','N')+chip(it,eff,'N/A','a','A')+'</div>';
+      }
+      if(!hard||hard==='auto'){
+        if(hard!=='auto'||eff==='N'){
+          if((a.c!=null&&(a.c!==''||a.cOpen))||eff==='N')h+='<textarea data-f2ac="'+it.row+'" maxlength="'+F2ADEF.max+'" placeholder="Comment (short - one line on the form)">'+esc(a.c||'')+'</textarea>';
+          else h+='<button type="button" class="lnk" data-f2aadd="'+it.row+'">+ Add comment</button>';
+        }
+      }
+      h+='</div>';
+    });
     h+='</div>';
   });
-  if(open)h+='</div>';
-  h+='<div class="panel"><p id="f2alen" style="margin:0;color:'+(nc>F2ADEF.lines?'var(--bad)':'var(--muted)')+'">'+nc+' of '+F2ADEF.lines+' comment lines used on the form.'+(nc>F2ADEF.lines?' There is only room for '+F2ADEF.lines+'. Shorten or remove some comments before sending.':'')+'</p></div>';
+  h+='<div class="panel"><p id="f2alen" style="margin:0;color:'+(len.bad?'var(--bad)':'var(--muted)')+'">'+esc(len.t)+'</p></div>';
   $('#view').innerHTML=h;
 }
 function renderF2aKeep(){var y=window.scrollY;renderF2a();window.scrollTo(0,y)}
@@ -1193,9 +1287,21 @@ function f2aclick(t){
   var v=S.f2v,fd=f2aD(v);
   var r=t.closest('[data-f2ar]');
   if(r){var row=+r.getAttribute('data-f2ar'),val=r.getAttribute('data-v'),a=fd.items[row]||(fd.items[row]={});a.r=(a.r===val)?'':val;if(a.r==='N'&&a.c==null)a.c='';f2save();renderF2aKeep();return true}
+  var sc=t.closest('[data-f2asec]');
+  if(sc){fd.sec=sc.getAttribute('data-f2asec');f2save();renderF2aKeep();return true}
+  var es=t.closest('[data-f2aess]');
+  if(es){var ev=es.getAttribute('data-f2aess');fd.ess=(fd.ess===ev)?'':ev;f2save();renderF2aKeep();return true}
   var ad=t.closest('[data-f2aadd]');
   if(ad){var rw=+ad.getAttribute('data-f2aadd'),a2=fd.items[rw]||(fd.items[rw]={});a2.c=a2.c||'';a2.cOpen=1;renderF2aKeep();setTimeout(function(){var el=$('[data-f2ac="'+rw+'"]');if(el)el.focus()},30);return true}
-  if(t.closest('#f2aAllYes')){f2aItems().forEach(function(it){if(!f2aR(v,it.row)){var a3=fd.items[it.row]||(fd.items[it.row]={});a3.r='Y'}});f2save();renderF2aKeep();return true}
+  if(t.closest('#f2aAllYes')){
+    var st=f2aSt(v);
+    f2aNeed(v).forEach(function(it){
+      if(f2aEff(v,it))return;
+      if(it.sec&&!st.sec&&!f2aSecActive(v,it.sec))return;   /* size not known: the person picks the section that fits */
+      if(it.ess&&!st.ess)return;           /* not yet said whether the emergency statement applies */
+      var a3=fd.items[it.row]||(fd.items[it.row]={});a3.r='Y';
+    });
+    f2save();renderF2aKeep();return true}
   if(t.closest('#f2aDone')||t.closest('#f2aBack')){f2save();v.view='rep';window.scrollTo(0,0);render();return true}
   return false;
 }
@@ -1209,6 +1315,12 @@ function duF4Block(v){
   var nd=0;for(var q=1;q<ud.names.length;q++)nd+=f4diffs(v,q);
   return '<p class="count" style="margin:.2rem 0 .5rem">'+n4+' of '+t4+' answered'+(ud.names.length>1?(nd?' - '+nd+(nd===1?' difference':' differences')+' on the other tank'+(ud.names.length>2?'s':''):' - other tank'+(ud.names.length>2?'s the same':' the same')):'')+'</p>'+(miss4.length&&f4any(v)?'<p class="count" style="margin:0 0 .5rem;color:var(--bad)">Still to be filled in: '+miss4.join(' and ')+'.</p>':'')+'<button type="button" class="btn block'+(n4<t4?' primary':'')+'" id="repF4">'+(n4===0&&!f4any(v)?'Start Form 4':(n4<t4?'Continue Form 4':'Edit Form 4'))+'</button>';
 }
+function duF3Block(v){
+  var ud=unitDef(v.unit),n3=f3answered(v),t3=f3rows().length,nd=0;
+  for(var q=1;q<ud.names.length;q++)nd+=f3diffs(v,q);
+  var noWt=f3any(v)&&!(f3o(v).vals&&String(f3o(v).vals.wt||'').trim());
+  return '<p class="count" style="margin:.2rem 0 .5rem">'+n3+' of '+t3+' answered'+(ud.names.length>1?(nd?' - '+nd+(nd===1?' difference':' differences')+' on the other tank'+(ud.names.length>2?'s':''):' - other tank'+(ud.names.length>2?'s the same':' the same')):'')+'</p>'+(noWt?'<p class="count" style="margin:0 0 .5rem;color:var(--bad)">Water temperature still to be filled in.</p>':'')+'<button type="button" class="btn block'+(n3<t3?' primary':'')+'" id="repF3">'+(n3===0&&!f3any(v)?'Start Form 3':(n3<t3?'Continue Form 3':'Edit Form 3'))+'</button>';
+}
 function renderRepTdu(){
   var v=S.f2v,sl=tduSerials(v.v,v.unit);
   $('#tabs').hidden=true;$('#fab').hidden=true;
@@ -1219,9 +1331,9 @@ function renderRepTdu(){
   h+='</div>';
   h+='<div class="panel"><h2 style="font-size:1.25rem;text-align:center">Form 1 - Tank Information</h2><div class="f2item"><p class="count" style="margin:.2rem 0 .4rem">Data plate: metal identification plate affixed and legible?</p><div class="chips"><button type="button" class="chip y'+(v.plate==='Y'?' on':'')+'" data-plate="Y">Yes</button><button type="button" class="chip n'+(v.plate==='N'?' on':'')+'" data-plate="N">No, out of service</button></div>'+(v.plate?'':'<p class="count" style="margin:.4rem 0 0;color:var(--bad)">Please choose Yes or No before sending.</p>')+'</div></div>';
   var on2=formOn(v,2),its2=f2items(v),n2=f2answered(v),nd2=0;for(var q2=1;q2<f2nt(v);q2++)nd2+=f2diffs(v,q2);
-  h+='<div class="panel"><h2 style="font-size:1.25rem;text-align:center">Forms in this report</h2><div class="f2item"><label class="check"><input type="checkbox" data-form="2"'+(on2?' checked':'')+'> Form 2 - Visual inspection (external)</label>'+(on2?'<p class="count" style="margin:.2rem 0 .5rem">'+n2+' of '+its2.length+' answered'+(f2nt(v)>1?(nd2?' - '+nd2+(nd2===1?' difference':' differences')+' on the other tanks':' - other tanks the same'):'')+'</p><button type="button" class="btn block'+(n2<its2.length?' primary':'')+'" id="repF2">'+(n2===0?'Start Form 2':(n2<its2.length?'Continue Form 2':'Edit Form 2'))+'</button>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="2a"'+(formOn(v,'2a')?' checked':'')+'> Form 2a - Discharge control devices and rear end protection</label>'+(formOn(v,'2a')?'<p class="count" style="margin:.2rem 0 .5rem">'+f2aAnswered(v)+' of '+f2aItems().length+' answered</p><button type="button" class="btn block" id="repF2a">'+(f2aAnswered(v)===0&&!f2aAny(v)?'Start Form 2a':(f2aAnswered(v)<f2aItems().length?'Continue Form 2a':'Edit Form 2a'))+'</button>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="4"'+(formOn(v,4)?' checked':'')+'> Form 4 - Leakage (K)</label>'+(formOn(v,4)?duF4Block(v):'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="5"'+(formOn(v,5)?' checked':'')+'> Form 5 - Hose test and inspection</label>'+(formOn(v,5)?'<p class="count" style="margin:.2rem 0 .5rem">'+f5duAns(v)+' of '+f5duTot(v)+' hose'+(f5duTot(v)===1?'':'s')+' answered</p><button type="button" class="btn block" id="repF5">'+(f5duAns(v)===0&&!f5any(v)?'Start Form 5':(f5duAns(v)<f5duTot(v)?'Continue Form 5':'Edit Form 5'))+'</button>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><p class="count" style="margin:.6rem 0 0">The other DU forms (3 and 8) are not on the phone yet - the office fills them in. This report tells the office the unit type, the data plate answer, Form 2, Form 2a, Form 4, Form 5 and Form 20, so the import can open the right Form 1 sheets for this unit.</p></div>';
+  h+='<div class="panel"><h2 style="font-size:1.25rem;text-align:center">Forms in this report</h2><div class="f2item"><label class="check"><input type="checkbox" data-form="2"'+(on2?' checked':'')+'> Form 2 - Visual inspection (external)</label>'+(on2?'<p class="count" style="margin:.2rem 0 .5rem">'+n2+' of '+its2.length+' answered'+(f2nt(v)>1?(nd2?' - '+nd2+(nd2===1?' difference':' differences')+' on the other tanks':' - other tanks the same'):'')+'</p><button type="button" class="btn block'+(n2<its2.length?' primary':'')+'" id="repF2">'+(n2===0?'Start Form 2':(n2<its2.length?'Continue Form 2':'Edit Form 2'))+'</button>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="2a"'+(formOn(v,'2a')?' checked':'')+'> Form 2a - Discharge control devices and rear end protection</label>'+(formOn(v,'2a')?'<p class="count" style="margin:.2rem 0 .5rem">'+f2aAnswered(v)+' of '+f2aNeed(v).length+' answered</p><button type="button" class="btn block" id="repF2a">'+(f2aAnswered(v)===0&&!f2aAny(v)?'Start Form 2a':(f2aAnswered(v)<f2aNeed(v).length?'Continue Form 2a':'Edit Form 2a'))+'</button>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="3"'+(formOn(v,3)?' checked':'')+'> Form 3 - Pressure test (3 or 5 yr)</label>'+(formOn(v,3)?duF3Block(v):'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="4"'+(formOn(v,4)?' checked':'')+'> Form 4 - Leakage (K)</label>'+(formOn(v,4)?duF4Block(v):'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="5"'+(formOn(v,5)?' checked':'')+'> Form 5 - Hose test and inspection</label>'+(formOn(v,5)?'<p class="count" style="margin:.2rem 0 .5rem">'+f5duAns(v)+' of '+f5duTot(v)+' hose'+(f5duTot(v)===1?'':'s')+' answered</p><button type="button" class="btn block" id="repF5">'+(f5duAns(v)===0&&!f5any(v)?'Start Form 5':(f5duAns(v)<f5duTot(v)?'Continue Form 5':'Edit Form 5'))+'</button>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><p class="count" style="margin:.6rem 0 0">The other DU forms (3 and 8) are not on the phone yet - the office fills them in. This report tells the office the unit type, the data plate answer, Form 2, Form 2a, Form 4, Form 5 and Form 20, so the import can open the right Form 1 sheets for this unit.</p></div>';
   h+='<div class="panel">'+f20Inline(v)+'</div>';
-  h+='<div class="panel"><h2>Send</h2><p>Sends the unit type, the data plate answer, Form 2, Form 2a, Form 4, Form 5 and Form 20 to the office.</p><button type="button" class="btn primary block" id="repSend">Send report</button></div>';
+  h+='<div class="panel"><h2>Send</h2><p>Sends the unit type, the data plate answer, Form 2, Form 2a, Form 3, Form 4, Form 5 and Form 20 to the office.</p><button type="button" class="btn primary block" id="repSend">Send report</button></div>';
   $('#view').innerHTML=h;
 }
 function renderRep(){
@@ -1426,7 +1538,7 @@ function buildF2(list){
     lines.push(['U',rec.unit||'S',rec.plate||'',repForms(rec).join(','),'L2'].join('|'));
     if(rec.f20&&rec.f20.res&&rec.f20.date)lines.push(['S','20',rec.f20.date,rec.f20.res].join('|'));
     if(rec.f20&&rec.f20.res==='F'&&rec.f20.date&&rec.f20.cm){rec.f20.cm.forEach(function(t,i){var tx=f2c(String(t||'').trim()).slice(0,F20CM_MAX);if(tx)lines.push(['S','CM',i+1,tx].join('|'))})}
-    if(rec.tdu){var f2al=formOn(rec,'2a')?buildF2a(rec):[];f2al.forEach(function(x){lines.push(x)});var f4du=formOn(rec,4)?buildF4(rec):[];f4du.forEach(function(x){lines.push(x)});var f5d=formOn(rec,5)?buildF5(rec):[];f5d.forEach(function(x){lines.push(x)});f2lines(rec,lines);return}
+    if(rec.tdu){var f2al=formOn(rec,'2a')?buildF2a(rec):[];f2al.forEach(function(x){lines.push(x)});var f3du=formOn(rec,3)?buildF3(rec):[];f3du.forEach(function(x){lines.push(x)});var f4du=formOn(rec,4)?buildF4(rec):[];f4du.forEach(function(x){lines.push(x)});var f5d=formOn(rec,5)?buildF5(rec):[];f5d.forEach(function(x){lines.push(x)});f2lines(rec,lines);return}
     if(rec.f20&&rec.f20.res&&rec.f20.date&&rec.f20.st&&f20stNeed(rec,rec.f20.res))lines.push(['S','ST',f2c(rec.f20.st),f20unitTanks(rec).map(function(t){return f2c(String(t.v.F||'').trim())}).join('~')].join('|'));
     var f3l=formOn(rec,3)?buildF3(rec):[];f3l.forEach(function(x){lines.push(x)});
     var f4l=formOn(rec,4)?buildF4(rec):[];f4l.forEach(function(x){lines.push(x)});
@@ -1441,7 +1553,7 @@ function buildF2(list){
 }
 function f2row(rec){
   var d=new Date(rec.ts),its=f2items(rec);
-  return '<div class="ent"><div><div class="tag" style="font-family:var(--mono);font-weight:700">'+esc(rec.v.D||'(no number)')+' <span class="badge '+(rec.sent?'good':'warn')+'">Report'+(rec.sent?' - sent':'')+'</span></div><div class="count">'+esc([rec.v.A,rec.v.C].filter(Boolean).join(' - '))+' - '+(rec.tdu?'DU '+unitDef(rec.unit).t.toLowerCase()+' unit - data plate '+(rec.plate==='Y'?'yes':(rec.plate==='N'?'no, out of service':'not answered'))+(formOn(rec,2)?' - Form 2: '+f2answered(rec)+' of '+its.length+' answered':'')+(formOn(rec,'2a')&&f2aAny(rec)?' - Form 2a: '+f2aAnswered(rec)+' of '+f2aItems().length+' answered':'')+(formOn(rec,4)&&f4any(rec)?' - Form 4: '+f4answered(rec)+' of '+f4rows().length+' answered':'')+(rec.f20&&rec.f20.res?' - Form 20 '+(rec.f20.res==='P'?'pass':'fail'):' - Form 20 open')+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})):unitDef(rec.unit).t.toLowerCase()+' unit - '+(formOn(rec,2)?'Form 2: '+f2answered(rec)+' of '+its.length+' answered':'no Form 2')+(formOn(rec,3)?' - Form 3: '+f3answered(rec)+' of '+f3rows().length+' answered':'')+(rec.f20&&rec.f20.res?' - Form 20 '+(rec.f20.res==='P'?'pass':'fail'):' - Form 20 open')+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})))+'</div></div><div class="row">'+
+  return '<div class="ent"><div><div class="tag" style="font-family:var(--mono);font-weight:700">'+esc(rec.v.D||'(no number)')+' <span class="badge '+(rec.sent?'good':'warn')+'">Report'+(rec.sent?' - sent':'')+'</span></div><div class="count">'+esc([rec.v.A,rec.v.C].filter(Boolean).join(' - '))+' - '+(rec.tdu?'DU '+unitDef(rec.unit).t.toLowerCase()+' unit - data plate '+(rec.plate==='Y'?'yes':(rec.plate==='N'?'no, out of service':'not answered'))+(formOn(rec,2)?' - Form 2: '+f2answered(rec)+' of '+its.length+' answered':'')+(formOn(rec,'2a')&&f2aAny(rec)?' - Form 2a: '+f2aAnswered(rec)+' of '+f2aNeed(rec).length+' answered':'')+(formOn(rec,4)&&f4any(rec)?' - Form 4: '+f4answered(rec)+' of '+f4rows().length+' answered':'')+(rec.f20&&rec.f20.res?' - Form 20 '+(rec.f20.res==='P'?'pass':'fail'):' - Form 20 open')+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})):unitDef(rec.unit).t.toLowerCase()+' unit - '+(formOn(rec,2)?'Form 2: '+f2answered(rec)+' of '+its.length+' answered':'no Form 2')+(formOn(rec,3)?' - Form 3: '+f3answered(rec)+' of '+f3rows().length+' answered':'')+(rec.f20&&rec.f20.res?' - Form 20 '+(rec.f20.res==='P'?'pass':'fail'):' - Form 20 open')+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})))+'</div></div><div class="row">'+
     (rec.sent?'':'<button class="btn sm primary" data-f2send="'+esc(rec.id)+'" type="button">Send</button>')+'<button class="btn sm" data-f2edit="'+esc(rec.id)+'" type="button">Open</button>'+(rec.sent?'<button class="btn sm" data-f2unsend="'+esc(rec.id)+'" type="button">Send again</button>':'')+'<button class="btn sm danger" data-f2del="'+esc(rec.id)+'" type="button">Delete</button></div></div>';
 }
 function f2sendPanel(){
@@ -1494,7 +1606,8 @@ var F3DEF={sheet:'Sheet54',comments:[35,36,37,38],items:[
 ]};
 function f3def(){return (S.data&&S.data.form3)||F3DEF}
 function f3o(v){return v.f3||{items:{},vals:{}}}
-function f3has(it,c){return !!it.cols&&it.cols.indexOf(c)>=0}
+function f3has(it,c){var cols=it.cols;if(it.row===32&&S.f2v&&S.f2v.tdu)cols='';   /* row 32 (not tested to 110%) is locked on the DU Form 3 sheets */
+  return !!cols&&cols.indexOf(c)>=0}
 function f3rows(){return f3def().items.filter(function(i){return f3has(i,'W')||f3has(i,'X')})}
 /* tanks: tank 0 is the first tank (stored in v.f3); tanks 1 and 2 are stored in v.f3.t[1], v.f3.t[2] and only hold what was changed or typed on their tab */
 function f3nt(v){return unitDef(v.unit).names.length}
@@ -1616,7 +1729,7 @@ function f3inHTML(x,v,k){
   var ph=(k&&base)?base:' ';
   var need=(x.k==='wt'&&!String(eff).trim()),tw=f3testWarn(v,k);return '<div class="field'+(c.msg?' bad':'')+(tw[x.k]?' warn':'')+(need?' need':'')+'" style="margin-top:.55rem"><label>'+esc(x.l)+(x.u?' ('+esc(x.u)+')':'')+(x.k==='wt'?' <span class="req">* required</span>':'')+'</label><input type="text" class="'+((k&&base)?'inh':'')+'" placeholder="'+esc(ph)+'" data-f3v="'+x.k+'" value="'+esc(own)+'" inputmode="'+im+'" autocomplete="off" autocapitalize="off"><div class="msg" data-f3m="'+x.k+'">'+esc(c.msg)+'</div><div class="note" data-f3n="'+x.k+'">'+esc(c.warn||tw[x.k]||'')+'</div>'+(x.hint?'<div class="hint">'+esc(x.hint)+'</div>':'')+'</div>';
 }
-function f3design(v){var s=String((v.v||{}).S||''),m=/\d+(\.\d+)?/.exec(s);if(!m)return 0;var n=+m[0];if(/kpa/i.test(s))return n>1800?265:(n>1700?250:0);return n}
+function f3design(v){var s=String((v.v||{})[v.tdu?'T':'S']||''),m=/\d+(\.\d+)?/.exec(s);if(!m)return 0;var n=+m[0];if(/kpa/i.test(s))return n>1800?265:(n>1700?250:0);return n}
 function f3testWarn(v,k){var d=f3design(v),o={sp:'',ep:''},sp=parseFloat(f3val(v,'sp',k)),ep=parseFloat(f3val(v,'ep',k));
   if(d&&!isNaN(sp)&&sp<d*1.5)o.sp='Below 1.5 x the design pressure ('+(d*1.5)+' psi for a '+d+' psi tank).';
   var e=isNaN(ep)?sp:ep;if(!isNaN(sp)&&!isNaN(e)&&e>sp*1.02)o.ep='More than 2% above the start pressure.';
@@ -2391,7 +2504,7 @@ document.addEventListener('input',function(e){
   var f3m=e.target.getAttribute&&e.target.getAttribute('data-f3cm');
   if(f3m&&S.f2v){var f3b=f3dw(S.f2v,f3tab(S.f2v)),a3=f3b.items[+f3m]||(f3b.items[+f3m]={});a3.c=e.target.value;f2save();return}
   var f2ak=e.target.getAttribute&&e.target.getAttribute('data-f2ac');
-  if(f2ak&&S.f2v){var f2ad=f2aD(S.f2v),aa=f2ad.items[+f2ak]||(f2ad.items[+f2ak]={});aa.c=e.target.value;f2save();var el2=$('#f2alen');if(el2){var nc2=f2aNc(S.f2v);el2.textContent=nc2+' of '+F2ADEF.lines+' comment lines used on the form.'+(nc2>F2ADEF.lines?' There is only room for '+F2ADEF.lines+'. Shorten or remove some comments before sending.':'');el2.style.color=nc2>F2ADEF.lines?'var(--bad)':'var(--muted)'}return}
+  if(f2ak&&S.f2v){var f2ad=f2aD(S.f2v),aa=f2ad.items[+f2ak]||(f2ad.items[+f2ak]={});aa.c=e.target.value;f2save();var el2=$('#f2alen');if(el2){var ln2=f2aLen(S.f2v);el2.textContent=ln2.t;el2.style.color=ln2.bad?'var(--bad)':'var(--muted)'}return}
   var fc=e.target.getAttribute&&e.target.getAttribute('data-f2c');
   if(fc&&S.f2v){var fdc=f2dw(S.f2v,f2tab(S.f2v)),a=fdc.items[+fc]||(fdc.items[+fc]={});a.c=e.target.value;f2save();if(S.f2v.tdu)tduLenUpd();return}
   var c=e.target.getAttribute&&e.target.getAttribute('data-in');
