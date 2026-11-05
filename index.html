@@ -422,7 +422,7 @@ function render(){
   if(S.form){renderForm();return}
   var top=$('#top');
   var ts=S.data.made||'';
-  top.innerHTML=tankIcon()+'<div class="grow"><h1>eB620 Tank Data</h1><p>'+(S.sample?'Example data - ':'')+S.data.tanks.length+' tanks'+(ts?' - data from '+esc(ts):'')+'</p></div>';
+  top.innerHTML=tankIcon()+'<div class="grow"><h1>eB620 Tank Data</h1><p>'+(S.sample?'Example data - ':'')+S.data.tanks.length+' tanks'+(ts?' - data from '+esc(ts):'')+' - page 8e</p></div>';
   var n=unsent().length+f2unsent().length+tduUnsent().length;
   var tabs=$('#tabs');tabs.hidden=false;
   tabs.innerHTML=[['tanks','Tanks',0],['send','To send',n],['data','Data',0]].map(function(t){
