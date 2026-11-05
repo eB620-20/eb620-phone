@@ -182,6 +182,20 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 .f2h{font-size:.82rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:1rem 0 .2rem}
 .f2bar{position:sticky;top:3.6rem;z-index:3;background:var(--bg);padding:.5rem 0;display:flex;gap:.5rem;align-items:center}
 .f2bar .btn{flex:1}
+<style>
+.mhc{border-left:5px solid var(--line)}
+.mhc.p{border-left-color:var(--good)}
+.mhc.f{border-left-color:var(--bad)}
+.mhc.mhfocus{outline:3px solid var(--accent);outline-offset:2px}
+.mhh{display:flex;flex-wrap:wrap;align-items:baseline;gap:.2rem .6rem}
+.mhu{font-size:1.35rem;font-weight:800;font-family:ui-monospace,Menlo,monospace}
+.mhco{font-weight:600}
+.mhtag{margin-left:auto;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);border-radius:.4rem;padding:.1rem .45rem}
+.mhfile{margin:.25rem 0 .6rem;font-size:.92rem;font-weight:600}
+.mhgrid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.mhsel{width:100%;min-height:3rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface2);padding:0 .9rem;font:inherit;color:inherit}
+.mhbar{height:.6rem;border-radius:.3rem;background:var(--surface2);border:1px solid var(--line);overflow:hidden}
+.mhbar>div{height:100%;background:var(--accent)}
 </style>
 </head><body><div id="app">
   <header class="top" id="top"></header>
@@ -197,7 +211,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 8q (on a twin or triple tile the Report sent badge now sits left of the word Twin / Triple, so the right-hand edge of every tile shows the unit type or description); 8p (All details now says "open for Edit button", with a line "Scroll to the bottom for the Edit button" above the list); 8n (Next annual visual and Next hydro are also shown in the top block under the serial number, as well as after the last dates in All details); 8m (Next annual visual and Next hydro now sit in the All details list right after Last visual and Last hydro, not at the top); 8k (Next annual visual is worked out as last visual + 12 months when the workbook leaves it blank, so a date always shows); 8j (the unit details show Last visual, Next annual visual, Last hydro and Next hydro; Edit this tank / Edit this unit is now at the bottom of All details, so you scroll to the end of the list before editing; the next visual date needs export for phone from workbook v101 or later); 8i (every cell of an existing tank or DU can now be corrected on the phone, including the dates, PRV and hose cells that were greyed; the workbook import needs v101 or later for this; the Quick update button is gone - Edit this tank does everything); 8h (the page label at the top now follows this version line); 8g (the tank description on a single tank tile, for example S1450, is no longer bold); 8f (single and twin / triple tiles look alike, lighter detail lines); 8e (page label at the top, updates are fetched fresh from the server); 8d (more forgiving QR scanner with a Light button and a hint, clearer unit banner with Back to the full list); 8c (see example pictures for ASME stamp, ASME stamp markings and HT markings); 8b (a Scan a QR label button opens the camera inside the app and opens the unit, jsQR included); 8a (new Due chip with 30/60/90 days and blue and red bars on tiles that are due, description on the right of each tile, Remove button and clearer steps for Form 10 pictures, Form 2 asks about a No without a comment, Form 4 pressure basis, units and relief valve type are required); 7y (each DU tile now says Single, Double or Quad unit and lists the tank serial numbers, so a quad (two rows in the DU list) can be seen from the list); 7x: (a line above the Send to office button explains that the tank tiles below are all sent together by it); 7w: (each tile on the To send list now shows the tank\'s serial number, so tiles of the same unit can be told apart); 7v: (the Form 20 status box now appears on every Pass or Fail of a nurse unit, not only when the status on file does not match; when it already matches, Leave the status as it is is pre-selected, so an Active unit can be changed to for example Active-AIR ISC; DUs still have no status box); 7u (the tank design pressure from the data plate now shows on the first page, after ASME stamp markings; export for phone from workbook v87 or later to get it); 7t (the Form 3 safety valve set pressure now offers 1723, 1725, 1825 and 1827 kpa as well as 250 and 265 psi, matching the workbook lists); 7s (column S is now the PRV set pressure and a new column AY holds the tank design pressure from the data plate: Form 4 Record pressure and the Form 3 start-pressure warning use AY first and fall back to S for tanks where AY is still empty; Form 3 Safety valve set pressure is filled in from the PRV pressure on the tank list and can be changed; Quick update has a Tank design pressure box); 7r (the Tanks list shows Report sent / Report on a nurse unit tile like it already does on a DU tile; the tile shows the most recent of Details sent, Update sent and Report sent, fading after 30 days; on a twin or triple the badge sits beside the Twin / Triple heading; 7q (the Location button in the Tanks list gives a drop-down of locations to tap instead of typing; 7p (scanning a per-unit QR label opens a DU or a one-tank unit straight away; 7o (a QR label for a whole unit shows the Tanks list with only that unit, with a Show all units button; 7n (scan the QR label on a tank or DU and that unit opens by its serial number; 7m (a DU report now has Form 10 (data plate pictures by email, up to four plates on a quad) and Form 13 (additional comments); 7l (saving a new or changed unit warns when its unit number is already used at the same location by a different company/owner: Change it or Save anyway; a twin or triple of the same company never warns); 7k (the search box looks at one thing only: Unit (default), Serial, Location or Company, chosen with the small buttons under it, or Any for everything; searching for unit 0 no longer finds a tank just because its size has a 0 in it); 7j (the pop-up sheet, e.g. File ready, uses the whole visible screen height and scrolls if needed, so the bottom buttons are never cut off; the text box in it is shorter); 7i (Form 4 record pressure is labelled psi; the Add tank note says unit number instead of tank number); 7h (the sheet keeps both buttons: Email to office = text in the message, Share file (PDF) = PDF attachment; the file for the office is now a PDF instead of a .txt - iPhone opens and shares it more easily; the report text is still inside it for the import); 7g (a blank Form 20 comment line is skipped: the lines you typed are sent as line 1, 2, 3 with no gap); 7f (a DU report now has Form 6 (metered) or Form 7 (non-metered) emergency discharge control tests - one checklist for the whole DU, not both in one report - and Form 8 thickness, one tab per tank (front left, front right, rear left, rear right on a quad); 7e: (Form 3: the relief device pressure rating is typed on the first tab only; the other tabs of a twin, triple or quad take it from the first tank, like the sheets; 7d: DU Form 3 pressure test on the phone, one tab per tank, row 32 asked on a DU too; DU Form 2a reworked: only the section that fits the tank size (over / 13,250 L or less) is asked, the other is N/A by itself; the emergency discharge control questions ask first whether the statement applies to the DU; page 2 has all the rear end protection questions, the next four are N/A after a No on the first, and the deemed-to-comply line fills itself in like the sheet; comments are numbered and printed per page (page 1: 4 lines, page 2: 2 lines); 7a: a DU report now has Form 4 - the leakage test, one checklist per tank (left / right, or the four tanks of a quad), same as for nurse tanks; 6z: (a DU report now has Form 2a - discharge control devices and rear end protection, one checklist per DU; a saved DU report keeps its Form 5 tick when reopened; 6y: (a DU report now has Form 20: date, Pass or Fail and, on a Fail, up to 3 comment lines; 6x: (a new tank or DU: picking the Description such as S2000 or T1450 Tandem fills in the Size (2000 USG) when it is in the list; a size you chose is never replaced; 6w: (Form 5: Correct the details on file on each hose card of nurse tanks too, a twin / triple with one shared hose corrects all its tanks; 6v: DU Form 5: Correct the details on file on each hose card - fix a wrong year, length, diameter or MFG without a Fail; travels as an S|HC line; Form 20: when the result is Fail a comment box (3 short lines) asks why; it travels as S|CM lines; on a nurse tank screen Quick update is a button beside Edit this tank; the PRV, hose, HRV and note boxes appear when you tap it (and stay open if there is something typed or a saved quick update); Forms 2, 3, 4 and 8 show which tank you are on: the tank name (Left / Centre / Right), its serial number and size / make / year under the form heading; the Sent badges (Details sent, Update sent, Report sent) on the tank and DU tiles disappear 30 days after the send; nothing is deleted and the To send list is unchanged; a small heading with the location name between locations in the tank and DU lists, DU list ordered like the tank list; the tank list is ordered by location, then unit number (company only breaks a tie); spaces in a unit number are ignored when sorting the tank list, so Pro1521 and Pro 1521 sort together; the tank list is ordered by location, then company, then unit number (numbers in natural order: 2 before 10, Pro 1527 before Pro 1528); before this it followed the workbook row order; Form 20: after Pass or Fail you can set the unit status when the status on file does not match - Pass offers the Active choices, Fail the not-active ones, default Active / Out of Service, or leave it; the report carries it as an S|ST line and the workbook changes the Nurse Tanks list; every inspection report email ends with a check line (eB620-check) so the office import can tell if a line was lost or changed; the tank list shows one tile per unit: a single tank is a card with its serial, a twin or triple has a row per tank (L, C, R) with size, make, year and serial; a choice added on this phone has a Remove button in the drop-down list: asks Yes/No, refused while a saved entry still uses it; the plain Sent badge on unit entries now reads Details sent; required fields: no (required) in the label, grey Required inside the empty field, red with a message when saved blank; wording: Unit instead of Tank in the headers, Company/Owner, Unit number, shorter search box text; Send screen headings say what each part is: nurse tanks, inspection reports, DUs; DU Form 5: liquid, vapour and 3rd hose cards, add a missing hose; the delivery units are now called DU everywhere on the phone (single, twin or quad); an inspection report is only saved when something was entered - choosing the unit type alone or just looking no longer leaves an unfinished report; Form 5 no longer says one hose for each tank; the nurse tank screen has the same compact Tank details panel as the DU screen: key fields, Edit this tank, and a collapsed All details list; the DU Form 2 (visual) checklist is on the phone, and the workbook fills it in; the email starts with a plain sentence for mail filters; tank and DU entries in the email use ~~ instead of tab characters, which mail apps turn into spaces; tank entries file ends with eB620-end like the other files; a sent report stays sent when you leave it; office changes made after the export are never overwritten by an older phone copy: only the fields you changed are sent, with their original values; DUs: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, DU opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, DUs, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
+var VERSION='prototype 8t (new Multi-Hose test on the Tanks page: pick a location, go down its hoses with Pass / Fail, new-hose details on a fail, a note, and Scan a QR label to jump to a tank; prototype, results stay on the phone and are not sent yet); 8s (the Due chip on the Tanks page now reads Hydro due, short enough to stay on one line beside the 30 / 60 / 90 day chips); 8q (on a twin or triple tile the Report sent badge now sits left of the word Twin / Triple, so the right-hand edge of every tile shows the unit type or description); 8p (All details now says "open for Edit button", with a line "Scroll to the bottom for the Edit button" above the list); 8n (Next annual visual and Next hydro are also shown in the top block under the serial number, as well as after the last dates in All details); 8m (Next annual visual and Next hydro now sit in the All details list right after Last visual and Last hydro, not at the top); 8k (Next annual visual is worked out as last visual + 12 months when the workbook leaves it blank, so a date always shows); 8j (the unit details show Last visual, Next annual visual, Last hydro and Next hydro; Edit this tank / Edit this unit is now at the bottom of All details, so you scroll to the end of the list before editing; the next visual date needs export for phone from workbook v101 or later); 8i (every cell of an existing tank or DU can now be corrected on the phone, including the dates, PRV and hose cells that were greyed; the workbook import needs v101 or later for this; the Quick update button is gone - Edit this tank does everything); 8h (the page label at the top now follows this version line); 8g (the tank description on a single tank tile, for example S1450, is no longer bold); 8f (single and twin / triple tiles look alike, lighter detail lines); 8e (page label at the top, updates are fetched fresh from the server); 8d (more forgiving QR scanner with a Light button and a hint, clearer unit banner with Back to the full list); 8c (see example pictures for ASME stamp, ASME stamp markings and HT markings); 8b (a Scan a QR label button opens the camera inside the app and opens the unit, jsQR included); 8a (new Due chip with 30/60/90 days and blue and red bars on tiles that are due, description on the right of each tile, Remove button and clearer steps for Form 10 pictures, Form 2 asks about a No without a comment, Form 4 pressure basis, units and relief valve type are required); 7y (each DU tile now says Single, Double or Quad unit and lists the tank serial numbers, so a quad (two rows in the DU list) can be seen from the list); 7x: (a line above the Send to office button explains that the tank tiles below are all sent together by it); 7w: (each tile on the To send list now shows the tank\'s serial number, so tiles of the same unit can be told apart); 7v: (the Form 20 status box now appears on every Pass or Fail of a nurse unit, not only when the status on file does not match; when it already matches, Leave the status as it is is pre-selected, so an Active unit can be changed to for example Active-AIR ISC; DUs still have no status box); 7u (the tank design pressure from the data plate now shows on the first page, after ASME stamp markings; export for phone from workbook v87 or later to get it); 7t (the Form 3 safety valve set pressure now offers 1723, 1725, 1825 and 1827 kpa as well as 250 and 265 psi, matching the workbook lists); 7s (column S is now the PRV set pressure and a new column AY holds the tank design pressure from the data plate: Form 4 Record pressure and the Form 3 start-pressure warning use AY first and fall back to S for tanks where AY is still empty; Form 3 Safety valve set pressure is filled in from the PRV pressure on the tank list and can be changed; Quick update has a Tank design pressure box); 7r (the Tanks list shows Report sent / Report on a nurse unit tile like it already does on a DU tile; the tile shows the most recent of Details sent, Update sent and Report sent, fading after 30 days; on a twin or triple the badge sits beside the Twin / Triple heading; 7q (the Location button in the Tanks list gives a drop-down of locations to tap instead of typing; 7p (scanning a per-unit QR label opens a DU or a one-tank unit straight away; 7o (a QR label for a whole unit shows the Tanks list with only that unit, with a Show all units button; 7n (scan the QR label on a tank or DU and that unit opens by its serial number; 7m (a DU report now has Form 10 (data plate pictures by email, up to four plates on a quad) and Form 13 (additional comments); 7l (saving a new or changed unit warns when its unit number is already used at the same location by a different company/owner: Change it or Save anyway; a twin or triple of the same company never warns); 7k (the search box looks at one thing only: Unit (default), Serial, Location or Company, chosen with the small buttons under it, or Any for everything; searching for unit 0 no longer finds a tank just because its size has a 0 in it); 7j (the pop-up sheet, e.g. File ready, uses the whole visible screen height and scrolls if needed, so the bottom buttons are never cut off; the text box in it is shorter); 7i (Form 4 record pressure is labelled psi; the Add tank note says unit number instead of tank number); 7h (the sheet keeps both buttons: Email to office = text in the message, Share file (PDF) = PDF attachment; the file for the office is now a PDF instead of a .txt - iPhone opens and shares it more easily; the report text is still inside it for the import); 7g (a blank Form 20 comment line is skipped: the lines you typed are sent as line 1, 2, 3 with no gap); 7f (a DU report now has Form 6 (metered) or Form 7 (non-metered) emergency discharge control tests - one checklist for the whole DU, not both in one report - and Form 8 thickness, one tab per tank (front left, front right, rear left, rear right on a quad); 7e: (Form 3: the relief device pressure rating is typed on the first tab only; the other tabs of a twin, triple or quad take it from the first tank, like the sheets; 7d: DU Form 3 pressure test on the phone, one tab per tank, row 32 asked on a DU too; DU Form 2a reworked: only the section that fits the tank size (over / 13,250 L or less) is asked, the other is N/A by itself; the emergency discharge control questions ask first whether the statement applies to the DU; page 2 has all the rear end protection questions, the next four are N/A after a No on the first, and the deemed-to-comply line fills itself in like the sheet; comments are numbered and printed per page (page 1: 4 lines, page 2: 2 lines); 7a: a DU report now has Form 4 - the leakage test, one checklist per tank (left / right, or the four tanks of a quad), same as for nurse tanks; 6z: (a DU report now has Form 2a - discharge control devices and rear end protection, one checklist per DU; a saved DU report keeps its Form 5 tick when reopened; 6y: (a DU report now has Form 20: date, Pass or Fail and, on a Fail, up to 3 comment lines; 6x: (a new tank or DU: picking the Description such as S2000 or T1450 Tandem fills in the Size (2000 USG) when it is in the list; a size you chose is never replaced; 6w: (Form 5: Correct the details on file on each hose card of nurse tanks too, a twin / triple with one shared hose corrects all its tanks; 6v: DU Form 5: Correct the details on file on each hose card - fix a wrong year, length, diameter or MFG without a Fail; travels as an S|HC line; Form 20: when the result is Fail a comment box (3 short lines) asks why; it travels as S|CM lines; on a nurse tank screen Quick update is a button beside Edit this tank; the PRV, hose, HRV and note boxes appear when you tap it (and stay open if there is something typed or a saved quick update); Forms 2, 3, 4 and 8 show which tank you are on: the tank name (Left / Centre / Right), its serial number and size / make / year under the form heading; the Sent badges (Details sent, Update sent, Report sent) on the tank and DU tiles disappear 30 days after the send; nothing is deleted and the To send list is unchanged; a small heading with the location name between locations in the tank and DU lists, DU list ordered like the tank list; the tank list is ordered by location, then unit number (company only breaks a tie); spaces in a unit number are ignored when sorting the tank list, so Pro1521 and Pro 1521 sort together; the tank list is ordered by location, then company, then unit number (numbers in natural order: 2 before 10, Pro 1527 before Pro 1528); before this it followed the workbook row order; Form 20: after Pass or Fail you can set the unit status when the status on file does not match - Pass offers the Active choices, Fail the not-active ones, default Active / Out of Service, or leave it; the report carries it as an S|ST line and the workbook changes the Nurse Tanks list; every inspection report email ends with a check line (eB620-check) so the office import can tell if a line was lost or changed; the tank list shows one tile per unit: a single tank is a card with its serial, a twin or triple has a row per tank (L, C, R) with size, make, year and serial; a choice added on this phone has a Remove button in the drop-down list: asks Yes/No, refused while a saved entry still uses it; the plain Sent badge on unit entries now reads Details sent; required fields: no (required) in the label, grey Required inside the empty field, red with a message when saved blank; wording: Unit instead of Tank in the headers, Company/Owner, Unit number, shorter search box text; Send screen headings say what each part is: nurse tanks, inspection reports, DUs; DU Form 5: liquid, vapour and 3rd hose cards, add a missing hose; the delivery units are now called DU everywhere on the phone (single, twin or quad); an inspection report is only saved when something was entered - choosing the unit type alone or just looking no longer leaves an unfinished report; Form 5 no longer says one hose for each tank; the nurse tank screen has the same compact Tank details panel as the DU screen: key fields, Edit this tank, and a collapsed All details list; the DU Form 2 (visual) checklist is on the phone, and the workbook fills it in; the email starts with a plain sentence for mail filters; tank and DU entries in the email use ~~ instead of tab characters, which mail apps turn into spaces; tank entries file ends with eB620-end like the other files; a sent report stays sent when you leave it; office changes made after the export are never overwritten by an older phone copy: only the fields you changed are sent, with their original values; DUs: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, DU opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, DUs, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -417,6 +431,7 @@ function tankIcon(){return '<svg width="30" height="30" viewBox="0 0 32 32" aria
 /* ---------- rendering ---------- */
 function unsent(){return S.entries.filter(function(e){return!e.sent})}
 function render(){
+  if(S.mhOn){renderMH();return}
   if(S.tduDetail&&!S.f2v){renderTduDetail();return}
   if(S.f2v){if(S.f2v.view==='f2')renderF2();else if(S.f2v.view==='f2a')renderF2a();else if(S.f2v.view==='f6'||S.f2v.view==='f7')renderF67();else if(S.f2v.view==='f20')renderF20();else if(S.f2v.view==='f3')renderF3();else if(S.f2v.view==='f4')renderF4();else if(S.f2v.view==='f13')renderF13();else if(S.f2v.view==='f8')renderF8();else if(S.f2v.view==='f5')renderF5();else renderRep();return}
   if(S.form){renderForm();return}
@@ -536,7 +551,8 @@ function renderTanks(){
   if(S.sample){h+='<div class="banner"><b>Example data.</b> These are the sample tanks from the template. Open the Data tab and load the file exported from the workbook to see your own tanks.</div>'}
   h+='<div class="chips" style="margin:0 0 .6rem">'+((tduRows().length||tduFields().length)?'<button type="button" class="chip s'+(S.kind!=='tdu'?' on':'')+'" data-kind="nurse">Nurse tanks</button><button type="button" class="chip s'+(S.kind==='tdu'?' on':'')+'" data-kind="tdu">DU</button>':'')+'<button type="button" class="chip s'+(S.activeOnly?' on':'')+'" data-activeonly="1">'+stLabel()+'</button></div>';
   h+='<button type="button" class="btn block" data-scan="1" style="margin:0 0 .6rem">Scan a QR label</button>';
-  h+='<div class="chips" style="margin:0 0 .6rem"><button type="button" class="chip s'+(S.dueOn?' on':'')+'" data-dueon="1">Due</button>'+(S.dueOn?[30,60,90].map(function(d){return '<button type="button" class="chip s'+(dueDays()===d?' on':'')+'" data-duedays="'+d+'" style="flex:.7">'+d+' days</button>'}).join(''):'')+'</div>';
+  h+='<button type="button" class="btn block" data-mh="1" style="margin:0 0 .6rem">Multi-Hose test</button>';
+  h+='<div class="chips" style="margin:0 0 .6rem"><button type="button" class="chip s'+(S.dueOn?' on':'')+'" data-dueon="1"'+(S.dueOn?' style="flex:1.5"':'')+'>Hydro due</button>'+(S.dueOn?[30,60,90].map(function(d){return '<button type="button" class="chip s'+(dueDays()===d?' on':'')+'" data-duedays="'+d+'" style="flex:.7">'+d+' days</button>'}).join(''):'')+'</div>';
   if(S.dueOn)h+='<p class="count" style="margin:-.2rem 0 .6rem">Tanks due now or within '+dueDays()+' days, most overdue first'+(S.data&&S.data.made?' (dates as exported from the workbook on '+esc(S.data.made)+')':'')+'. <span style="color:var(--duebl);font-weight:700">Blue</span> = coming due, <span style="color:var(--duered);font-weight:700">red</span> = DUE or overdue.</p>';
   h+=(S.sf==='A'?'<div class="search"><select id="qloc" aria-label="Location"><option value="">All locations</option>'+locChoices().map(function(a){return '<option value="'+esc(a)+'"'+(locNorm(a)===locNorm(S.locF)?' selected':'')+'>'+esc(a)+'</option>'}).join('')+'</select></div>':'<div class="search"><input id="q" type="search" placeholder="'+srchPh()+'" value="'+esc(S.q)+'" autocomplete="off" aria-label="Search tanks"></div>')+'<div class="sfc" role="group" aria-label="Search in">'+[['D','Unit'],['S','Serial'],['A','Location'],['C','Company'],['all','Any']].map(function(x){return '<button type="button" class="sf'+(S.sf===x[0]?' on':'')+'" data-sf="'+x[0]+'">'+x[1]+'</button>'}).join('')+'</div><div class="count" id="cnt"></div><ul class="list" id="tl"></ul>';
   $('#view').innerHTML=h;
@@ -2687,6 +2703,7 @@ function f10open(){
 /* ---------- events ---------- */
 document.addEventListener('click',function(e){
   var t=e.target;
+  if(S.mhOn){mhClick(t);return}
   if(S.f2v){if(S.f2v.view==='f2')f2click(t);else if(S.f2v.view==='f2a')f2aclick(t);else if(S.f2v.view==='f6'||S.f2v.view==='f7')f67click(t);else if(S.f2v.view==='f20')f20click(t);else if(S.f2v.view==='f3')f3click(t);else if(S.f2v.view==='f4')f4click(t);else if(S.f2v.view==='f13')f13click(t);else if(S.f2v.view==='f8')f8click(t);else if(S.f2v.view==='f5')f5click(t);else repClick(t);return}
   var tdE=t.closest('[data-tduedit]');if(S.tduDetail&&tdE){openTduEdit(+tdE.getAttribute('data-tduedit'));return}
   if(S.tduDetail&&t.closest('#tduBack')){S.tduDetail=null;window.scrollTo(0,0);render();return}
@@ -2710,6 +2727,7 @@ document.addEventListener('click',function(e){
     return;
   }
   if(t.closest('[data-scan]')){qrScan();return}
+  if(t.closest('[data-mh]')){S.mhOn=true;S.mhFocus='';window.scrollTo(0,0);render();return}
   var du1=t.closest('[data-dueon]');if(du1){S.dueOn=!S.dueOn;lsSet('ebp_dueon',S.dueOn);renderTanks();return}
   var du2=t.closest('[data-duedays]');if(du2){S.dueDays=+du2.dataset.duedays;lsSet('ebp_duedays',S.dueDays);renderTanks();return}
   var ao=t.closest('[data-activeonly]');if(ao){S.stF=S.stF==='active'?'inactive':S.stF==='inactive'?'all':'active';lsSet('ebp_stf',S.stF);renderTanks();return}
@@ -2759,6 +2777,7 @@ document.addEventListener('click',function(e){
   }
 });
 document.addEventListener('change',function(e){
+  if(S.mhOn){if(e.target.id==='mhLoc'){S.mh.loc=e.target.value;S.mh.filter='all';mhSave();renderMH();window.scrollTo(0,0);return}if(mhInput(e.target))return}
   var f3k=e.target.getAttribute&&e.target.getAttribute('data-f3v');
   if(f3k&&S.f2v){f3blur(e.target,f3k);return}
   var f4k=e.target.getAttribute&&e.target.getAttribute('data-f4v');
@@ -2774,6 +2793,7 @@ document.addEventListener('change',function(e){
   }
 });
 document.addEventListener('input',function(e){
+  if(S.mhOn&&mhInput(e.target))return;
   var cmk=e.target.getAttribute&&e.target.getAttribute('data-f20cm');
   if(cmk!==null&&cmk!==undefined&&S.f2v){var cf=S.f2v.f20||(S.f2v.f20={date:'',res:'',auto:0});cf.cm=cf.cm||['','',''];cf.cm[+cmk]=e.target.value;f2save();return}
   var f3k=e.target.getAttribute&&e.target.getAttribute('data-f3v');
@@ -2852,7 +2872,7 @@ function qrGot(txt,s){
     return false;
   }
   try{if(navigator.vibrate)navigator.vibrate(60)}catch(e){}
-  closeSheet();qrOpen(qs);return true;
+  closeSheet();if(S.mhOn)mhQr(qs);else qrOpen(qs);return true;
 }
 function qrScan(){
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||typeof jsQR!=='function'){toast('The camera cannot be used here. Scan the label with the phone camera app instead.');return}
@@ -2917,11 +2937,133 @@ function qrOpen(qs){
   S.tab='tanks';S.sf='S';S.q=q;S.locF='';S.stF='all';render();
   toast('Serial '+q+' is not in the list on this phone. Load a newer tank list, or add the unit.');
 }
+/* ---------- 8t: Multi-Hose test (prototype: results stay on this phone, nothing is sent to the workbook yet) ---------- */
+S.mh=lsGet('ebp_mh',null)||{loc:'',filter:'all',items:{}};
+if(!S.mh.items)S.mh.items={};
+S.mhOn=false;
+function mhSave(){lsSet('ebp_mh',S.mh)}
+function mhLocs(){
+  var seen={},out=[];
+  function add(a){a=String(a||'').trim();var k=locNorm(a);if(a&&!seen[k]){seen[k]=1;out.push(a)}}
+  allTanks().forEach(function(t){if(t.row)add(t.v.A)});
+  tduRows().forEach(function(t){add(t.v.A)});
+  out.sort(natural);return out;
+}
+function mhHose(v,cols){var o={},ks=['V','W','X','Y'];ks.forEach(function(k,j){var x=v[cols?cols[j]:k];if(x!=null&&String(x).trim()!=='')o[k]=String(x).trim()});return o}
+function mhHas(h){return !!(h.V||h.W||h.X||h.Y)}
+function mhSig(h){return ['V','W','X','Y'].map(function(k){return norm(h[k])}).join('|')}
+function mhItems(){
+  var loc=S.mh.loc,out=[],groups={},order=[];
+  if(!loc)return out;
+  allTanks().forEach(function(t){
+    if(!t.row||locNorm(t.v.A)!==locNorm(loc))return;
+    if(!S.mh.all&&!isActive(t.v.F))return;
+    var k=keyOf(t.v);if(!groups[k]){groups[k]=[];order.push(k)}groups[k].push(t)});
+  order.forEach(function(k){
+    var g=groups[k].slice().sort(function(a,b){return a.row-b.row}),subs={},so=[];
+    g.forEach(function(t){var h=mhHose(t.v),s=mhSig(h);if(!subs[s]){subs[s]=[];so.push(s)}subs[s].push(t)});
+    so.forEach(function(s,si){
+      var ts=subs[s],v0=ts[0].v,h=mhHose(v0),tag='';
+      if(g.length>1)tag=(ts.length===g.length?(g.length===2?'Twin':'Triple')+' - one hose':(g.length===2?'Twin':'Triple')+' - hose '+(si+1));
+      out.push({id:'n:'+ts[0].row,kind:'n',unit:String(v0.D||''),co:String(v0.C||''),tag:tag,rows:ts.map(function(t){return t.row}),
+        desc:[v0.AD,v0.AF,v0.AE].filter(Boolean).join(' - '),hose:h,has:mhHas(h)})})});
+  tduList().forEach(function(t){
+    if(locNorm(t.v.A)!==locNorm(loc))return;
+    var ur=tduUnitRows(t.v),b=(ur[0]||t).v;
+    if(!S.mh.all&&b.E&&!isActive(b.E))return;
+    DUHOSE.forEach(function(c,i){
+      var h=mhHose(b,c);
+      if(!mhHas(h)&&i>0)return;
+      out.push({id:'d:'+t.row+':'+i,kind:'d',unit:String(b.D||''),co:String(b.C||''),tag:'DU - '+DUHN[i].toLowerCase(),rows:ur.map(function(x){return x.row}),du:true,
+        desc:[b.F,b.AM,b.AN].filter(Boolean).join(' - '),hose:h,has:mhHas(h)})})});
+  out.sort(function(a,b){return natural(a.unit,b.unit)||(a.id<b.id?-1:1)});
+  return out;
+}
+function mhS(id,mk){var o=S.mh.items[id];if(!o&&mk){o=S.mh.items[id]={res:'',np:0,cm:'',rb:0,nt:0,yr:'',ln:'',dia:'',mf:''}}return o||{res:'',np:0,cm:'',rb:0,nt:0,yr:'',ln:'',dia:'',mf:''}}
+function mhCounts(items){var c={n:items.length,p:0,f:0,todo:0};items.forEach(function(it){var r=mhS(it.id).res;if(r==='P')c.p++;else if(r==='F')c.f++;else c.todo++});return c}
+function mhSelHtml(c,cur,old,first,key){
+  return '<select class="mhsel" data-mhf="'+key+'">'+f5opts(c,cur,old,first)+'</select>';
+}
+function mhCard(it){
+  var o=mhS(it.id),cls=o.res==='P'?' p':o.res==='F'?' f':'',foc=S.mhFocus===it.id?' mhfocus':'',h=it.hose,id=esc(it.id);
+  var info=[h.V&&('expires '+h.V),h.X&&(h.X+' ft'),h.W,h.Y].filter(Boolean).join(', ');
+  var s='<div class="panel mhc'+cls+foc+'" id="mh_'+id.replace(/[^\w]/g,'_')+'"><div class="mhh"><span class="mhu">'+esc(it.unit||'?')+'</span><span class="mhco">'+esc(it.co)+'</span>'+(it.tag?'<span class="mhtag">'+esc(it.tag)+'</span>':'')+'</div>';
+  if(it.desc)s+='<p class="count" style="margin:.1rem 0 .1rem">'+esc(it.desc)+'</p>';
+  s+='<p class="mhfile">'+(info?'Hose on file: '+esc(info):'No hose on file for this tank. Fill in the hose below.')+'</p>';
+  s+='<div class="chips"><button type="button" class="chip y'+(o.res==='P'?' on':'')+'" data-mhr="'+id+'" data-v="P">Pass</button><button type="button" class="chip n'+(o.res==='F'?' on':'')+'" data-mhr="'+id+'" data-v="F">Fail</button></div>';
+  if(o.res==='F'||!it.has){
+    s+='<div class="f2h" style="margin-top:.8rem">'+(it.has?'New hose':'Hose details')+'</div>';
+    if(it.has)s+='<p class="count" style="margin:0 0 .3rem">Fill in only what is different from the old hose. A box left empty keeps the old hose\'s detail.</p>';
+    s+='<div class="mhgrid"><div class="field"><label>Expiry year</label><input type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder=" " data-mhf="yr|'+id+'" value="'+esc(o.yr)+'">'+(h.V?'<div class="hint">On file: '+esc(h.V)+'</div>':'')+'</div>';
+    s+='<div class="field"><label>Length (ft)</label><input type="text" inputmode="decimal" autocomplete="off" placeholder=" " data-mhf="ln|'+id+'" value="'+esc(o.ln)+'">'+(h.X?'<div class="hint">On file: '+esc(h.X)+' ft</div>':'')+'</div></div>';
+    s+='<div class="field" style="margin-top:.5rem"><label>Diameter</label>'+mhSelHtml('W',o.dia,h.W,it.has?null:'Choose','dia|'+id)+'</div>';
+    s+='<div class="field" style="margin-top:.5rem"><label>Manufacturer</label>'+mhSelHtml('Y',o.mf,h.Y,it.has?null:'Choose','mf|'+id)+'</div>';
+    if(o.res==='F')s+='<button type="button" class="chip s" style="display:block;width:100%;text-align:left;margin-top:.7rem'+(o.np?'':'')+'" data-mhnp="'+id+'">'+(o.np?'&#10003; ':'')+'New hose fitted and passed</button>';
+  }
+  if(o.nt||o.cm||o.rb){
+    s+='<div class="field" style="margin-top:.7rem"><label>Note (optional, short)</label><input type="text" maxlength="'+F5CM+'" autocomplete="off" placeholder=" " data-mhf="cm|'+id+'" value="'+esc(o.cm)+'"></div>';
+    s+='<button type="button" class="chip s'+(o.rb?' on':'')+'" style="display:block;width:100%;text-align:left;margin-top:.5rem" data-mhrb="'+id+'">'+(o.rb?'&#10003; ':'')+'Hose end valve rebuilt</button>';
+  }else s+='<button type="button" class="lnk" style="margin-top:.5rem" data-mhnt="'+id+'">+ Add a note (for example: end valve rebuilt)</button>';
+  return s+'</div>';
+}
+function renderMH(){
+  var h='',m=S.mh;
+  $('#tabs').hidden=true;$('#fab').hidden=true;
+  $('#top').innerHTML='<button class="hbtn icon" id="mhBack" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Multi-Hose test</h1><p>'+(m.loc?esc(m.loc):'Choose the location')+'</p></div><button class="hbtn solid" id="mhDone" type="button">Done</button>';
+  h+='<div class="banner"><b>Prototype.</b> Pass / Fail and new-hose details are kept on this phone only. Sending them to the workbook for Form 5 comes after you approve these screens. Test gauge serial numbers stay in the workbook.</div>';
+  if(!m.loc){
+    var locs=mhLocs(),started=Object.keys(m.items).length;
+    h+='<div class="panel"><h2>Which location?</h2><p>All the tanks and DUs at the location are listed with their hose on file. Go down the list as you test each hose.</p><div class="field"><select class="mhsel" id="mhLoc"><option value="">Choose a location</option>'+locs.map(function(a){return '<option value="'+esc(a)+'">'+esc(a)+'</option>'}).join('')+'</select></div></div>';
+    $('#view').innerHTML=h;return;
+  }
+  var items=mhItems(),c=mhCounts(items),pct=c.n?Math.round((c.p+c.f)*100/c.n):0;
+  h+='<div class="panel"><h2>'+esc(m.loc)+'</h2><p style="margin:0 0 .5rem"><b>'+(c.p+c.f)+'</b> of <b>'+c.n+'</b> hoses tested - <span style="color:var(--good);font-weight:700">'+c.p+' pass</span> - <span style="color:var(--bad);font-weight:700">'+c.f+' fail</span> - '+c.todo+' to do</p><div class="mhbar"><div style="width:'+pct+'%"></div></div><div class="row" style="margin-top:.7rem;display:flex;gap:.5rem"><button type="button" class="btn primary" style="flex:1" data-mhscan="1">Scan a QR label</button><button type="button" class="btn" style="flex:1" id="mhChange">Change location</button></div></div>';
+  h+='<div class="chips" style="margin:0 0 .6rem">'+[['all','All ('+c.n+')'],['todo','To do ('+c.todo+')'],['F','Failed ('+c.f+')']].map(function(x){return '<button type="button" class="chip s'+(m.filter===x[0]?' on':'')+'" data-mhfilter="'+x[0]+'">'+x[1]+'</button>'}).join('')+'</div>';
+  var shown=items.filter(function(it){var r=mhS(it.id).res;return m.filter==='todo'?!r:m.filter==='F'?r==='F':true});
+  if(!items.length)h+='<div class="panel"><p>No active tanks or DUs with a hose at '+esc(m.loc)+' in the list on this phone.</p></div>';
+  else if(!shown.length)h+='<div class="panel"><p>'+(m.filter==='todo'?'Every hose has an answer.':'No failed hoses.')+'</p></div>';
+  h+=shown.map(mhCard).join('');
+  h+='<div class="panel"><button type="button" class="lnk" id="mhClear" style="color:var(--bad)">Clear all results for '+esc(m.loc)+'</button></div>';
+  $('#view').innerHTML=h;
+}
+function mhBack(){S.mhOn=false;S.tab='tanks';window.scrollTo(0,0);render()}
+function mhClick(t){
+  var m=S.mh,y=window.scrollY;
+  function again(){mhSave();renderMH();window.scrollTo(0,y)}
+  if(t.closest('#mhBack')||t.closest('#mhDone')){mhBack();return}
+  if(t.closest('[data-mhscan]')){S.mhScan=1;qrScan();return}
+  if(t.closest('#mhChange')){m.loc='';m.filter='all';again();window.scrollTo(0,0);return}
+  var fl=t.closest('[data-mhfilter]');if(fl){m.filter=fl.getAttribute('data-mhfilter');again();return}
+  var r=t.closest('[data-mhr]');if(r){var o=mhS(r.getAttribute('data-mhr'),1),x=r.getAttribute('data-v');o.res=(o.res===x)?'':x;if(o.res!=='F')o.np=0;S.mhFocus='';again();return}
+  var np=t.closest('[data-mhnp]');if(np){var o2=mhS(np.getAttribute('data-mhnp'),1);o2.np=o2.np?0:1;again();return}
+  var rb=t.closest('[data-mhrb]');if(rb){var o3=mhS(rb.getAttribute('data-mhrb'),1);o3.rb=o3.rb?0:1;again();return}
+  var nt=t.closest('[data-mhnt]');if(nt){var o4=mhS(nt.getAttribute('data-mhnt'),1);o4.nt=1;again();return}
+  var cl=t.closest('#mhClear');if(cl){if(cl.getAttribute('data-armed')){var keep={};Object.keys(m.items).forEach(function(k){if(!mhItems().some(function(it){return it.id===k}))keep[k]=m.items[k]});m.items=keep;again();toast('Cleared for '+m.loc+'.')}else{cl.setAttribute('data-armed','1');cl.textContent='Tap again to clear every result for '+m.loc;setTimeout(function(){if(cl.isConnected){cl.removeAttribute('data-armed');cl.textContent='Clear all results for '+m.loc}},4000)}return}
+}
+function mhInput(el){
+  var k=el.getAttribute('data-mhf');if(!k)return false;
+  var p=k.split('|'),id=p.slice(1).join('|'),o=mhS(id,1);
+  o[p[0]]=el.value;mhSave();return true;
+}
+/* a label scanned while the Multi-Hose list is open jumps to that hose instead of opening the tank */
+function mhQr(qs){
+  function qp(n){try{var mm=new RegExp('[?&]'+n+'=([^&#]*)').exec(qs);return mm?decodeURIComponent(mm[1].replace(/\+/g,' ')).trim():''}catch(e){return ''}}
+  var q=qp('s'),u=qp('u'),qn=q.toLowerCase().replace(/\s+/g,''),items=mhItems(),hit=null;
+  function same(x){return String(x||'').toLowerCase().replace(/\s+/g,'')===qn}
+  var rows=[];
+  if(q){allTanks().forEach(function(t){if(t.row&&same(t.v.AB))rows.push(t.row)});tduRows().forEach(function(t){if(t.row&&(same(t.v.AJ)||same(t.v.AK)))rows.push(t.row)})}
+  items.forEach(function(it){if(hit)return;if(q&&it.rows.some(function(r){return rows.indexOf(r)>=0}))hit=it;else if(u&&norm(it.unit)===norm(u))hit=it});
+  S.mhScan=0;
+  if(!hit){toast('That label is not one of the tanks at '+S.mh.loc+'. Check the location, or the tank may not be active.');return}
+  S.mh.filter='all';S.mhFocus=hit.id;renderMH();
+  var el=document.getElementById('mh_'+hit.id.replace(/[^\w]/g,'_'));if(el)el.scrollIntoView({block:'center'});
+  toast('Unit '+hit.unit+(hit.tag?' - '+hit.tag:'')+'. Pass or Fail.');
+}
 render();
 qrOpen();
 /* works offline when the page is hosted: the service worker keeps a copy */
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&document.querySelector('link[rel=manifest]')){navigator.serviceWorker.register('sw.js').catch(function(){})}}catch(e){}
-window.__ebp={S:S,buildTSV:buildTSV,parseMY:parseMY,check:check};
+window.__ebp={S:S,buildTSV:buildTSV,parseMY:parseMY,check:check,mhQr:mhQr,mhItems:mhItems,render:render};
 })();
 </script>
 </body></html>
