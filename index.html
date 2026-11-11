@@ -214,7 +214,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 9q (on a DU report the Start / Continue button of Form 2a and Form 5 is dark while the form is not finished, like Forms 2, 3, 4, 6, 7 and 8). Earlier: 9p (the HT markings example writes the ratings as RT-1 to RT-4, with the hyphen, as on the plate). Earlier: 9o (the HT markings example explains what the RT markings mean and says the ratings are RT 1 to RT 4). Earlier: 9n (the HT markings example mentions RT-1 to RT-4). Earlier: 9m (fixed: Send said Answer Form 20 when Form 20 had been set to Fail by itself (a No-only line) because the date shown in the box was not stored; the date is now stored with the automatic Fail). Earlier: 9l (tapping Yes on a line that is marked No asks Was this fixed? first; Yes makes it No and Yes, No leaves it No only; works on Forms 2, 2a, 3, 4, 6 and 7). Earlier: 9k (an answer can be No and Yes on the same line - not conforming, then fixed: tap No, then Yes, and comment what was wrong and when it was fixed; it goes to the workbook as a No line and a Yes line; a line that is No only keeps Form 20 on Fail / out of service and Pass is refused until it also has Yes; works on Forms 2, 2a, 3, 4, 6 and 7). Earlier: 9j (a new unit added on the phone and already in a newly loaded workbook file is no longer listed twice, even if it was never marked as sent). Earlier: 9i (Location and Company can be added on the phone; the workbook adds them to its Sites list on import). Earlier: 9h (Data tab help: Export for phone is a tile on the Welcome menu). Earlier: 9g (Form 3: Safety valve set pressure must be chosen, and Date type must be chosen once a 1st or 2nd PRV date is typed; both marked * required and block Done and Send like Form 4). Earlier: 9f (on a DU, the Form 3 Safety valve set pressure is filled in from the new PRV set pressure column of the DU list, like a nurse tank; the tech can still change it; needs the workbook from v121 and a new export). Earlier: 9e (the email for DU units now says DU units, not TDU units, in its subject and file name). Earlier: 9d (a Multi-Hose test with both nurse and MSV hoses is sent as two reports - nurse hoses to B620-20, MSV hoses to the Ammonia Code of Practice - with a choice sheet on Send results; needs the workbook from v120, which keeps nurse and MSV hoses on separate tests). Earlier: 9c (a hose on file with a missing detail - expiry year, length, diameter or manufacturer - now shows boxes to fill in what is missing, needed before its Pass is sent; the workbook enters them from v115). Earlier: 9b (an MSV has fixed hose positions - Vapour 1, Liquid 1, Vapour 2, Liquid 2 up to Liquid 4 - shown on its hose cards, and Add another hose asks which free position the new hose takes; a vessel is told apart by its company name, the unit number is optional; needs export for phone and import from workbook v113). Earlier: 9a (the type filter is always shown, greyed out when empty; DUs are no longer on the Multi-Hose test; their hoses are tested with the annual inspection; the Hide hydro due filter is gone, a Nurse / MSV filter replaces it, and Remove from this test says hydro/VK). Earlier: 8x (the Multi-Hose test has Send results: a report file for the office with Pass / Fail and new hose details; MSV vessels can get another hose with Add another hose). Earlier: 8w (the Multi-Hose test also lists the hoses of MSVs - main storage vessels - from the workbook export; they have no hydro tag and no Remove from this test). Earlier: 8v (a scanned serial that is not in the list now offers New tank / New DU with the serial filled in; Done on Forms 2a, 6 and 7 and Send ask about a No without a comment, like Form 2); 8u (Multi-Hose test: units due for a hydro are left out of the list (their hose is tested with the hydro), with 30 / 60 / 90 days, and any hose can be removed from the test and put back); 8t (new Multi-Hose test on the Tanks page: pick a location, go down its hoses with Pass / Fail, new-hose details on a fail, a note, and Scan a QR label to jump to a tank; prototype, results stay on the phone and are not sent yet); 8s (the Due chip on the Tanks page now reads Hydro due, short enough to stay on one line beside the 30 / 60 / 90 day chips); 8q (on a twin or triple tile the Report sent badge now sits left of the word Twin / Triple, so the right-hand edge of every tile shows the unit type or description); 8p (All details now says "open for Edit button", with a line "Scroll to the bottom for the Edit button" above the list); 8n (Next annual visual and Next hydro are also shown in the top block under the serial number, as well as after the last dates in All details); 8m (Next annual visual and Next hydro now sit in the All details list right after Last visual and Last hydro, not at the top); 8k (Next annual visual is worked out as last visual + 12 months when the workbook leaves it blank, so a date always shows); 8j (the unit details show Last visual, Next annual visual, Last hydro and Next hydro; Edit this tank / Edit this unit is now at the bottom of All details, so you scroll to the end of the list before editing; the next visual date needs export for phone from workbook v101 or later); 8i (every cell of an existing tank or DU can now be corrected on the phone, including the dates, PRV and hose cells that were greyed; the workbook import needs v101 or later for this; the Quick update button is gone - Edit this tank does everything); 8h (the page label at the top now follows this version line); 8g (the tank description on a single tank tile, for example S1450, is no longer bold); 8f (single and twin / triple tiles look alike, lighter detail lines); 8e (page label at the top, updates are fetched fresh from the server); 8d (more forgiving QR scanner with a Light button and a hint, clearer unit banner with Back to the full list); 8c (see example pictures for ASME stamp, ASME stamp markings and HT markings); 8b (a Scan a QR label button opens the camera inside the app and opens the unit, jsQR included); 8a (new Due chip with 30/60/90 days and blue and red bars on tiles that are due, description on the right of each tile, Remove button and clearer steps for Form 10 pictures, Form 2 asks about a No without a comment, Form 4 pressure basis, units and relief valve type are required); 7y (each DU tile now says Single, Double or Quad unit and lists the tank serial numbers, so a quad (two rows in the DU list) can be seen from the list); 7x: (a line above the Send to office button explains that the tank tiles below are all sent together by it); 7w: (each tile on the To send list now shows the tank\'s serial number, so tiles of the same unit can be told apart); 7v: (the Form 20 status box now appears on every Pass or Fail of a nurse unit, not only when the status on file does not match; when it already matches, Leave the status as it is is pre-selected, so an Active unit can be changed to for example Active-AIR ISC; DUs still have no status box); 7u (the tank design pressure from the data plate now shows on the first page, after ASME stamp markings; export for phone from workbook v87 or later to get it); 7t (the Form 3 safety valve set pressure now offers 1723, 1725, 1825 and 1827 kpa as well as 250 and 265 psi, matching the workbook lists); 7s (column S is now the PRV set pressure and a new column AY holds the tank design pressure from the data plate: Form 4 Record pressure and the Form 3 start-pressure warning use AY first and fall back to S for tanks where AY is still empty; Form 3 Safety valve set pressure is filled in from the PRV pressure on the tank list and can be changed; Quick update has a Tank design pressure box); 7r (the Tanks list shows Report sent / Report on a nurse unit tile like it already does on a DU tile; the tile shows the most recent of Details sent, Update sent and Report sent, fading after 30 days; on a twin or triple the badge sits beside the Twin / Triple heading; 7q (the Location button in the Tanks list gives a drop-down of locations to tap instead of typing; 7p (scanning a per-unit QR label opens a DU or a one-tank unit straight away; 7o (a QR label for a whole unit shows the Tanks list with only that unit, with a Show all units button; 7n (scan the QR label on a tank or DU and that unit opens by its serial number; 7m (a DU report now has Form 10 (data plate pictures by email, up to four plates on a quad) and Form 13 (additional comments); 7l (saving a new or changed unit warns when its unit number is already used at the same location by a different company/owner: Change it or Save anyway; a twin or triple of the same company never warns); 7k (the search box looks at one thing only: Unit (default), Serial, Location or Company, chosen with the small buttons under it, or Any for everything; searching for unit 0 no longer finds a tank just because its size has a 0 in it); 7j (the pop-up sheet, e.g. File ready, uses the whole visible screen height and scrolls if needed, so the bottom buttons are never cut off; the text box in it is shorter); 7i (Form 4 record pressure is labelled psi; the Add tank note says unit number instead of tank number); 7h (the sheet keeps both buttons: Email to office = text in the message, Share file (PDF) = PDF attachment; the file for the office is now a PDF instead of a .txt - iPhone opens and shares it more easily; the report text is still inside it for the import); 7g (a blank Form 20 comment line is skipped: the lines you typed are sent as line 1, 2, 3 with no gap); 7f (a DU report now has Form 6 (metered) or Form 7 (non-metered) emergency discharge control tests - one checklist for the whole DU, not both in one report - and Form 8 thickness, one tab per tank (front left, front right, rear left, rear right on a quad); 7e: (Form 3: the relief device pressure rating is typed on the first tab only; the other tabs of a twin, triple or quad take it from the first tank, like the sheets; 7d: DU Form 3 pressure test on the phone, one tab per tank, row 32 asked on a DU too; DU Form 2a reworked: only the section that fits the tank size (over / 13,250 L or less) is asked, the other is N/A by itself; the emergency discharge control questions ask first whether the statement applies to the DU; page 2 has all the rear end protection questions, the next four are N/A after a No on the first, and the deemed-to-comply line fills itself in like the sheet; comments are numbered and printed per page (page 1: 4 lines, page 2: 2 lines); 7a: a DU report now has Form 4 - the leakage test, one checklist per tank (left / right, or the four tanks of a quad), same as for nurse tanks; 6z: (a DU report now has Form 2a - discharge control devices and rear end protection, one checklist per DU; a saved DU report keeps its Form 5 tick when reopened; 6y: (a DU report now has Form 20: date, Pass or Fail and, on a Fail, up to 3 comment lines; 6x: (a new tank or DU: picking the Description such as S2000 or T1450 Tandem fills in the Size (2000 USG) when it is in the list; a size you chose is never replaced; 6w: (Form 5: Correct the details on file on each hose card of nurse tanks too, a twin / triple with one shared hose corrects all its tanks; 6v: DU Form 5: Correct the details on file on each hose card - fix a wrong year, length, diameter or MFG without a Fail; travels as an S|HC line; Form 20: when the result is Fail a comment box (3 short lines) asks why; it travels as S|CM lines; on a nurse tank screen Quick update is a button beside Edit this tank; the PRV, hose, HRV and note boxes appear when you tap it (and stay open if there is something typed or a saved quick update); Forms 2, 3, 4 and 8 show which tank you are on: the tank name (Left / Centre / Right), its serial number and size / make / year under the form heading; the Sent badges (Details sent, Update sent, Report sent) on the tank and DU tiles disappear 30 days after the send; nothing is deleted and the To send list is unchanged; a small heading with the location name between locations in the tank and DU lists, DU list ordered like the tank list; the tank list is ordered by location, then unit number (company only breaks a tie); spaces in a unit number are ignored when sorting the tank list, so Pro1521 and Pro 1521 sort together; the tank list is ordered by location, then company, then unit number (numbers in natural order: 2 before 10, Pro 1527 before Pro 1528); before this it followed the workbook row order; Form 20: after Pass or Fail you can set the unit status when the status on file does not match - Pass offers the Active choices, Fail the not-active ones, default Active / Out of Service, or leave it; the report carries it as an S|ST line and the workbook changes the Nurse Tanks list; every inspection report email ends with a check line (eB620-check) so the office import can tell if a line was lost or changed; the tank list shows one tile per unit: a single tank is a card with its serial, a twin or triple has a row per tank (L, C, R) with size, make, year and serial; a choice added on this phone has a Remove button in the drop-down list: asks Yes/No, refused while a saved entry still uses it; the plain Sent badge on unit entries now reads Details sent; required fields: no (required) in the label, grey Required inside the empty field, red with a message when saved blank; wording: Unit instead of Tank in the headers, Company/Owner, Unit number, shorter search box text; Send screen headings say what each part is: nurse tanks, inspection reports, DUs; DU Form 5: liquid, vapour and 3rd hose cards, add a missing hose; the delivery units are now called DU everywhere on the phone (single, twin or quad); an inspection report is only saved when something was entered - choosing the unit type alone or just looking no longer leaves an unfinished report; Form 5 no longer says one hose for each tank; the nurse tank screen has the same compact Tank details panel as the DU screen: key fields, Edit this tank, and a collapsed All details list; the DU Form 2 (visual) checklist is on the phone, and the workbook fills it in; the email starts with a plain sentence for mail filters; tank and DU entries in the email use ~~ instead of tab characters, which mail apps turn into spaces; tank entries file ends with eB620-end like the other files; a sent report stays sent when you leave it; office changes made after the export are never overwritten by an older phone copy: only the fields you changed are sent, with their original values; DUs: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, DU opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, DUs, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
+var VERSION='prototype 9r (the bottom of each form has a Next button that goes on to the next ticked form that is not finished (or, on a twin, triple or quad, to the next tank first); it runs the same checks as before; the Done button at the top is now Back to list). Earlier: 9q (on a DU report the Start / Continue button of Form 2a and Form 5 is dark while the form is not finished, like Forms 2, 3, 4, 6, 7 and 8). Earlier: 9p (the HT markings example writes the ratings as RT-1 to RT-4, with the hyphen, as on the plate). Earlier: 9o (the HT markings example explains what the RT markings mean and says the ratings are RT 1 to RT 4). Earlier: 9n (the HT markings example mentions RT-1 to RT-4). Earlier: 9m (fixed: Send said Answer Form 20 when Form 20 had been set to Fail by itself (a No-only line) because the date shown in the box was not stored; the date is now stored with the automatic Fail). Earlier: 9l (tapping Yes on a line that is marked No asks Was this fixed? first; Yes makes it No and Yes, No leaves it No only; works on Forms 2, 2a, 3, 4, 6 and 7). Earlier: 9k (an answer can be No and Yes on the same line - not conforming, then fixed: tap No, then Yes, and comment what was wrong and when it was fixed; it goes to the workbook as a No line and a Yes line; a line that is No only keeps Form 20 on Fail / out of service and Pass is refused until it also has Yes; works on Forms 2, 2a, 3, 4, 6 and 7). Earlier: 9j (a new unit added on the phone and already in a newly loaded workbook file is no longer listed twice, even if it was never marked as sent). Earlier: 9i (Location and Company can be added on the phone; the workbook adds them to its Sites list on import). Earlier: 9h (Data tab help: Export for phone is a tile on the Welcome menu). Earlier: 9g (Form 3: Safety valve set pressure must be chosen, and Date type must be chosen once a 1st or 2nd PRV date is typed; both marked * required and block Done and Send like Form 4). Earlier: 9f (on a DU, the Form 3 Safety valve set pressure is filled in from the new PRV set pressure column of the DU list, like a nurse tank; the tech can still change it; needs the workbook from v121 and a new export). Earlier: 9e (the email for DU units now says DU units, not TDU units, in its subject and file name). Earlier: 9d (a Multi-Hose test with both nurse and MSV hoses is sent as two reports - nurse hoses to B620-20, MSV hoses to the Ammonia Code of Practice - with a choice sheet on Send results; needs the workbook from v120, which keeps nurse and MSV hoses on separate tests). Earlier: 9c (a hose on file with a missing detail - expiry year, length, diameter or manufacturer - now shows boxes to fill in what is missing, needed before its Pass is sent; the workbook enters them from v115). Earlier: 9b (an MSV has fixed hose positions - Vapour 1, Liquid 1, Vapour 2, Liquid 2 up to Liquid 4 - shown on its hose cards, and Add another hose asks which free position the new hose takes; a vessel is told apart by its company name, the unit number is optional; needs export for phone and import from workbook v113). Earlier: 9a (the type filter is always shown, greyed out when empty; DUs are no longer on the Multi-Hose test; their hoses are tested with the annual inspection; the Hide hydro due filter is gone, a Nurse / MSV filter replaces it, and Remove from this test says hydro/VK). Earlier: 8x (the Multi-Hose test has Send results: a report file for the office with Pass / Fail and new hose details; MSV vessels can get another hose with Add another hose). Earlier: 8w (the Multi-Hose test also lists the hoses of MSVs - main storage vessels - from the workbook export; they have no hydro tag and no Remove from this test). Earlier: 8v (a scanned serial that is not in the list now offers New tank / New DU with the serial filled in; Done on Forms 2a, 6 and 7 and Send ask about a No without a comment, like Form 2); 8u (Multi-Hose test: units due for a hydro are left out of the list (their hose is tested with the hydro), with 30 / 60 / 90 days, and any hose can be removed from the test and put back); 8t (new Multi-Hose test on the Tanks page: pick a location, go down its hoses with Pass / Fail, new-hose details on a fail, a note, and Scan a QR label to jump to a tank; prototype, results stay on the phone and are not sent yet); 8s (the Due chip on the Tanks page now reads Hydro due, short enough to stay on one line beside the 30 / 60 / 90 day chips); 8q (on a twin or triple tile the Report sent badge now sits left of the word Twin / Triple, so the right-hand edge of every tile shows the unit type or description); 8p (All details now says "open for Edit button", with a line "Scroll to the bottom for the Edit button" above the list); 8n (Next annual visual and Next hydro are also shown in the top block under the serial number, as well as after the last dates in All details); 8m (Next annual visual and Next hydro now sit in the All details list right after Last visual and Last hydro, not at the top); 8k (Next annual visual is worked out as last visual + 12 months when the workbook leaves it blank, so a date always shows); 8j (the unit details show Last visual, Next annual visual, Last hydro and Next hydro; Edit this tank / Edit this unit is now at the bottom of All details, so you scroll to the end of the list before editing; the next visual date needs export for phone from workbook v101 or later); 8i (every cell of an existing tank or DU can now be corrected on the phone, including the dates, PRV and hose cells that were greyed; the workbook import needs v101 or later for this; the Quick update button is gone - Edit this tank does everything); 8h (the page label at the top now follows this version line); 8g (the tank description on a single tank tile, for example S1450, is no longer bold); 8f (single and twin / triple tiles look alike, lighter detail lines); 8e (page label at the top, updates are fetched fresh from the server); 8d (more forgiving QR scanner with a Light button and a hint, clearer unit banner with Back to the full list); 8c (see example pictures for ASME stamp, ASME stamp markings and HT markings); 8b (a Scan a QR label button opens the camera inside the app and opens the unit, jsQR included); 8a (new Due chip with 30/60/90 days and blue and red bars on tiles that are due, description on the right of each tile, Remove button and clearer steps for Form 10 pictures, Form 2 asks about a No without a comment, Form 4 pressure basis, units and relief valve type are required); 7y (each DU tile now says Single, Double or Quad unit and lists the tank serial numbers, so a quad (two rows in the DU list) can be seen from the list); 7x: (a line above the Send to office button explains that the tank tiles below are all sent together by it); 7w: (each tile on the To send list now shows the tank\'s serial number, so tiles of the same unit can be told apart); 7v: (the Form 20 status box now appears on every Pass or Fail of a nurse unit, not only when the status on file does not match; when it already matches, Leave the status as it is is pre-selected, so an Active unit can be changed to for example Active-AIR ISC; DUs still have no status box); 7u (the tank design pressure from the data plate now shows on the first page, after ASME stamp markings; export for phone from workbook v87 or later to get it); 7t (the Form 3 safety valve set pressure now offers 1723, 1725, 1825 and 1827 kpa as well as 250 and 265 psi, matching the workbook lists); 7s (column S is now the PRV set pressure and a new column AY holds the tank design pressure from the data plate: Form 4 Record pressure and the Form 3 start-pressure warning use AY first and fall back to S for tanks where AY is still empty; Form 3 Safety valve set pressure is filled in from the PRV pressure on the tank list and can be changed; Quick update has a Tank design pressure box); 7r (the Tanks list shows Report sent / Report on a nurse unit tile like it already does on a DU tile; the tile shows the most recent of Details sent, Update sent and Report sent, fading after 30 days; on a twin or triple the badge sits beside the Twin / Triple heading; 7q (the Location button in the Tanks list gives a drop-down of locations to tap instead of typing; 7p (scanning a per-unit QR label opens a DU or a one-tank unit straight away; 7o (a QR label for a whole unit shows the Tanks list with only that unit, with a Show all units button; 7n (scan the QR label on a tank or DU and that unit opens by its serial number; 7m (a DU report now has Form 10 (data plate pictures by email, up to four plates on a quad) and Form 13 (additional comments); 7l (saving a new or changed unit warns when its unit number is already used at the same location by a different company/owner: Change it or Save anyway; a twin or triple of the same company never warns); 7k (the search box looks at one thing only: Unit (default), Serial, Location or Company, chosen with the small buttons under it, or Any for everything; searching for unit 0 no longer finds a tank just because its size has a 0 in it); 7j (the pop-up sheet, e.g. File ready, uses the whole visible screen height and scrolls if needed, so the bottom buttons are never cut off; the text box in it is shorter); 7i (Form 4 record pressure is labelled psi; the Add tank note says unit number instead of tank number); 7h (the sheet keeps both buttons: Email to office = text in the message, Share file (PDF) = PDF attachment; the file for the office is now a PDF instead of a .txt - iPhone opens and shares it more easily; the report text is still inside it for the import); 7g (a blank Form 20 comment line is skipped: the lines you typed are sent as line 1, 2, 3 with no gap); 7f (a DU report now has Form 6 (metered) or Form 7 (non-metered) emergency discharge control tests - one checklist for the whole DU, not both in one report - and Form 8 thickness, one tab per tank (front left, front right, rear left, rear right on a quad); 7e: (Form 3: the relief device pressure rating is typed on the first tab only; the other tabs of a twin, triple or quad take it from the first tank, like the sheets; 7d: DU Form 3 pressure test on the phone, one tab per tank, row 32 asked on a DU too; DU Form 2a reworked: only the section that fits the tank size (over / 13,250 L or less) is asked, the other is N/A by itself; the emergency discharge control questions ask first whether the statement applies to the DU; page 2 has all the rear end protection questions, the next four are N/A after a No on the first, and the deemed-to-comply line fills itself in like the sheet; comments are numbered and printed per page (page 1: 4 lines, page 2: 2 lines); 7a: a DU report now has Form 4 - the leakage test, one checklist per tank (left / right, or the four tanks of a quad), same as for nurse tanks; 6z: (a DU report now has Form 2a - discharge control devices and rear end protection, one checklist per DU; a saved DU report keeps its Form 5 tick when reopened; 6y: (a DU report now has Form 20: date, Pass or Fail and, on a Fail, up to 3 comment lines; 6x: (a new tank or DU: picking the Description such as S2000 or T1450 Tandem fills in the Size (2000 USG) when it is in the list; a size you chose is never replaced; 6w: (Form 5: Correct the details on file on each hose card of nurse tanks too, a twin / triple with one shared hose corrects all its tanks; 6v: DU Form 5: Correct the details on file on each hose card - fix a wrong year, length, diameter or MFG without a Fail; travels as an S|HC line; Form 20: when the result is Fail a comment box (3 short lines) asks why; it travels as S|CM lines; on a nurse tank screen Quick update is a button beside Edit this tank; the PRV, hose, HRV and note boxes appear when you tap it (and stay open if there is something typed or a saved quick update); Forms 2, 3, 4 and 8 show which tank you are on: the tank name (Left / Centre / Right), its serial number and size / make / year under the form heading; the Sent badges (Details sent, Update sent, Report sent) on the tank and DU tiles disappear 30 days after the send; nothing is deleted and the To send list is unchanged; a small heading with the location name between locations in the tank and DU lists, DU list ordered like the tank list; the tank list is ordered by location, then unit number (company only breaks a tie); spaces in a unit number are ignored when sorting the tank list, so Pro1521 and Pro 1521 sort together; the tank list is ordered by location, then company, then unit number (numbers in natural order: 2 before 10, Pro 1527 before Pro 1528); before this it followed the workbook row order; Form 20: after Pass or Fail you can set the unit status when the status on file does not match - Pass offers the Active choices, Fail the not-active ones, default Active / Out of Service, or leave it; the report carries it as an S|ST line and the workbook changes the Nurse Tanks list; every inspection report email ends with a check line (eB620-check) so the office import can tell if a line was lost or changed; the tank list shows one tile per unit: a single tank is a card with its serial, a twin or triple has a row per tank (L, C, R) with size, make, year and serial; a choice added on this phone has a Remove button in the drop-down list: asks Yes/No, refused while a saved entry still uses it; the plain Sent badge on unit entries now reads Details sent; required fields: no (required) in the label, grey Required inside the empty field, red with a message when saved blank; wording: Unit instead of Tank in the headers, Company/Owner, Unit number, shorter search box text; Send screen headings say what each part is: nurse tanks, inspection reports, DUs; DU Form 5: liquid, vapour and 3rd hose cards, add a missing hose; the delivery units are now called DU everywhere on the phone (single, twin or quad); an inspection report is only saved when something was entered - choosing the unit type alone or just looking no longer leaves an unfinished report; Form 5 no longer says one hose for each tank; the nurse tank screen has the same compact Tank details panel as the DU screen: key fields, Edit this tank, and a collapsed All details list; the DU Form 2 (visual) checklist is on the phone, and the workbook fills it in; the email starts with a plain sentence for mail filters; tank and DU entries in the email use ~~ instead of tab characters, which mail apps turn into spaces; tank entries file ends with eB620-end like the other files; a sent report stays sent when you leave it; office changes made after the export are never overwritten by an older phone copy: only the fields you changed are sent, with their original values; DUs: edit a unit, add a new unit or quad, all fields like the nurse tanks; open email first, attach in Mail; picture email with the picture inside the text, pasted when large; three-way status filter: Active / Not active / All, DU opens its details first, report starts only on Start; same hose on both tanks asked once, Add a hose only for a tank with no hose, DUs, Forms list, Form 1, Form 2, Form 3, Form 4, Form 8, Form 13, Form 20, Email to office)';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -1255,6 +1255,69 @@ function openF2(o){
   S.f2v=f2state(src,{A:o.A||'',C:o.C||'',D:o.D||'',S:o.S||'',AY:o.AY||''},o.AB||'',ex?ex.id:newId(),key);
   S.form=null;window.scrollTo(0,0);render();
 }
+
+/* ---------- Next form button (9r): the bottom button of a form goes on to the next ticked form ---------- */
+var FWD_NURSE=['2','3','4','5','8','10','13'],FWD_DU=['2','2a','3','4','5','6','7','8','10','13'];
+var FWD_DONE={f2:'f2Done',f2a:'f2aDone',f6:'f67Done',f7:'f67Done',f3:'f3Done',f4:'f4Done',f5:'f5Done',f8:'f8Done',f13:'f13Done'};
+function fwdKey(view){return view==='f2'?'2':view==='f2a'?'2a':view==='f6'?'6':view==='f7'?'7':view==='f3'?'3':view==='f4'?'4':view==='f5'?'5':view==='f8'?'8':view==='f13'?'13':''}
+function fwdOn(v,k){return formOn(v,k==='2a'?'2a':+k)}
+function fwdFinished(v,k){
+  if(k==='2')return f2answered(v)>=f2items(v).length;
+  if(k==='2a')return f2aAnswered(v)>=f2aNeed(v).length;
+  if(k==='3')return f3answered(v)>=f3rows().length;
+  if(k==='4')return f4answered(v)>=f4rows().length;
+  if(k==='5')return v.tdu?(f5duTot(v)>0&&f5duAns(v)>=f5duTot(v)):f5answered(v)>=f5n(v);
+  if(k==='6'||k==='7')return f67ans(v,+k)>=f67rows(+k).length;
+  if(k==='8')return f8answered(v)>=F8Q.length;
+  if(k==='13')return f13any(v);
+  return false;
+}
+function fwdNextKey(v,cur){
+  var L=v.tdu?FWD_DU:FWD_NURSE,i=L.indexOf(cur),j,k;
+  for(j=i+1;j<L.length;j++){k=L[j];if(fwdOn(v,k)&&!fwdFinished(v,k))return k}
+  return '';
+}
+/* the tank tab the form is on (twin, triple, quad): {p:'f3',k:0,nt:2} or null */
+function fwdTab(v){
+  var w=v.view,nt,k;
+  if(w==='f2'){nt=f2nt(v);k=f2tab(v)}else if(w==='f3'){nt=f3nt(v);k=f3tab(v)}else if(w==='f4'){nt=f4nt(v);k=f4tab(v)}else if(w==='f8'){nt=f8nt(v);k=f8tab(v)}else return null;
+  return nt>1?{p:w,k:k,nt:nt}:null;
+}
+function fwdLabel(v){
+  var tb=fwdTab(v);
+  if(tb&&tb.k<tb.nt-1)return 'Next: '+unitDef(v.unit).names[tb.k+1].toLowerCase()+' tank';
+  var nx=fwdNextKey(v,fwdKey(v.view));
+  return nx?'Next: Form '+nx:'Back to the report';
+}
+function fwdAppend(){
+  var v=S.f2v,el=$('#view');if(!v||!el||!FWD_DONE[v.view])return;
+  el.insertAdjacentHTML('beforeend','<div class="panel"><button type="button" class="btn primary block" id="fwdNext">'+esc(fwdLabel(v))+'</button></div>');
+}
+function fwdClick(){
+  var v=S.f2v,tb=fwdTab(v),b;
+  if(tb&&tb.k<tb.nt-1){b=$('[data-'+tb.p+'tab="'+(tb.k+1)+'"]');if(b){S.fwdGo=1;b.click();S.fwdGo=0}return}
+  b=$('#'+FWD_DONE[v.view]);if(!b)return;
+  S.fwd=fwdNextKey(v,fwdKey(v.view))||'rep';S.fwdGo=1;b.click();S.fwdGo=0;
+}
+function fwdOpen(v,k){
+  if(k==='10'){v.view='rep';render();f10open();return}
+  if(k==='2'){v.view='f2';v.f2tab=0}
+  else if(k==='2a'){v.f2a=v.f2a||{items:{}};v.view='f2a'}
+  else if(k==='6'){v.f6=v.f6||{items:{}};v.view='f6'}
+  else if(k==='7'){v.f7=v.f7||{items:{}};v.view='f7'}
+  else if(k==='3'){v.f3=v.f3||{items:{},vals:{}};v.view='f3';v.f3tab=0}
+  else if(k==='4'){v.f4=v.f4||{items:{},vals:{}};v.view='f4';v.f4tab=0}
+  else if(k==='5'){v.f5=v.f5||{h:[]};v.view='f5'}
+  else if(k==='8'){v.f8=v.f8||{q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''};v.view='f8';v.f8tab=0}
+  else if(k==='13'){v.f13=v.f13||{text:''};v.view='f13'}
+  else v.view='rep';
+  render();
+}
+function leaveForm(v){
+  var nx=S.fwd;S.fwd=null;window.scrollTo(0,0);
+  if(nx&&nx!=='rep'){fwdOpen(v,nx);window.scrollTo(0,0);return}
+  v.view='rep';render();
+}
 function nextForm(v){
   var its=f2items(v);
   if(formOn(v,2)&&f2answered(v)<its.length)return 'f2';
@@ -1534,7 +1597,7 @@ function buildF2a(rec){
 function renderF2a(){
   var v=S.f2v,fd=f2aD(v),refs=f2aRefs(v),st=f2aSt(v),need=f2aNeed(v),n=f2aAnswered(v),len=f2aLen(v);
   $('#tabs').hidden=true;$('#fab').hidden=true;
-  $('#top').innerHTML='<button class="hbtn icon" id="f2aBack" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 2a - DU '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f2aDone" type="button">Done</button>';
+  $('#top').innerHTML='<button class="hbtn icon" id="f2aBack" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 2a - DU '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f2aDone" type="button">Back to list</button>';
   var h='<div class="panel"><h2>Discharge control devices and rear end protection</h2><p>One checklist for the whole DU, in two pages: page 1 discharge control devices, page 2 rear end protection. Tap Yes, No or N/A. Add a comment where something needs one; it gets the next Ref # for its page and is printed on that page. Some answers fill themselves in, the way the form does. Changes are saved on this phone as you go.</p></div>';
   h+='<div class="f2bar"><span class="count" style="flex:1;margin:0" id="f2cnt">'+n+' of '+need.length+' answered</span><button class="btn sm" id="f2aAllYes" type="button">Mark the rest Yes</button></div>';
   var blocks=[],cur=null;
@@ -1577,7 +1640,7 @@ function renderF2a(){
     h+='</div>';
   });
   h+='<div class="panel"><p id="f2alen" style="margin:0;color:'+(len.bad?'var(--bad)':'var(--muted)')+'">'+esc(len.t)+'</p></div>';
-  $('#view').innerHTML=h;
+  $('#view').innerHTML=h;fwdAppend();
 }
 function renderF2aKeep(){var y=window.scrollY;renderF2a();window.scrollTo(0,y)}
 function f2aclick(t){
@@ -1599,7 +1662,7 @@ function f2aclick(t){
       var a3=fd.items[it.row]||(fd.items[it.row]={});a3.r='Y';
     });
     f2save();renderF2aKeep();return true}
-  if(t.closest('#f2aDone')){f2save();var n2a=f2aNoCm(v),go2a=function(){v.view='rep';window.scrollTo(0,0);render()};if(n2a)f2noCmAsk(v,'finish',go2a,n2a);else go2a();return true}
+  if(t.closest('#f2aDone')){f2save();var n2a=f2aNoCm(v),go2a=function(){leaveForm(v)};if(n2a)f2noCmAsk(v,'finish',go2a,n2a);else go2a();return true}
   if(t.closest('#f2aBack')){f2save();v.view='rep';window.scrollTo(0,0);render();return true}
   return false;
 }
@@ -1631,7 +1694,7 @@ function buildF67(rec,n){
 function renderF67(){
   var v=S.f2v,n=v.view==='f6'?6:7,d=F67[n],fd=f67d(v,n),refs=f67refs(v,n),tot=f67rows(n).length,ans=f67ans(v,n),ln=f67len(v,n);
   $('#tabs').hidden=true;$('#fab').hidden=true;
-  $('#top').innerHTML='<button class="hbtn icon" id="f67Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form '+n+' - DU '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f67Done" type="button">Done</button>';
+  $('#top').innerHTML='<button class="hbtn icon" id="f67Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form '+n+' - DU '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f67Done" type="button">Back to list</button>';
   var h='<div class="panel"><h2>'+esc(d.title)+'</h2><p>'+esc(d.sub)+' One checklist for the whole DU. Tap Yes, No or N/A. Add a comment where something needs one; it gets the next Ref # and is printed under the checklist ('+d.max+' comment lines on the form). Changes are saved on this phone as you go.</p></div>';
   h+='<div class="f2bar"><span class="count" style="flex:1;margin:0" id="f67cnt">'+ans+' of '+tot+' answered</span><button class="btn sm" id="f67AllYes" type="button">Mark the rest Yes</button></div>';
   d.secs.forEach(function(sc){
@@ -1646,7 +1709,7 @@ function renderF67(){
     h+='</div>';
   });
   h+='<div class="panel"><p id="f67len" style="margin:0;color:'+(ln.bad?'var(--bad)':'var(--muted)')+'">'+esc(ln.t)+'</p></div>';
-  $('#view').innerHTML=h;
+  $('#view').innerHTML=h;fwdAppend();
 }
 function renderF67Keep(){var y=window.scrollY;renderF67();window.scrollTo(0,y)}
 function f67click(t){
@@ -1656,7 +1719,7 @@ function f67click(t){
   var ad=t.closest('[data-f67add]');
   if(ad){var rw=+ad.getAttribute('data-f67add'),a2=fd.items[rw]||(fd.items[rw]={});a2.c=a2.c||'';a2.cOpen=1;renderF67Keep();setTimeout(function(){var el=$('[data-f67c="'+rw+'"]');if(el)el.focus()},30);return true}
   if(t.closest('#f67AllYes')){f67rows(n).forEach(function(row2){var a3=fd.items[row2]||(fd.items[row2]={});if(!a3.r)a3.r='Y'});f2save();renderF67Keep();return true}
-  if(t.closest('#f67Done')){f2save();var n67=f67NoCm(v,n),go67=function(){v.view='rep';window.scrollTo(0,0);render()};if(n67)f2noCmAsk(v,'finish',go67,n67);else go67();return true}
+  if(t.closest('#f67Done')){f2save();var n67=f67NoCm(v,n),go67=function(){leaveForm(v)};if(n67)f2noCmAsk(v,'finish',go67,n67);else go67();return true}
   if(t.closest('#f67Back')){f2save();v.view='rep';window.scrollTo(0,0);render();return true}
   return false;
 }
@@ -1686,7 +1749,7 @@ function duF3Block(v){
   return '<p class="count" style="margin:.2rem 0 .5rem">'+n3+' of '+t3+' answered'+(ud.names.length>1?(nd?' - '+nd+(nd===1?' difference':' differences')+' on the other tank'+(ud.names.length>2?'s':''):' - other tank'+(ud.names.length>2?'s the same':' the same')):'')+'</p>'+(noWt?'<p class="count" style="margin:0 0 .5rem;color:var(--bad)">Water temperature still to be filled in.</p>':'')+(noSv?'<p class="count" style="margin:0 0 .5rem;color:var(--bad)">Safety valve set pressure still to be chosen.</p>':'')+'<button type="button" class="btn block'+(n3<t3?' primary':'')+'" id="repF3">'+(n3===0&&!f3any(v)?'Start Form 3':(n3<t3?'Continue Form 3':'Edit Form 3'))+'</button>';
 }
 function renderRepTdu(){
-  var v=S.f2v,sl=tduSerials(v.v,v.unit);
+  S.fwd=null;var v=S.f2v,sl=tduSerials(v.v,v.unit);
   $('#tabs').hidden=true;$('#fab').hidden=true;
   $('#top').innerHTML='<button class="hbtn icon" id="repBack" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>DU report - Unit '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="repDone" type="button">Done</button>';
   var h='<div class="panel"><h2>Unit</h2><p>What kind of DU is this?</p><div class="chips">'+TUNITS.map(function(u){return '<button type="button" class="chip s'+(v.unit===u.k?' on':'')+'" data-unit="'+u.k+'">'+u.t+'</button>'}).join('')+'</div>';
@@ -1701,6 +1764,7 @@ function renderRepTdu(){
   $('#view').innerHTML=h;
 }
 function renderRep(){
+  S.fwd=null;
   if(S.f2v&&S.f2v.tdu){renderRepTdu();return}
   var v=S.f2v,ud=unitDef(v.unit),tk=unitTanks(v.v),its=f2items(),n=f2answered(v),nx=nextForm(v);
   $('#tabs').hidden=true;$('#fab').hidden=true;
@@ -1789,7 +1853,7 @@ function repClick(t){
 function renderF20(){
   var v=S.f2v,f=v.f20||(v.f20={date:'',res:'',auto:0});
   $('#tabs').hidden=true;$('#fab').hidden=true;
-  $('#top').innerHTML='<button class="hbtn icon" id="f20Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 20 - Unit '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f20Done" type="button">Done</button>';
+  $('#top').innerHTML='<button class="hbtn icon" id="f20Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 20 - Unit '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f20Done" type="button">Back to list</button>';
   var h='<div class="panel"><h2>Statement of certification</h2><p>Two questions. Signature and the rest of the form are done at the office.</p></div>';
   h+='<div class="panel"><h2>Date of inspection</h2><div class="field"><input type="date" id="f20date" value="'+esc(f.date||'')+'"></div></div>';
   h+='<div class="panel"><h2>Result</h2><p>Pass: tank returned to service. Fail: tank out of service.</p><div class="chips"><button type="button" class="chip y'+(f.res==='P'?' on':'')+'" data-f20res="P"'+(f20noOnly(v).length?' style="opacity:.4"':'')+'>Pass</button><button type="button" class="chip n'+(f.res==='F'?' on':'')+'" data-f20res="F">Fail</button></div>'+(v.plate==='N'&&f.res==='F'&&f.auto?'<p style="margin:0">Set to Fail because the data plate answer is No, out of service.</p>':'')+(f20lockMsg(v)?'<p style="margin:.4rem 0 0;color:var(--bad)">'+esc(f20lockMsg(v))+'</p>':'')+f20stUI(v)+f20cmUI(v)+'</div>';
@@ -1806,7 +1870,7 @@ function renderF2(){
   var v=S.f2v,def=f2def(v),ud=unitDef(v.unit),nt=f2nt(v),k=f2tab(v),fd=f2dw(v,k),refs=f2refs(f2eff(v,k),v),n0=ud.names[0].toLowerCase();
   $('#tabs').hidden=true;$('#fab').hidden=true;
   var its=f2items(),n=f2answered(v,k);
-  $('#top').innerHTML='<button class="hbtn icon" id="f2Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 2 - '+(v.tdu?'DU ':'Unit ')+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f2Done" type="button">Done</button>';
+  $('#top').innerHTML='<button class="hbtn icon" id="f2Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 2 - '+(v.tdu?'DU ':'Unit ')+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f2Done" type="button">Back to list</button>';
   var h='';
   if(nt>1)h+='<div class="ttabs">'+ud.names.map(function(nm,i){var dn=f2diffs(v,i);return '<button type="button" class="ttab'+(i===k?' on':'')+'" data-f2tab="'+i+'">'+esc(nm)+(dn?'<span class="dn">'+dn+(dn===1?' difference':' differences')+'</span>':'')+'</button>'}).join('')+'</div>';
   h+='<div class="panel"><h2>Visual inspection (external)'+(nt>1?' - '+esc(ud.names[k].toLowerCase())+' tank':'')+'</h2>'+tankTag(v,k)+'<p>Tap Yes, No or N/A for each item. If something did not conform but was fixed on site, tap No and then Yes as well, and say what was wrong and when it was fixed. Add a comment where something needs one; it gets the next Ref # and is printed on the form beside the item.'+(v.tdu?' The DU form has one comment line, so all the comments of a tank share it: keep them short.':'')+' Changes are saved on this phone as you go.</p>'+(nt>1?(k?'<p style="margin:0">This tank is the same as the '+esc(n0)+' tank unless you change an answer or add a comment. Tap an answer to change it; tap it again to go back to "same".</p>':'<p style="margin:0">Answer this first tank. The other tanks start the same; change them on their own tab only where they differ.</p>'):'')+'</div>';
@@ -1830,7 +1894,7 @@ function renderF2(){
   var nc=Object.keys(refs).length,mx=def.comments.length;
   if(v.tdu){var lm=tduLenMsg(v,k);h+='<div class="panel"><p id="f2len" style="margin:0;color:'+(lm.bad?'var(--bad)':'var(--muted)')+'">'+esc(lm.t)+'</p></div>'}
   else h+='<div class="panel"><p style="margin:0;color:'+(nc>mx?'var(--bad)':'var(--muted)')+'">'+nc+' of '+mx+' comment lines used on the form'+(nt>1?' for this tank':'')+'.'+(nc>mx?' There is only room for '+mx+'. Shorten or remove some comments before sending.':'')+'</p></div>';
-  $('#view').innerHTML=h;
+  $('#view').innerHTML=h;fwdAppend();
 }
 function f2closeCheck(){
   var v=S.f2v;f2save();S.f2v=null;S.tab='tanks';render();
@@ -1856,7 +1920,7 @@ function f2click(t){
     var kq=f2tab(S.f2v),fdq=f2dw(S.f2v,kq);
     f2items().forEach(function(it){if(it.cols.indexOf('W')>=0&&!f2r(S.f2v,it.row,kq)){var a=fdq.items[it.row]||(fdq.items[it.row]={});a.r='Y'}});
     f2save();renderF2KeepScroll();return true}
-  if(t.closest('#f2Done')){f2save();var rd=S.f2v;f2noCmAsk(rd,'finish',function(){rd.view='rep';window.scrollTo(0,0);render()});return true}
+  if(t.closest('#f2Done')){f2save();var rd=S.f2v;f2noCmAsk(rd,'finish',function(){leaveForm(rd)});return true}
   if(t.closest('#f2Back')){f2save();S.f2v.view='rep';window.scrollTo(0,0);render();return true}
   return false;
 }
@@ -2069,7 +2133,7 @@ function renderF3(){
   var v=S.f2v,def=f3def(),f=v.f3||(v.f3={items:{},vals:{}}),ud=unitDef(v.unit),nt=f3nt(v),k=f3tab(v),fd=f3dw(v,k),refs=f3refs(fd),n0=ud.names[0].toLowerCase();
   $('#tabs').hidden=true;$('#fab').hidden=true;
   var rows=f3rows(),n=f3answered(v,k);
-  $('#top').innerHTML='<button class="hbtn icon" id="f3Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 3 - Unit '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f3Done" type="button">Done</button>';
+  $('#top').innerHTML='<button class="hbtn icon" id="f3Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 3 - Unit '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f3Done" type="button">Back to list</button>';
   var h='';
   if(nt>1)h+='<div class="ttabs">'+ud.names.map(function(nm,i){var dn=f3diffs(v,i);return '<button type="button" class="ttab'+(i===k?' on':'')+'" data-f3tab="'+i+'">'+esc(nm)+(dn?'<span class="dn">'+dn+(dn===1?' difference':' differences')+'</span>':'')+'</button>'}).join('')+'</div>';
   h+='<div class="panel"><h2>Pressure test'+(nt>1?' - '+esc(ud.names[k].toLowerCase())+' tank':'')+'</h2>'+tankTag(v,k)+'<p>Tap Yes, No or N/A for each item and type the numbers where they are asked for. A comment gets the next Ref # and is printed on the form beside the item. Changes are saved on this phone as you go.</p>'+(nt>1?(k?'<p style="margin:0">This tank is the same as the '+esc(n0)+' tank unless you change an answer or a number here. Anything you change is marked as a difference. Numbers left empty are the same as the '+esc(n0)+' tank (shown in grey).</p>':'<p style="margin:0">The other tank'+(nt>2?'s start':' starts')+' the same as this one. Open the other tab'+(nt>2?'s':'')+' only to record anything that is different on that tank.</p>'):'')+'<p style="margin:0">The tank design pressure is taken from the data plate on Form 1 at the office.</p></div>';
@@ -2093,7 +2157,7 @@ function renderF3(){
   h+='</div>';
   var nc=Object.keys(refs).length,mx=def.comments.length;
   h+='<div class="panel"><p style="margin:0;color:'+(nc>mx?'var(--bad)':'var(--muted)')+'">'+nc+' of '+mx+' comment lines used on the form'+(nt>1?' for this tank':'')+'.'+(nc>mx?' There is only room for '+mx+'. Shorten or remove some comments before sending.':'')+'</p></div>';
-  $('#view').innerHTML=h;
+  $('#view').innerHTML=h;fwdAppend();
 }
 function f3inHTML(x,v,k){
   k=k||0;var own=f3own(v,x.k,k),eff=f3val(v,x.k,k),base=f3val(v,x.k,0);
@@ -2154,7 +2218,7 @@ function f3click(t){
     var act=document.activeElement;if(act&&act.getAttribute&&act.getAttribute('data-f3v'))f3blur(act,act.getAttribute('data-f3v'));
     f2save();
     if(t.closest('#f3Done')){var pb=f3problems(v);if(pb.length){toast('Form 3 cannot be marked done yet: '+pb[0]);renderF3();return true}}
-    v.view='rep';window.scrollTo(0,0);render();return true}
+    leaveForm(v);return true}
   return false;
 }
 
@@ -2265,7 +2329,7 @@ function renderF4(){
   f.vals=f.vals||{};if(!f.rpDone){f.rpDone=1;var rm=/\d+(\.\d+)?/.exec(String((v.v||{}).AY||(v.v||{}).S||''));if(rm&&!String(f.vals.rp||'').trim()){f.vals.rp=rm[0];f.rpAuto=rm[0]}f2save()}
   $('#tabs').hidden=true;$('#fab').hidden=true;
   var rows=f4rows(),n=f4answered(v,k);
-  $('#top').innerHTML='<button class="hbtn icon" id="f4Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 4 - '+(v.tdu?'DU ':'Unit ')+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f4Done" type="button">Done</button>';
+  $('#top').innerHTML='<button class="hbtn icon" id="f4Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 4 - '+(v.tdu?'DU ':'Unit ')+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f4Done" type="button">Back to list</button>';
   var h='';
   if(nt>1)h+='<div class="ttabs">'+ud.names.map(function(nm,i){var dn=f4diffs(v,i);return '<button type="button" class="ttab'+(i===k?' on':'')+'" data-f4tab="'+i+'">'+esc(nm)+(dn?'<span class="dn">'+dn+(dn===1?' difference':' differences')+'</span>':'')+'</button>'}).join('')+'</div>';
   h+='<div class="panel"><h2>Leakage test'+(nt>1?' - '+esc(ud.names[k].toLowerCase())+' tank':'')+'</h2>'+tankTag(v,k)+'<p>Tap Yes, No or N/A for each item and type the numbers where they are asked for. A comment gets the next Ref # and is printed on the form beside the item. Changes are saved on this phone as you go.</p>'+(nt>1?(k?'<p style="margin:0">This tank is the same as the '+esc(n0)+' tank unless you change an answer or a number here. Anything you change is marked as a difference. Numbers left empty are the same as the '+esc(n0)+' tank (shown in grey).</p>':'<p style="margin:0">The other tank'+(nt>2?'s start':' starts')+' the same as this one. Open the other tab'+(nt>2?'s':'')+' only to record anything that is different on that tank.</p>'):'')+'</div>';
@@ -2288,7 +2352,7 @@ function renderF4(){
   h+='</div>';
   var nc=Object.keys(refs).length,mx=def.comments.length;
   h+='<div class="panel"><p style="margin:0;color:'+(nc>mx?'var(--bad)':'var(--muted)')+'">'+nc+' of '+mx+' comment lines used on the form'+(nt>1?' for this tank':'')+'.'+(nc>mx?' There is only room for '+mx+'. Shorten or remove some comments before sending.':'')+'</p></div>';
-  $('#view').innerHTML=h;
+  $('#view').innerHTML=h;fwdAppend();
 }
 function f4inHTML(x,v,k){
   k=k||0;var own=f4own(v,x.k,k),eff=f4val(v,x.k,k),base=f4val(v,x.k,0);
@@ -2339,7 +2403,7 @@ function f4click(t){
     var act=document.activeElement;if(act&&act.getAttribute&&act.getAttribute('data-f4v'))f4blur(act,act.getAttribute('data-f4v'));
     f2save();
     if(t.closest('#f4Done')){var pb=f4problems(v);if(pb.length){toast('Form 4 cannot be marked done yet: '+pb[0]);renderF4();return true}}
-    v.view='rep';window.scrollTo(0,0);render();return true}
+    leaveForm(v);return true}
   return false;
 }
 /* ---------- Form 13 (additional comments) ---------- */
@@ -2368,16 +2432,16 @@ function f13count(v){var n=f13lines(v).length;return n+' of '+F13MAX+' lines use
 function renderF13(){
   var v=S.f2v,f=v.f13||(v.f13={text:''});
   $('#tabs').hidden=true;$('#fab').hidden=true;
-  $('#top').innerHTML='<button class="hbtn icon" id="f13Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 13 - Additional comments</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+' - '+(v.tdu?'Unit ':'Tank ')+esc(v.v.D||'')+'</p></div><button class="hbtn solid" id="f13Done" type="button">Done</button>';
+  $('#top').innerHTML='<button class="hbtn icon" id="f13Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 13 - Additional comments</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+' - '+(v.tdu?'Unit ':'Tank ')+esc(v.v.D||'')+'</p></div><button class="hbtn solid" id="f13Done" type="button">Back to list</button>';
   var h='<div class="panel"><h2>Additional comments</h2><p>Type anything that should be on the report and is not covered by the other forms. A line on the form holds about '+F13W+' characters, so long text carries on to the next line by itself. Press Enter to start a new line. Changes are saved on this phone as you go.</p>';
   h+='<textarea id="f13text" class="f13t" rows="14" placeholder="Additional comments">'+esc(f.text||'')+'</textarea>';
   h+='<p class="count" id="f13cnt" style="margin:.4rem 0 0">'+esc(f13count(v))+'</p></div>';
-  $('#view').innerHTML=h;
+  $('#view').innerHTML=h;fwdAppend();
 }
 function f13refresh(){var c=$('#f13cnt');if(c){c.textContent=f13count(S.f2v);c.style.color=f13lines(S.f2v).length>F13MAX?'var(--bad)':''}}
 function f13click(t){
   var v=S.f2v;
-  if(t.closest('#f13Done')||t.closest('#f13Back')){f2save();v.view='rep';window.scrollTo(0,0);render();return true}
+  if(t.closest('#f13Done')||t.closest('#f13Back')){f2save();leaveForm(v);return true}
   return false;
 }
 
@@ -2469,7 +2533,7 @@ function renderF8(){
   var v=S.f2v,ud=unitDef(v.unit),nt=f8nt(v),k=f8tab(v),f=f8dw(v,k),n0=ud.names[0].toLowerCase(),b=f8o(v);
   f.q=f.q||{};f.vals=f.vals||{};f.a=f.a||{};f.rd=f.rd||{};f8ex(f,0);
   $('#tabs').hidden=true;$('#fab').hidden=true;
-  $('#top').innerHTML='<button class="hbtn icon" id="f8Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 8 - Unit '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f8Done" type="button">Done</button>';
+  $('#top').innerHTML='<button class="hbtn icon" id="f8Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 8 - Unit '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f8Done" type="button">Back to list</button>';
   var h='';
   if(nt>1)h+='<div class="ttabs">'+ud.names.map(function(nm,i){var dn=f8diffs(v,i);return '<button type="button" class="ttab'+(i===k?' on':'')+'" data-f8tab="'+i+'">'+esc(nm)+(dn?'<span class="dn">'+dn+(dn===1?' difference':' differences')+'</span>':'')+'</button>'}).join('')+'</div>';
   h+='<div class="panel"><h2>Thickness test'+(nt>1?' - '+esc(ud.names[k].toLowerCase())+' tank':'')+'</h2>'+tankTag(v,k)+'<p>Answer the checklist, tick the areas that were tested, and enter the readings from the tank diagram. Changes are saved on this phone as you go.</p>'+(nt>1?(k?'<p style="margin:0">Checklist answers, data plate values and the comment are the same as the '+esc(n0)+' tank unless you change them. Measurements (areas and diagram readings) are for this tank only and are never copied from another tank.</p>':'<p style="margin:0">Answer this first tank. For the other tanks, use their tab only where they differ, and enter their own measurements there.</p>'):'')+'</div>';
@@ -2494,7 +2558,7 @@ function renderF8(){
   h+='</div>';
   var inc=k?(b.cm||''):'';
   h+='<div class="panel"><div class="f2h">Comment</div><p class="count" style="margin:0 0 .3rem">One line on the form (up to '+F8CM+' characters). For more, use Form 13.</p><textarea data-f8v="cm" maxlength="'+F8CM+'" placeholder="'+esc(String(inc).trim()?inc:'Comment (short - one line on the form)')+'">'+esc(f.cm||'')+'</textarea></div>';
-  $('#view').innerHTML=h;
+  $('#view').innerHTML=h;fwdAppend();
 }
 function f8click(t){
   var v=S.f2v,k=f8tab(v),f=f8dw(v,k),y=window.scrollY;
@@ -2507,7 +2571,7 @@ function f8click(t){
     var act=document.activeElement;if(act&&act.getAttribute&&act.getAttribute('data-f8v'))f8store(act);
     f2save();
     if(t.closest('#f8Done')){var pb=f8problems(v);if(pb.length){toast('Form 8 cannot be marked done yet: '+pb[0]);return true}}
-    v.view='rep';window.scrollTo(0,0);render();return true}
+    leaveForm(v);return true}
   return false;
 }
 function f8store(el){
@@ -2585,7 +2649,7 @@ function buildF5(rec){
 function renderF5(){
   var v=S.f2v,ud=unitDef(v.unit),tk=f5tk(v),n=f5n(v);
   $('#tabs').hidden=true;$('#fab').hidden=true;
-  $('#top').innerHTML='<button class="hbtn icon" id="f5Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 5 - '+(v.tdu?'DU ':'Unit ')+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f5Done" type="button">Done</button>';
+  $('#top').innerHTML='<button class="hbtn icon" id="f5Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 5 - '+(v.tdu?'DU ':'Unit ')+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f5Done" type="button">Back to list</button>';
   var h='<div class="panel"><h2>Hose test and inspection</h2><p>Choose Pass or Fail. A hose that fails or has expired is replaced: the office sheet adds a line for the new hose. '+(v.tdu?'A hose that is not in the DU list shows Add a hose instead.':'A tank with no hose in the tank list shows Add a hose instead.')+'</p></div>';
   var f5f=f5o(v);
   if(f5anyDup(v)&&!f5f.sh){
@@ -2633,7 +2697,7 @@ function renderF5(){
       h+='<div class="field" style="margin-top:.7rem"><label>Comment (optional, short)</label><input type="text" placeholder=" " maxlength="'+F5CM+'" autocomplete="off" data-f5v="xc'+i+'" value="'+esc(x.cm||'')+'"></div>';
       h+='<button type="button" class="lnk" style="margin-top:.7rem" data-f5xrm="'+i+'">Remove this hose</button>'}
     h+='</div>'}
-  $('#view').innerHTML=h;
+  $('#view').innerHTML=h;fwdAppend();
 }
 function f5click(t){
   var v=S.f2v,y=window.scrollY;
@@ -2650,7 +2714,7 @@ function f5click(t){
     var act=document.activeElement;if(act&&act.getAttribute&&(act.getAttribute('data-f5v')||act.getAttribute('data-f5s')))f5store(act);
     f2save();
     if(t.closest('#f5Done')){var pb=f5problems(v);if(pb.length){toast('Form 5 cannot be marked done yet: '+pb[0]);return true}}
-    v.view='rep';window.scrollTo(0,0);render();return true}
+    leaveForm(v);return true}
   return false;
 }
 function f5opts(c,cur,old,first){var L=(F[c]&&F[c].list)||[],a=(S.adds&&S.adds[c])||[],all=L.concat(a.filter(function(x){return L.indexOf(x)<0})),h='<option value="">'+(first||('Same as the old hose'+(old?' ('+esc(old)+')':'')))+'</option>';all.forEach(function(x){h+='<option value="'+esc(x)+'"'+(x===cur?' selected':'')+'>'+esc(x)+'</option>'});if(cur&&all.indexOf(cur)<0)h+='<option value="'+esc(cur)+'" selected>'+esc(cur)+'</option>';return h}
@@ -2802,6 +2866,8 @@ function f10open(){
 document.addEventListener('click',function(e){
   var t=e.target;
   if(S.mhOn){mhClick(t);return}
+  if(S.f2v&&t.closest('#top')&&!S.fwdGo)S.fwd=null;
+  if(S.f2v&&t.closest('#fwdNext')){fwdClick();return}
   if(S.f2v){if(S.f2v.view==='f2')f2click(t);else if(S.f2v.view==='f2a')f2aclick(t);else if(S.f2v.view==='f6'||S.f2v.view==='f7')f67click(t);else if(S.f2v.view==='f20')f20click(t);else if(S.f2v.view==='f3')f3click(t);else if(S.f2v.view==='f4')f4click(t);else if(S.f2v.view==='f13')f13click(t);else if(S.f2v.view==='f8')f8click(t);else if(S.f2v.view==='f5')f5click(t);else repClick(t);return}
   var tdE=t.closest('[data-tduedit]');if(S.tduDetail&&tdE){openTduEdit(+tdE.getAttribute('data-tduedit'));return}
   if(S.tduDetail&&t.closest('#tduBack')){S.tduDetail=null;window.scrollTo(0,0);render();return}
