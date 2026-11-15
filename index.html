@@ -220,7 +220,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 9au (Form 20 SPEC statements now also for DUs: every DU tank whose spec on the DU list is TC331 or TC51 gets the four questions, one set per tank on a twin or quad. Nurse tanks as in 9at.';
+var VERSION='prototype 9av (the nurse report now lists every form in order with a tick box, the same as the DU report - no more Add a form buttons; on Form 20, for nurse and DU, Pass / Fail now comes after the SPEC statements, like the form in the workbook.';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -1852,7 +1852,7 @@ function duF8Block(v){
 }
 function f20Inline(v){
   var f20=v.f20||{};
-  return '<div class="f2item"><p class="tx" style="font-weight:700;font-size:1rem;color:var(--ink)">Form 20 - Statement of certification</p><p class="count" style="margin:.2rem 0 .2rem">Date of inspection</p><div class="field" style="margin:0 0 .5rem"><input type="date" id="f20date" value="'+esc(f20.date||todayISO())+'"></div><p class="count" style="margin:0 0 .3rem">Result (Pass: returned to service. Fail: out of service.)</p><div class="chips"><button type="button" class="chip y'+(f20.res==='P'?' on':'')+'" data-f20res="P"'+(f20noOnly(v).length?' style="opacity:.4"':'')+'>Pass</button><button type="button" class="chip n'+(f20.res==='F'?' on':'')+'" data-f20res="F">Fail</button></div>'+(v.plate==='N'&&f20.res==='F'&&f20.auto?'<p class="count" style="margin:.4rem 0 0">Set to Fail because the data plate answer is No, out of service.</p>':'')+(f20lockMsg(v)?'<p class="count" style="margin:.4rem 0 0;color:var(--bad)">'+esc(f20lockMsg(v))+'</p>':'')+f20stUI(v)+f20spUI(v)+f20cmUI(v)+(f20done(v)?'':'<p class="count" style="margin:.4rem 0 0;color:var(--bad)">Choose Pass or Fail before sending.</p>')+'</div>';
+  return '<div class="f2item"><p class="tx" style="font-weight:700;font-size:1rem;color:var(--ink)">Form 20 - Statement of certification</p><p class="count" style="margin:.2rem 0 .2rem">Date of inspection</p><div class="field" style="margin:0 0 .5rem"><input type="date" id="f20date" value="'+esc(f20.date||todayISO())+'"></div>'+f20spUI(v)+'<p class="count" style="margin:0 0 .3rem">Result (Pass: returned to service. Fail: out of service.)</p><div class="chips"><button type="button" class="chip y'+(f20.res==='P'?' on':'')+'" data-f20res="P"'+(f20noOnly(v).length?' style="opacity:.4"':'')+'>Pass</button><button type="button" class="chip n'+(f20.res==='F'?' on':'')+'" data-f20res="F">Fail</button></div>'+(v.plate==='N'&&f20.res==='F'&&f20.auto?'<p class="count" style="margin:.4rem 0 0">Set to Fail because the data plate answer is No, out of service.</p>':'')+(f20lockMsg(v)?'<p class="count" style="margin:.4rem 0 0;color:var(--bad)">'+esc(f20lockMsg(v))+'</p>':'')+f20stUI(v)+f20cmUI(v)+(f20done(v)?'':'<p class="count" style="margin:.4rem 0 0;color:var(--bad)">Choose Pass or Fail before sending.</p>')+'</div>';
 }
 function duF4Block(v){
   var ud=unitDef(v.unit),n4=f4answered(v),t4=f4rows().length,miss4=[];
@@ -1899,7 +1899,6 @@ function renderRep(){
   FORMS_ALL.forEach(function(f){
     if(f.du)return;
     var on=formOn(v,f.n);
-    if(!on&&!f.def)return;
     var row='<div class="f2item"><label class="check"><input type="checkbox" data-form="'+f.n+'"'+(on?' checked':'')+'> '+esc(f.t)+'</label>';
     if(f.n===2){
       row+=on?'<p class="count" style="margin:.2rem 0 .5rem">'+n+' of '+its.length+' answered'+(ud.names.length>1?(function(){var nd=0;for(var q=1;q<ud.names.length;q++)nd+=f2diffs(v,q);return nd?' - '+nd+(nd===1?' difference':' differences')+' on the other tank'+(ud.names.length>2?'s':''):' - other tank'+(ud.names.length>2?'s the same':' the same')})():'')+'</p><button type="button" class="btn block'+(f2answered(v)<f2items(v).length?' primary':'')+'" id="repF2">'+(n===0?'Start Form 2':(n<its.length?'Continue Form 2':'Edit Form 2'))+'</button>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
@@ -1928,10 +1927,6 @@ function renderRep(){
     h+=row;
   });
   h+=f20Inline(v);
-  var off=FORMS_ALL.filter(function(f){return !f.def&&!f.du&&!formOn(v,f.n)});
-  if(off.length){
-    h+='<p style="margin:.8rem 0 .3rem;font-weight:600">Add a form</p><div class="fgrid">'+off.map(function(f){return '<button type="button" class="btn block" data-addform="'+f.n+'">+ Form '+f.n+' - '+esc(f.s)+'</button>'}).join('')+'</div>';
-  }
   h+='</div>';
   h+='<div class="panel"><h2>Send</h2><p>Sends this report to the office: unit, data plate, the forms in the report, Form 2, Form 3, Form 4, Form 5, Form 8, Form 13 and Form 20. Form 10 pictures go in their own email.</p><button type="button" class="btn primary block" id="repSend">Send report</button></div>';
   $('#view').innerHTML=h;
@@ -1975,7 +1970,8 @@ function renderF20(){
   $('#top').innerHTML='<button class="hbtn icon" id="f20Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 20 - Unit '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f20Done" type="button">Back to list</button>';
   var h='<div class="panel"><h2>Statement of certification</h2><p>Two questions. Signature and the rest of the form are done at the office.</p></div>';
   h+='<div class="panel"><h2>Date of inspection</h2><div class="field"><input type="date" id="f20date" value="'+esc(f.date||'')+'"></div></div>';
-  h+='<div class="panel"><h2>Result</h2><p>Pass: tank returned to service. Fail: tank out of service.</p><div class="chips"><button type="button" class="chip y'+(f.res==='P'?' on':'')+'" data-f20res="P"'+(f20noOnly(v).length?' style="opacity:.4"':'')+'>Pass</button><button type="button" class="chip n'+(f.res==='F'?' on':'')+'" data-f20res="F">Fail</button></div>'+(v.plate==='N'&&f.res==='F'&&f.auto?'<p style="margin:0">Set to Fail because the data plate answer is No, out of service.</p>':'')+(f20lockMsg(v)?'<p style="margin:.4rem 0 0;color:var(--bad)">'+esc(f20lockMsg(v))+'</p>':'')+f20stUI(v)+f20spUI(v)+f20cmUI(v)+'</div>';
+  if(f20spTanks(v).length)h+='<div class="panel">'+f20spUI(v)+'</div>';
+  h+='<div class="panel"><h2>Result</h2><p>Pass: tank returned to service. Fail: tank out of service.</p><div class="chips"><button type="button" class="chip y'+(f.res==='P'?' on':'')+'" data-f20res="P"'+(f20noOnly(v).length?' style="opacity:.4"':'')+'>Pass</button><button type="button" class="chip n'+(f.res==='F'?' on':'')+'" data-f20res="F">Fail</button></div>'+(v.plate==='N'&&f.res==='F'&&f.auto?'<p style="margin:0">Set to Fail because the data plate answer is No, out of service.</p>':'')+(f20lockMsg(v)?'<p style="margin:.4rem 0 0;color:var(--bad)">'+esc(f20lockMsg(v))+'</p>':'')+f20stUI(v)+f20cmUI(v)+'</div>';
   $('#view').innerHTML=h;
 }
 function f20click(t){
