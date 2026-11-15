@@ -220,7 +220,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 9at (Form 20 SPEC statements: when a nurse tank on the report has Tank spec TC331 or TC51, Form 20 now asks the four SPEC questions for that tank - specification (starts as the tank spec), steel QT or NQT, stress relieved after manufacture, stress relieved after repair - one set per tank on a twin or triple. They travel in the report as S|SP lines (old workbooks ignore them).';
+var VERSION='prototype 9au (Form 20 SPEC statements now also for DUs: every DU tank whose spec on the DU list is TC331 or TC51 gets the four questions, one set per tank on a twin or quad. Nurse tanks as in 9at.';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -1321,17 +1321,25 @@ function f20cmUI(v){
   var cm=f.cm||[];
   return '<p class="count" style="margin:.7rem 0 .3rem"><b>Comment on Form 20</b> - why it failed (up to 3 short lines, '+F20CM_MAX+' characters each)</p>'+[0,1,2].map(function(i){return '<div class="field" style="margin:0 0 .35rem"><input type="text" data-f20cm="'+i+'" maxlength="'+F20CM_MAX+'" placeholder="Line '+(i+1)+'" value="'+esc(cm[i]||'')+'" autocomplete="off"></div>'}).join('');
 }
-/* 9at: the four SPEC statements of Form 20, one set per tank whose Tank spec is TC331 or TC51 (nurse units). Answers live in v.f20.sp[tankIndex]={sp,st,mf,rp}. */
+/* 9at/9au: the four SPEC statements of Form 20, one set per tank whose Tank spec is TC331 or TC51 (nurse units: Tank spec column; DUs: the spec on the DU list row). Answers live in v.f20.sp[tankIndex]={sp,st,mf,rp}. */
 var F20SP_SPEC=['TC51','CTC51','DOT51','TC331','MC330','MC331'],F20SP_ST=['QT','NQT'],F20SP_MF=['No','Yes','Unknown'],F20SP_RP=['N/A','No','Yes'];
 var F20SP_Q=[['sp','Specification',F20SP_SPEC],['st','Steel',F20SP_ST],['mf','Stress relieved after manufacture?',F20SP_MF],['rp','Stress relieved after repair?',F20SP_RP]];
-function f20spTanks(v){if(!v||v.tdu)return [];var o=[];f20unitTanks(v).forEach(function(t,k){var a=String(t.v.AJ||'').trim().toUpperCase();if(a==='TC331'||a==='TC51')o.push({k:k,def:a})});return o}
+function duTanks(v){/* 9au: the tanks of a DU in Form 1 sheet order: single = 1, twin = left, right, quad = front left, front right, rear left, rear right; spec comes from the DU list row the tank is on */
+  var rows=tduUnitRows(v.v||{}),r1=rows[0]?rows[0].v:{},r2=rows[1]?rows[1].v:{},k=/^d/.test(v.unit||'')?v.unit:(rows.length>=2?'dq':(r1.AK?'dd':'ds')),o=[];
+  function add(r,c,nm){if(r&&String(r[c]||'').trim())o.push({nm:nm,sn:String(r[c]).trim(),bg:String(r.BG||'').toUpperCase().replace(/[^A-Z0-9]/g,'')})}
+  if(k==='ds')add(r1,'AJ','Tank');else if(k==='dd'){add(r1,'AJ','Left tank');add(r1,'AK','Right tank')}
+  else{add(r1,'AJ','Front left tank');add(r1,'AK','Front right tank');add(r2,'AJ','Rear left tank');add(r2,'AK','Rear right tank')}
+  return o}
+function f20spTanks(v){if(!v)return [];var o=[];
+  if(v.tdu){duTanks(v).forEach(function(t,k){if(t.bg==='TC331'||t.bg==='TC51')o.push({k:k,def:t.bg,nm:t.nm,sn:t.sn})});return o}
+  f20unitTanks(v).forEach(function(t,k){var a=String(t.v.AJ||'').trim().toUpperCase();if(a==='TC331'||a==='TC51')o.push({k:k,def:a})});return o}
 function f20spVal(v,k,def){var s=(v.f20&&v.f20.sp&&v.f20.sp[k])||{};return {sp:s.sp!=null?s.sp:def,st:s.st||'',mf:s.mf||'',rp:s.rp||''}}
 function f20spUI(v){
   var L=f20spTanks(v);if(!L.length)return '';
-  var h='<p class="count" style="margin:.8rem 0 .3rem"><b>SPEC statements on Form 20</b> - '+(L.length>1?'answer for each tank that is a SPEC tank (TC331 or TC51)':'this tank is a SPEC tank ('+esc(L[0].def)+')')+'</p>',miss=false;
+  var h='<p class="count" style="margin:.8rem 0 .3rem"><b>SPEC statements on Form 20</b> - '+(f20ntk(v)>1?'answer for each tank that is a SPEC tank (TC331 or TC51)':'this tank is a SPEC tank ('+esc(L[0].def)+')')+'</p>',miss=false;
   L.forEach(function(x){
     var s=f20spVal(v,x.k,x.def);
-    if(f20ntk(v)>1)h+=tankTag(v,x.k);
+    if(f20ntk(v)>1)h+=(v.tdu?'<p class="count" style="margin:.1rem 0 .5rem"><b>'+esc(x.nm)+'</b> - S/N '+esc(x.sn)+'</p>':tankTag(v,x.k));
     F20SP_Q.forEach(function(q,j){
       var cur=s[q[0]];if(!cur)miss=true;
       h+='<p class="count" style="margin:.3rem 0 .15rem">'+esc(q[1])+'</p><div class="field" style="margin:0 0 .3rem"><select data-f20sp="'+x.k+':'+q[0]+'"><option value="">Choose...</option>'+q[2].map(function(o){return '<option value="'+esc(o)+'"'+(o===cur?' selected':'')+'>'+esc(o)+'</option>'}).join('')+'</select></div>'});
@@ -1339,10 +1347,10 @@ function f20spUI(v){
   if(miss)h+='<p class="count" style="margin:.3rem 0 .3rem;color:var(--bad)">Please answer all four for each SPEC tank. The office form prints blank answers as blank.</p>';
   return h;
 }
-function f20ntk(v){return f20unitTanks(v).length}
+function f20ntk(v){return v.tdu?duTanks(v).length:f20unitTanks(v).length}
 /* S|SP|tank|spec|steel|mfg|repair - only when the crew answered something beyond the default specification */
 function f20spLines(rec){
-  var out=[];if(!rec||rec.tdu||!rec.f20||!rec.f20.res||!rec.f20.date)return out;
+  var out=[];if(!rec||!rec.f20||!rec.f20.res||!rec.f20.date)return out;
   f20spTanks(rec).forEach(function(x){var s=f20spVal(rec,x.k,x.def);if(!(s.st||s.mf||s.rp)&&s.sp===x.def)return;
     out.push(['S','SP',x.k+1,f2c(s.sp),f2c(s.st),f2c(s.mf),f2c(s.rp)].join('|'))});
   return out;
