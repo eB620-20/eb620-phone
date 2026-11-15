@@ -220,7 +220,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 9av (the nurse report now lists every form in order with a tick box, the same as the DU report - no more Add a form buttons; on Form 20, for nurse and DU, Pass / Fail now comes after the SPEC statements, like the form in the workbook.';
+var VERSION='prototype 9aw (on a twin, triple or quad, the button at the bottom of Forms 2, 3, 4 and 8 is now two buttons while you are not on the last tank: Next tank, and Next form - skip the other tanks, since they take the first tank answers. The nurse report lists every form in order and Form 20 has Pass / Fail after the SPEC statements, as in 9av.';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -1407,11 +1407,13 @@ function fwdLabel(v){
 }
 function fwdAppend(){
   var v=S.f2v,el=$('#view');if(!v||!el||!FWD_DONE[v.view])return;
-  el.insertAdjacentHTML('beforeend','<div class="panel"><button type="button" class="btn primary block" id="fwdNext">'+esc(fwdLabel(v))+'</button></div>');
+  var tb=fwdTab(v),nx=fwdNextKey(v,fwdKey(v.view)),two=tb&&tb.k<tb.nt-1;
+  /* 9aw: on a twin / triple / quad that is not on its last tank, a second button skips the other tanks (they take the first tank's answers) and goes straight to the next form */
+  el.insertAdjacentHTML('beforeend','<div class="panel"><button type="button" class="btn primary block" id="fwdNext">'+esc(fwdLabel(v))+'</button>'+(two?'<button type="button" class="btn block" id="fwdForm" style="margin-top:.6rem">'+(nx?'Next: Form '+nx+' (skip the other '+(tb.nt-tb.k-1>1?'tanks':'tank')+')':'Back to the report (skip the other '+(tb.nt-tb.k-1>1?'tanks':'tank')+')')+'</button>':'')+'</div>');
 }
-function fwdClick(){
+function fwdClick(skipTanks){
   var v=S.f2v,tb=fwdTab(v),b;
-  if(tb&&tb.k<tb.nt-1){b=$('[data-'+tb.p+'tab="'+(tb.k+1)+'"]');if(b){S.fwdGo=1;b.click();S.fwdGo=0}return}
+  if(!skipTanks&&tb&&tb.k<tb.nt-1){b=$('[data-'+tb.p+'tab="'+(tb.k+1)+'"]');if(b){S.fwdGo=1;b.click();S.fwdGo=0}return}
   b=$('#'+FWD_DONE[v.view]);if(!b)return;
   S.fwd=fwdNextKey(v,fwdKey(v.view))||'rep';S.fwdGo=1;b.click();S.fwdGo=0;
 }
@@ -3137,6 +3139,7 @@ document.addEventListener('click',function(e){
   if(S.mhOn){mhClick(t);return}
   if(S.f2v&&t.closest('#top')&&!S.fwdGo)S.fwd=null;
   if(S.f2v&&t.closest('#fwdNext')){fwdClick();return}
+  if(S.f2v&&t.closest('#fwdForm')){fwdClick(true);return}
   if(S.f2v){if(S.f2v.view==='f2')f2click(t);else if(S.f2v.view==='f2a')f2aclick(t);else if(S.f2v.view==='f6'||S.f2v.view==='f7')f67click(t);else if(S.f2v.view==='f20')f20click(t);else if(S.f2v.view==='f3')f3click(t);else if(S.f2v.view==='f4')f4click(t);else if(S.f2v.view==='f13')f13click(t);else if(S.f2v.view==='f8')f8click(t);else if(S.f2v.view==='f5')f5click(t);else repClick(t);return}
   var tdE=t.closest('[data-tduedit]');if(S.tduDetail&&tdE){openTduEdit(+tdE.getAttribute('data-tduedit'));return}
   if(S.tduDetail&&t.closest('#tduBack')){S.tduDetail=null;window.scrollTo(0,0);render();return}
