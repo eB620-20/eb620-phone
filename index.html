@@ -220,7 +220,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 9aw (on a twin, triple or quad, the button at the bottom of Forms 2, 3, 4 and 8 is now two buttons while you are not on the last tank: Next tank, and Next form - skip the other tanks, since they take the first tank answers. The nurse report lists every form in order and Form 20 has Pass / Fail after the SPEC statements, as in 9av.';
+var VERSION='prototype 9ax (the Form 10 data plate pictures now go in the same email as the report: the Send screen and the email itself tell you to add them with the photo button, in tank order. Next tank / Next form buttons as in 9aw.';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -1117,7 +1117,7 @@ function mkPdf(text,title){
   var u=new Uint8Array(out.length);for(var k=0;k<out.length;k++)u[k]=out.charCodeAt(k)&255;
   return u}
 
-function shareFile(text,name,title,countLabel,onSent,subject){
+function shareFile(text,name,title,countLabel,onSent,subject,f10recs){
   var DL=window.__dl||null,pdfBytes=null,pdfName=String(name).replace(/\.txt$/i,'.pdf');
   try{if(pdfName!==name)pdfBytes=mkPdf(text,title)}catch(e){pdfBytes=null}
   var shown=(pdfBytes&&!DL)?pdfName:name;
@@ -1131,7 +1131,7 @@ function shareFile(text,name,title,countLabel,onSent,subject){
   function doDownload(){
     try{var bl=pdfBytes?new Blob([pdfBytes],{type:'application/pdf'}):new Blob([text],{type:'application/octet-stream'}),u=URL.createObjectURL(bl),a=document.createElement('a');a.href=u;a.download=pdfBytes?pdfName:name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000)}catch(e){}
   }
-  openSheet('<h2>File ready</h2><p style="margin:0;color:var(--muted);font-size:.92rem">'+countLabel+' in <b>'+esc(shown)+'</b>. Share it with the office. When you are sure it went out, tap "Mark as sent".</p><label for="offMail" style="display:block;margin-top:.7rem;font-weight:600;font-size:.9rem">Office email address</label><input id="offMail" type="email" inputmode="email" autocomplete="email" autocapitalize="off" placeholder="office@yourcompany.com" style="width:100%;min-height:3rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface2);padding:0 .9rem"><div class="row" style="margin-top:.6rem"><button class="btn primary" id="emBtn" type="button">Email to office</button></div><p style="margin:.6rem 0 0;color:var(--muted);font-size:.85rem">Opens your mail app with the report already in the message as text. Just tap Send. Or use "Share file" to send the report as a PDF attachment:</p><div class="row"><button class="btn" id="shBtn" type="button">Share file</button><button class="btn" id="dlBtn" type="button">Save to phone</button><button class="btn" id="cpBtn" type="button">Copy text</button></div><textarea id="tsvBox" readonly aria-label="File contents"></textarea><div class="row"><button class="btn" id="okBtn" type="button">Mark as sent</button><button class="btn" id="clBtn" type="button">Close</button></div>',function(){
+  openSheet('<h2>File ready</h2><p style="margin:0;color:var(--muted);font-size:.92rem">'+countLabel+' in <b>'+esc(shown)+'</b>. Share it with the office. When you are sure it went out, tap "Mark as sent".</p>'+f10boxHtml(f10recs)+'<label for="offMail" style="display:block;margin-top:.7rem;font-weight:600;font-size:.9rem">Office email address</label><input id="offMail" type="email" inputmode="email" autocomplete="email" autocapitalize="off" placeholder="office@yourcompany.com" style="width:100%;min-height:3rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface2);padding:0 .9rem"><div class="row" style="margin-top:.6rem"><button class="btn primary" id="emBtn" type="button">Email to office</button></div><p style="margin:.6rem 0 0;color:var(--muted);font-size:.85rem">Opens your mail app with the report already in the message as text. Just tap Send. Or use "Share file" to send the report as a PDF attachment:</p><div class="row"><button class="btn" id="shBtn" type="button">Share file</button><button class="btn" id="dlBtn" type="button">Save to phone</button><button class="btn" id="cpBtn" type="button">Copy text</button></div><textarea id="tsvBox" readonly aria-label="File contents"></textarea><div class="row"><button class="btn" id="okBtn" type="button">Mark as sent</button><button class="btn" id="clBtn" type="button">Close</button></div>',function(){
     $('#tsvBox').value=text;
     $('#offMail').value=lsGet('ebp_office','');
     if(pdfBytes&&!DL)$('#shBtn').textContent='Share file (PDF)';
@@ -1140,7 +1140,7 @@ function shareFile(text,name,title,countLabel,onSent,subject){
       if(!/^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(a)){toast('Type the office email address first.');$('#offMail').focus();return}
       lsSet('ebp_office',a);
       var sj=subject||('eB620 app - '+title);
-      var url='mailto:'+encodeURIComponent(a).replace(/%40/g,'@')+'?subject='+encodeURIComponent(sj)+'&body='+encodeURIComponent('eB620 phone app: data for the office import. Nothing to read or change here, just send it.\r\n\r\n'+(/^eB620-(phone|tdu)-/.test(text)?text.replace(/\t/g,'~~'):text));
+      var url='mailto:'+encodeURIComponent(a).replace(/%40/g,'@')+'?subject='+encodeURIComponent(sj)+'&body='+encodeURIComponent((f10mailLine(f10recs)?'eB620 phone app: data for the office import. '+f10mailLine(f10recs):'eB620 phone app: data for the office import. Nothing to read or change here, just send it.')+'\r\n\r\n'+(/^eB620-(phone|tdu)-/.test(text)?text.replace(/\t/g,'~~'):text));
       try{window.location.href=url}catch(e){toast('Could not open the mail app. Use Copy text below.')}
       toast('Mail is opening. Send it, then come back and tap Mark as sent.');
     };
@@ -1152,7 +1152,7 @@ function shareFile(text,name,title,countLabel,onSent,subject){
     $('#dlBtn').onclick=function(){doDownload();toast('Saving the file. If nothing downloads, use Copy text.')};
     $('#cpBtn').onclick=function(){var box=$('#tsvBox');var done=function(){toast('Copied. Paste it into an email or a text file ending in .txt.')};
       try{navigator.clipboard.writeText(text).then(done,function(){box.select();document.execCommand&&document.execCommand('copy');done()})}catch(e){box.select();try{document.execCommand('copy')}catch(_){}done()}};
-    $('#okBtn').onclick=function(){onSent();closeSheet();render();toast('Marked as sent.')};
+    $('#okBtn').onclick=function(){onSent(!!($('#f10With')&&$('#f10With').checked));closeSheet();render();toast('Marked as sent.')};
     $('#clBtn').onclick=closeSheet;
   });
 }
@@ -1183,7 +1183,7 @@ function loadDataText(txt,name){
 }
 
 /* ---------- Form 2 (visual inspection) ---------- */
-S.f2=lsGet('ebp_f2',[]);S.f3ok=lsGet('ebp_f3ok',{});S.f10done=lsGet('ebp_f10done',{});S.f2v=null;S.tdue=lsGet('ebp_tdue',[]);
+S.f2=lsGet('ebp_f2',[]);S.f3ok=lsGet('ebp_f3ok',{});S.f10done=lsGet('ebp_f10done',{});S.f10with=lsGet('ebp_f10with',{});S.f2v=null;S.tdue=lsGet('ebp_tdue',[]);
 /* DU Form 2 (sheet 'Form 2 External(V)(TC331-S)' and its copies): one comment line (A36) shared by all comments; rows 25 to 28 are already Yes on the form */
 var TDU_F2={"sheet": "Sheet69", "max": 110, "comments": [36], "items": [{"row": 9, "t": "INSPECT tank", "h": 1, "cols": ""}, {"row": 10, "t": "Painted in light reflecting paint(5.3.2.3) (SR55d B622-20)", "h": 0, "cols": "WXYZ"}, {"row": 11, "t": "Verify Tank Markings: (5.2.2.9, 5.3.1.1, 7.2.1.1e)(5.1k B622)", "h": 0, "cols": "WXYZ"}, {"row": 12, "t": "Wall for corrosion or abrasion (7.2.1.1a)", "h": 0, "cols": "WXYZ"}, {"row": 13, "t": "For cuts, digs, gouges (7.2.1.8a)", "h": 0, "cols": "WXYZ"}, {"row": 14, "t": "Check for dents(>12.7mm deep over a weld,  depth >10% length)(7.2.1.8b,c)", "h": 0, "cols": "WXYZ"}, {"row": 15, "t": "Check for distortions or any structural defects(7.2.1.1a and 7.2.1.8e)", "h": 0, "cols": "WXYZ"}, {"row": 16, "t": "Inspect all vertical welds for cracks, defects or leakage(7.2.1.8d)", "h": 0, "cols": "WXYZ"}, {"row": 17, "t": "Inspect all horizontal welds for cracks, defects or leakage(7.2.1.8d)", "h": 0, "cols": "WXYZ"}, {"row": 18, "t": "INSPECT valves and plumbing (if applicable)", "h": 1, "cols": ""}, {"row": 19, "t": "Verify valves and emergency devices operation: (7.2.1.1c)", "h": 0, "cols": "WXYZ"}, {"row": 20, "t": "Liquid level gauge operational and free of corrosion(5.2.3, 7.2.1.1c)", "h": 0, "cols": "WXYZ"}, {"row": 21, "t": "Verify piping and fittings are free from leaks/defects, mounts secure (7.2.1.1a)", "h": 0, "cols": "WXYZ"}, {"row": 22, "t": "All bolts &/or nuts, fuseible links or elements are in place and secure (7.2.1.1d)", "h": 0, "cols": "WXYZ"}, {"row": 23, "t": "Appurtenances and securement", "h": 1, "cols": ""}, {"row": 24, "t": "Appurtenances, attachments and major connecting structures(7.2.1.1f) are not damaged or corroded", "h": 0, "cols": "WXYZ"}, {"row": 25, "t": "Tank secured by components that draw the tank down tight to the frame.(5.1.3, 7.2.1.1f, SR54Gi of B622-20)", "h": 0, "cols": "WXYZ", "dy": 1}, {"row": 26, "t": "Portable tanks that are loaded and unloaded while on the vehicle now require tank securement that has been designed by a Professional Engineer(5.1l)", "h": 0, "cols": "WXYZ", "dy": 1}, {"row": 27, "t": "Manholes secure (if equipped)(7.2.1.1b)", "h": 0, "cols": "WXYZ", "dy": 1}, {"row": 28, "t": "Upper Coupler Assembly: (7.2.1.1f) Only applies to TANK trailers.  Free of corrosion and damage", "h": 0, "cols": "WXYZ", "dy": 1}, {"row": 29, "t": "Hose and Assembies (if applicable)", "h": 1, "cols": ""}, {"row": 30, "t": "Hose assembly: (7.2.1.1g), see Form 5, Inspected as per Form 5, recorded and tagged.", "h": 0, "cols": "WXYZ"}, {"row": 31, "t": "Safety Relief Valves", "h": 1, "cols": ""}, {"row": 32, "t": "HRV's - Thermal expansion relief installed in correct location (between two closed valves on a TC331 tank) 5.2.4.10.1.  Located to prevent discharge from impinging on the tank, piping, or personnel (TC331 tank 5.2.4.10.2)", "h": 0, "cols": "WXYZ"}, {"row": 33, "t": "PRV's - at least one or more located in vapor space of tank(5.2.4.1a,5.2.4.7), opening of device will not be prevented nor it's discharge restricted(5.2.2.8b)", "h": 0, "cols": "WXYZ"}, {"row": 34, "t": "Off-truck emergency shutdown system tested(7.2.1.6)", "h": 0, "cols": "WXYZ"}]};
 function f2def(v){v=v||S.f2v;return (v&&v.tdu)?TDU_F2:((S.data&&S.data.form2)||SAMPLE.form2)}
@@ -2136,8 +2136,17 @@ function buildF2(list){
 /* 9al: Form 10 data plate pictures follow the report: after a report with Form 10 is marked as sent the app offers to send the pictures; the To send tile shows whether they went */
 function f10pending(rec){return !!rec&&formOn(rec,10)&&!(S.f10done||{})[rec.id]}
 function f10mark(v){if(!v||!v.id)return;S.f10done=S.f10done||{};S.f10done[v.id]=Date.now();lsSet('ebp_f10done',S.f10done)}
-function f10tag(rec){return formOn(rec,10)?(' - Form 10 pictures: '+((S.f10done||{})[rec.id]?'email opened':'not sent yet')):''}
+function f10tag(rec){return formOn(rec,10)?(' - Form 10 pictures: '+((S.f10with||{})[rec.id]?'in the report email':((S.f10done||{})[rec.id]?'email opened':'not sent yet'))):''}
 function f10ord(rec){var o=f10order(rec);return o?' Put all '+o.length+' pictures in that one email, in this order: '+o.map(esc).join(', ')+'.':''}
+/* 9ax: the Form 10 data plate pictures go in the SAME email as the report (the crew adds them with Mail's photo button before tapping Send) */
+function f10withMark(rec){f10mark(rec);S.f10with=S.f10with||{};S.f10with[rec.id]=1;lsSet('ebp_f10with',S.f10with)}
+function f10mailLine(recs){
+  var rs=(recs||[]).filter(function(r){return r&&f10pending(r)});if(!rs.length)return '';
+  return rs.map(function(r){var sl=f10slots(r),o=f10order(r);
+    return 'Form 10 pictures: before you tap Send, tap the photo button in this email and add '+(sl.length>1?'all '+sl.length+' data plate pictures, in this order: '+o.join(', '):'the data plate picture')+'.'}).join(' ')}
+function f10boxHtml(recs,fromChain){
+  var rs=(recs||[]).filter(function(r){return r&&f10pending(r)});if(!rs.length)return '';
+  return '<div style="margin:.7rem 0 0;padding:.6rem .75rem;border:1.5px solid var(--warn,#d9a400);border-radius:.7rem;background:var(--surface2)"><b>Form 10: data plate pictures</b><div style="margin-top:.25rem;font-size:.9rem;line-height:1.4">'+rs.map(function(r){var sl=f10slots(r),o=f10order(r);return (rs.length>1?'<b>'+chName(r)+'</b>: When':'When')+' your mail app opens, tap its <b>photo</b> (or paperclip) button and add '+(sl.length>1?'<b>all '+sl.length+' pictures</b> to this same email, in this order: '+o.map(function(x){return '<b>'+esc(x)+'</b>'}).join(', '):'the data plate picture')+'. Then tap Send.'}).join('<br>')+'</div>'+(fromChain?'':'<label style="display:flex;gap:.5rem;align-items:flex-start;margin-top:.5rem;font-size:.9rem"><input type="checkbox" id="f10With" style="margin-top:.2rem;min-width:1.2rem;min-height:1.2rem"><span>I added the data plate pictures to the email I sent</span></label><div style="margin-top:.25rem;color:var(--muted);font-size:.82rem">Leave it unticked if you used Share file (PDF) or left the pictures out. The app will then ask about sending them separately.</div>')+'</div>'}
 function f10pendHtml(ids){
   var rs=ids.map(chRec).filter(f10pending);if(!rs.length)return '';
   return '<h2 style="margin:.8rem 0 .2rem;font-size:1rem">Data plate pictures still to send</h2>'+rs.map(function(r){return '<div class="row" style="margin-top:.35rem"><span style="flex:1;align-self:center"><b>'+chName(r)+'</b></span><button class="btn sm primary" data-f10pg="'+esc(r.id)+'" type="button">Send pictures</button></div>'}).join('');
@@ -2146,7 +2155,7 @@ function f10pendBind(w){Array.prototype.forEach.call(w.querySelectorAll('[data-f
 function f10AskAfter(ids){
   var rs=(ids||[]).map(chRec).filter(f10pending);if(!rs.length)return;
   var r=rs[0];
-  openSheet('<h2>Send the data plate pictures now?</h2><p style="margin:0;color:var(--muted);font-size:.92rem">Form 10 is in the report for <b>'+chName(r)+'</b>. The pictures go to the office in one more email.'+f10ord(r)+'</p><div class="row"><button class="btn primary" id="f10pnGo" type="button">Yes, send pictures</button><button class="btn" id="f10pnLater" type="button">Later</button></div><p style="margin:.4rem 0 0;color:var(--muted);font-size:.85rem">Later: the report stays on the To send list marked "Form 10 pictures: not sent yet".</p>',function(){
+  openSheet('<h2>Send the data plate pictures now?</h2><p style="margin:0;color:var(--muted);font-size:.92rem">Form 10 is in the report for <b>'+chName(r)+'</b>, but the data plate pictures were not ticked as added to that email. Send them now in one more email?'+f10ord(r)+'</p><div class="row"><button class="btn primary" id="f10pnGo" type="button">Yes, send pictures</button><button class="btn" id="f10pnLater" type="button">Later</button></div><p style="margin:.4rem 0 0;color:var(--muted);font-size:.85rem">Later: the report stays on the To send list marked "Form 10 pictures: not sent yet".</p>',function(){
     $('#f10pnLater').onclick=closeSheet;
     $('#f10pnGo').onclick=function(){closeSheet();f10open(r)};
   });
@@ -2163,7 +2172,7 @@ function chRec(id){return S.f2.filter(function(r){return r.id===id})[0]}
 function chName(r){return esc((r&&r.v&&r.v.D)||'(no number)')+(r&&r.v&&r.v.A?' - '+esc(r.v.A):'')}
 function chAllOpen(){
   var u=f2unsent();if(!u.length)return;
-  openSheet('<h2>Send all '+u.length+' reports</h2><p style="margin:0;color:var(--muted);font-size:.92rem">Each report goes in its own email. Mail opens with the first one; tap Send in Mail, come back here, and tap Yes to open the next one.</p><label for="chMail" style="display:block;margin-top:.7rem;font-weight:600;font-size:.9rem">Office email address</label><input id="chMail" type="email" inputmode="email" autocomplete="email" style="width:100%;box-sizing:border-box"><div class="row"><button class="btn primary" id="chGo" type="button">Open report 1 of '+u.length+'</button><button class="btn" id="chNo" type="button">Cancel</button></div>',function(){
+  openSheet('<h2>Send all '+u.length+' reports</h2><p style="margin:0;color:var(--muted);font-size:.92rem">Each report goes in its own email. Mail opens with the first one; tap Send in Mail, come back here, and tap Yes to open the next one.</p>'+(u.some(f10pending)?'<p style="margin:.5rem 0 0;font-size:.92rem"><b>Reports with Form 10:</b> when Mail opens, add the data plate pictures to that same email with the photo button before you tap Send. The email shows the picture order.</p>':'')+'<label for="chMail" style="display:block;margin-top:.7rem;font-weight:600;font-size:.9rem">Office email address</label><input id="chMail" type="email" inputmode="email" autocomplete="email" style="width:100%;box-sizing:border-box"><div class="row"><button class="btn primary" id="chGo" type="button">Open report 1 of '+u.length+'</button><button class="btn" id="chNo" type="button">Cancel</button></div>',function(){
     $('#chMail').value=lsGet('ebp_office','');
     $('#chNo').onclick=closeSheet;
     $('#chGo').onclick=function(){
@@ -2175,7 +2184,7 @@ function chAllOpen(){
   });
 }
 function chOpenMail(text,name,sj,ids){
-  var url='mailto:'+encodeURIComponent(CH.addr).replace(/%40/g,'@')+'?subject='+encodeURIComponent(sj)+'&body='+encodeURIComponent('eB620 phone app: data for the office import. Nothing to read or change here, just send it.\r\n\r\n'+text);
+  var url='mailto:'+encodeURIComponent(CH.addr).replace(/%40/g,'@')+'?subject='+encodeURIComponent(sj)+'&body='+encodeURIComponent((f10mailLine(ids.map(chRec))?'eB620 phone app: data for the office import. '+f10mailLine(ids.map(chRec)):'eB620 phone app: data for the office import. Nothing to read or change here, just send it.')+'\r\n\r\n'+text);
   CH.cur=ids;CH.wait=true;CH.t=Date.now();chSave();closeSheet();
   toast('Mail is opening report '+(CH.i+1)+' of '+CH.ids.length+'. Send it, then come back here.');
   try{window.location.href=url}catch(e){toast('Could not open the mail app.')}
@@ -2205,9 +2214,9 @@ function chResume(){
   if(CH.t&&Date.now()-CH.t<2500)return;
   var w=$('#sheetWrap');if(w&&!w.hidden&&w.querySelector('#chYes'))return;
   var r=chRec((CH.cur||[])[0]),last=CH.i>=CH.ids.length-1;
-  openSheet('<h2>Did report '+(CH.i+1)+' of '+CH.ids.length+' go out?</h2><p style="margin:0 0 .4rem"><b>'+chName(r)+'</b></p><p style="margin:0;color:var(--muted);font-size:.92rem">Tap Yes only if you tapped Send in Mail.</p><div class="row"><button class="btn primary" id="chYes" type="button">'+(last?'Yes, that was the last one':'Yes, open the next one')+'</button></div><div class="row"><button class="btn" id="chAgain" type="button">No, open it again</button><button class="btn" id="chStop2" type="button">Stop here</button></div>',function(){
+  openSheet('<h2>Did report '+(CH.i+1)+' of '+CH.ids.length+' go out?</h2><p style="margin:0 0 .4rem"><b>'+chName(r)+'</b></p><p style="margin:0;color:var(--muted);font-size:.92rem">Tap Yes only if you tapped Send in Mail.</p>'+(f10pending(r)?'<label style="display:flex;gap:.5rem;align-items:flex-start;margin-top:.5rem;font-size:.9rem"><input type="checkbox" id="f10WithCh" style="margin-top:.2rem;min-width:1.2rem;min-height:1.2rem"><span>I added the data plate pictures to that email</span></label>':'')+'<div class="row"><button class="btn primary" id="chYes" type="button">'+(last?'Yes, that was the last one':'Yes, open the next one')+'</button></div><div class="row"><button class="btn" id="chAgain" type="button">No, open it again</button><button class="btn" id="chStop2" type="button">Stop here</button></div>',function(){
     $('#chYes').onclick=function(){
-      (CH.cur||[]).forEach(function(id){var q=chRec(id);if(q)q.sent=Date.now()});lsSet('ebp_f2',S.f2);
+      var wp=!!($('#f10WithCh')&&$('#f10WithCh').checked);(CH.cur||[]).forEach(function(id){var q=chRec(id);if(q){q.sent=Date.now();if(wp&&f10pending(q))f10withMark(q)}});lsSet('ebp_f2',S.f2);
       CH.done++;CH.i++;CH.wait=false;CH.cur=null;chSave();closeSheet();render();chStep();
     };
     $('#chAgain').onclick=function(){CH.wait=false;chSave();closeSheet();chStep()};
@@ -2243,7 +2252,8 @@ function sendF2(id,ok,chain){
   var text=buildF2(list),name='eB620_form2_'+String(list[0].v.D||'tank').replace(/[^A-Za-z0-9_-]+/g,'')+'_'+stamp()+'.txt',ids=list.map(function(r){return r.id});
   var r0=list[0],sj='eB620 app - '+[r0.v.D||'tank',r0.v.A,new Date(r0.ts).toISOString().slice(0,10)].filter(Boolean).join(' - ');
   if(chain){chain(text,name,sj,ids);return}
-  shareFile(text,name,'eB620 Form 2',list.length+(list.length===1?' inspection':' inspections'),function(){S.f2.forEach(function(r){if(ids.indexOf(r.id)>=0)r.sent=Date.now()});lsSet('ebp_f2',S.f2);setTimeout(function(){f10AskAfter(ids)},400)},sj);
+  var f10p=list.filter(f10pending);
+  shareFile(text,name,'eB620 Form 2',list.length+(list.length===1?' inspection':' inspections'),function(withPics){S.f2.forEach(function(r){if(ids.indexOf(r.id)>=0)r.sent=Date.now()});lsSet('ebp_f2',S.f2);if(withPics)f10p.forEach(f10withMark);setTimeout(function(){f10AskAfter(ids)},400)},sj,f10p);
 }
 
 /* ---------- Form 3 (pressure test) ---------- */
@@ -3035,7 +3045,7 @@ function f10tiny(file,lab){
 }
 function f10open(v0){
   var v=v0||S.f2v,sl=f10slots(v),i;F10={files:{},extra:[]};
-  var h='<h2>Data plate pictures</h2><p style="margin:0;color:var(--muted);font-size:.92rem">The data plate pictures go to the office in their own email.</p><ol style="margin:.5rem 0 0;padding-left:1.2rem;color:var(--muted);font-size:.92rem;line-height:1.45"><li>Tap <b>Open email</b>. Your mail app opens with the office address and subject already filled in.</li><li>In that email, tap the mail app\'s <b>photo</b> (or paperclip) button and add the pictures. '+(f10order(v)?'Put <b>all '+sl.length+' pictures in this one email</b> (not one email per picture), in this order: '+f10order(v).map(function(x){return '<b>'+esc(x)+'</b>'}).join(', ')+'. ':'')+'Then send it.</li><li>You can send it before or after the report. In the workbook, click <b>Import from phone</b> once with both emails in your inbox and the pictures are put on Form 10.</li></ol>';
+  var h='<h2>Data plate pictures</h2><p style="margin:0;color:var(--muted);font-size:.92rem">Normally the data plate pictures go in the same email as the report. Use this only if you sent the report without them.</p><ol style="margin:.5rem 0 0;padding-left:1.2rem;color:var(--muted);font-size:.92rem;line-height:1.45"><li>Tap <b>Open email</b>. Your mail app opens with the office address and subject already filled in.</li><li>In that email, tap the mail app\'s <b>photo</b> (or paperclip) button and add the pictures. '+(f10order(v)?'Put <b>all '+sl.length+' pictures in this one email</b> (not one email per picture), in this order: '+f10order(v).map(function(x){return '<b>'+esc(x)+'</b>'}).join(', ')+'. ':'')+'Then send it.</li><li>You can send it before or after the report. In the workbook, click <b>Import from phone</b> once with both emails in your inbox and the pictures are put on Form 10.</li></ol>';
   h+='<label for="f10Addr" style="display:block;margin-top:.8rem;font-weight:600;font-size:.9rem">Office email address</label><input id="f10Addr" type="email" inputmode="email" autocomplete="email" autocapitalize="off" placeholder="office@yourcompany.com" style="width:100%;min-height:3rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface2);padding:0 .9rem">';
   h+='<div class="row" style="margin-top:.7rem"><button class="btn primary" id="f10Draft" type="button">Open email</button><button class="btn" id="f10Close" type="button">Close</button></div><p id="f10Msg" style="margin:.5rem 0 0;color:var(--muted);font-size:.85rem"></p>';
   h+='<details style="margin-top:1rem"><summary style="font-weight:600">Another way: choose the photos in this app</summary><p style="margin:.5rem 0 0;color:var(--muted);font-size:.85rem">Use this only if the photo button in your mail app does not work. The app shrinks each picture and puts it in the email as a block of letters and numbers (lines starting <b>eB620-pic</b>). That is normal: do not change it or delete any of it, just send the email. The office import turns it back into the picture.</p>';
