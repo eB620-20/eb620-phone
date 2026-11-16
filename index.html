@@ -220,7 +220,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 9ax (the Form 10 data plate pictures now go in the same email as the report: the Send screen and the email itself tell you to add them with the photo button, in tank order. Next tank / Next form buttons as in 9aw.';
+var VERSION='prototype 9ay (Form 20 SPEC statements now have a short help text: what a SPEC tank is, and the build date for TC331 / TC51. The Form 10 picture note says to add the picture anywhere in the report email, below the text is safest. Pictures go in the report email as in 9ax.';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -1334,12 +1334,17 @@ function f20spTanks(v){if(!v)return [];var o=[];
   if(v.tdu){duTanks(v).forEach(function(t,k){if(t.bg==='TC331'||t.bg==='TC51')o.push({k:k,def:t.bg,nm:t.nm,sn:t.sn})});return o}
   f20unitTanks(v).forEach(function(t,k){var a=String(t.v.AJ||'').trim().toUpperCase();if(a==='TC331'||a==='TC51')o.push({k:k,def:a})});return o}
 function f20spVal(v,k,def){var s=(v.f20&&v.f20.sp&&v.f20.sp[k])||{};return {sp:s.sp!=null?s.sp:def,st:s.st||'',mf:s.mf||'',rp:s.rp||''}}
+/* 9ay: helper wording (the notes on the workbook's Form 1 Tank spec ticks: nurse TC331 built after July 1, 1996; nurse TC51 and DU TC331 / TC51 after July 1, 1998) */
+function f20spHelp(v,sp){var t=String(sp||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(t==='TC331')return 'TC331 is a SPEC tank built after July 1, '+(v.tdu?'1998':'1996')+'.';
+  if(t==='TC51')return 'TC51 is a SPEC tank built after July 1, 1998.';
+  return ''}
 function f20spUI(v){
   var L=f20spTanks(v);if(!L.length)return '';
-  var h='<p class="count" style="margin:.8rem 0 .3rem"><b>SPEC statements on Form 20</b> - '+(f20ntk(v)>1?'answer for each tank that is a SPEC tank (TC331 or TC51)':'this tank is a SPEC tank ('+esc(L[0].def)+')')+'</p>',miss=false;
+  var h='<p class="count" style="margin:.8rem 0 .3rem"><b>SPEC statements on Form 20</b> - '+(f20ntk(v)>1?'answer for each tank that is a SPEC tank (TC331 or TC51)':'this tank is a SPEC tank ('+esc(L[0].def)+')')+'</p><p class="count" style="margin:0 0 .4rem;font-size:.85rem;color:var(--muted)">These are the four SPEC statements printed on Form 20. They are for SPEC tanks only (TC331 or TC51). A tank that is not SPEC is not asked; the office form shows N/A for it.'+(f20ntk(v)>1?'':' '+esc(f20spHelp(v,L[0].def)))+'</p>',miss=false;
   L.forEach(function(x){
     var s=f20spVal(v,x.k,x.def);
-    if(f20ntk(v)>1)h+=(v.tdu?'<p class="count" style="margin:.1rem 0 .5rem"><b>'+esc(x.nm)+'</b> - S/N '+esc(x.sn)+'</p>':tankTag(v,x.k));
+    if(f20ntk(v)>1)h+=(v.tdu?'<p class="count" style="margin:.1rem 0 .5rem"><b>'+esc(x.nm)+'</b> - S/N '+esc(x.sn)+'</p>':tankTag(v,x.k))+'<p class="count" style="margin:0 0 .3rem;font-size:.85rem;color:var(--muted)">'+esc(f20spHelp(v,x.def))+'</p>';
     F20SP_Q.forEach(function(q,j){
       var cur=s[q[0]];if(!cur)miss=true;
       h+='<p class="count" style="margin:.3rem 0 .15rem">'+esc(q[1])+'</p><div class="field" style="margin:0 0 .3rem"><select data-f20sp="'+x.k+':'+q[0]+'"><option value="">Choose...</option>'+q[2].map(function(o){return '<option value="'+esc(o)+'"'+(o===cur?' selected':'')+'>'+esc(o)+'</option>'}).join('')+'</select></div>'});
@@ -2143,10 +2148,10 @@ function f10withMark(rec){f10mark(rec);S.f10with=S.f10with||{};S.f10with[rec.id]
 function f10mailLine(recs){
   var rs=(recs||[]).filter(function(r){return r&&f10pending(r)});if(!rs.length)return '';
   return rs.map(function(r){var sl=f10slots(r),o=f10order(r);
-    return 'Form 10 pictures: before you tap Send, tap the photo button in this email and add '+(sl.length>1?'all '+sl.length+' data plate pictures, in this order: '+o.join(', '):'the data plate picture')+'.'}).join(' ')}
+    return 'Form 10 pictures: before you tap Send, tap the photo button in this email and add '+(sl.length>1?'all '+sl.length+' data plate pictures, in this order: '+o.join(', '):'the data plate picture')+'. Anywhere in the email works; below the report text is safest.'}).join(' ')}
 function f10boxHtml(recs,fromChain){
   var rs=(recs||[]).filter(function(r){return r&&f10pending(r)});if(!rs.length)return '';
-  return '<div style="margin:.7rem 0 0;padding:.6rem .75rem;border:1.5px solid var(--warn,#d9a400);border-radius:.7rem;background:var(--surface2)"><b>Form 10: data plate pictures</b><div style="margin-top:.25rem;font-size:.9rem;line-height:1.4">'+rs.map(function(r){var sl=f10slots(r),o=f10order(r);return (rs.length>1?'<b>'+chName(r)+'</b>: When':'When')+' your mail app opens, tap its <b>photo</b> (or paperclip) button and add '+(sl.length>1?'<b>all '+sl.length+' pictures</b> to this same email, in this order: '+o.map(function(x){return '<b>'+esc(x)+'</b>'}).join(', '):'the data plate picture')+'. Then tap Send.'}).join('<br>')+'</div>'+(fromChain?'':'<label style="display:flex;gap:.5rem;align-items:flex-start;margin-top:.5rem;font-size:.9rem"><input type="checkbox" id="f10With" style="margin-top:.2rem;min-width:1.2rem;min-height:1.2rem"><span>I added the data plate pictures to the email I sent</span></label><div style="margin-top:.25rem;color:var(--muted);font-size:.82rem">Leave it unticked if you used Share file (PDF) or left the pictures out. The app will then ask about sending them separately.</div>')+'</div>'}
+  return '<div style="margin:.7rem 0 0;padding:.6rem .75rem;border:1.5px solid var(--warn,#d9a400);border-radius:.7rem;background:var(--surface2)"><b>Form 10: data plate pictures</b><div style="margin-top:.25rem;font-size:.9rem;line-height:1.4">'+rs.map(function(r){var sl=f10slots(r),o=f10order(r);return (rs.length>1?'<b>'+chName(r)+'</b>: When':'When')+' your mail app opens, tap its <b>photo</b> (or paperclip) button and add '+(sl.length>1?'<b>all '+sl.length+' pictures</b> to this same email, in this order: '+o.map(function(x){return '<b>'+esc(x)+'</b>'}).join(', '):'the data plate picture')+'. Anywhere in the email works; below the report text is safest. Then tap Send.'}).join('<br>')+'</div>'+(fromChain?'':'<label style="display:flex;gap:.5rem;align-items:flex-start;margin-top:.5rem;font-size:.9rem"><input type="checkbox" id="f10With" style="margin-top:.2rem;min-width:1.2rem;min-height:1.2rem"><span>I added the data plate pictures to the email I sent</span></label><div style="margin-top:.25rem;color:var(--muted);font-size:.82rem">Leave it unticked if you used Share file (PDF) or left the pictures out. The app will then ask about sending them separately.</div>')+'</div>'}
 function f10pendHtml(ids){
   var rs=ids.map(chRec).filter(f10pending);if(!rs.length)return '';
   return '<h2 style="margin:.8rem 0 .2rem;font-size:1rem">Data plate pictures still to send</h2>'+rs.map(function(r){return '<div class="row" style="margin-top:.35rem"><span style="flex:1;align-self:center"><b>'+chName(r)+'</b></span><button class="btn sm primary" data-f10pg="'+esc(r.id)+'" type="button">Send pictures</button></div>'}).join('');
