@@ -223,7 +223,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 9az (Unit 384 fix: a report now finds its tanks by location as well, so the two 384 twins are twins. Form 10 wording says the pictures go in the same email. Form 3: a relief rating, start or end pressure at or above 110% of the minimum test pressure sets the last line to No and Form 20 to Fail; amber warning between the maximum test pressure and 110%. The three tanks of a unit always show left, centre, right. The To send tile lists every ticked form, and Send asks when a ticked form is empty. SPEC date for TC331 is July 1, 1998.';
+var VERSION='prototype 9ba (To send is split in two: Ready to send, and Not finished. Send all and the number on the tab count only the ready reports. Tapping Send on an unfinished report asks: open the report, remove a form that is not needed, or send anyway.';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -478,10 +478,10 @@ function render(){
   var top=$('#top');
   var ts=S.data.made||'';
   top.innerHTML=tankIcon()+'<div class="grow"><h1>eB620 Tank Data</h1><p>'+(S.sample?'Example data - ':'')+S.data.tanks.length+' tanks'+(ts?' - data from '+esc(ts):'')+' - page '+((/prototype (\w+)/.exec(VERSION)||[])[1]||'')+'</p></div>';
-  var n=unsent().length+f2unsent().length+tduUnsent().length;
+  var n=unsent().length+f2ready().length+tduUnsent().length,nfin=f2unfin().length;
   var tabs=$('#tabs');tabs.hidden=false;
   tabs.innerHTML=[['tanks','Tanks',0],['send','To send',n],['data','Data',0]].map(function(t){
-    return '<button type="button" data-tab="'+t[0]+'"'+(S.tab===t[0]?' aria-current="page"':'')+'>'+t[1]+(t[2]?'<span class="n">'+t[2]+'</span>':'')+'</button>'}).join('');
+    return '<button type="button" data-tab="'+t[0]+'"'+(S.tab===t[0]?' aria-current="page"':'')+'>'+t[1]+(t[2]?'<span class="n">'+t[2]+'</span>':'')+(t[0]==='send'&&nfin?'<span class="n" style="background:var(--muted);margin-left:.2rem" title="Not finished">'+nfin+'</span>':'')+'</button>'}).join('');
   var fabT=S.kind==='tdu'&&(tduRows().length||tduFields().length);
   $('#fab').hidden=S.tab!=='tanks'||(fabT&&!tduFields().length);
   $('#fab').textContent=fabT?'+ New DU':'+ New tank';
@@ -2188,16 +2188,22 @@ function f2fstatHtml(rec){
     return ' - '+(x.full?esc(s):'<span style="color:var(--warn);font-weight:600">'+esc(s)+'</span>')}).join('')}
 /* the forms ticked in the report with NOTHING answered (Form 13 is left out: an empty Form 13 sends nothing) */
 function f2unfilled(rec){return f2fstat(rec).filter(function(x){return x.none&&x.n!==13})}
-function f2unfAsk(rec,uf,go){
-  var names=uf.map(function(x){return 'Form '+x.n+' ('+x.a+' of '+x.t+(x.u?' '+x.u:'')+')'}),txt=names.length>1?names.slice(0,-1).join(', ')+' and '+names[names.length-1]:names[0];
-  openSheet('<h2>'+(uf.length===1?'A form is':'Forms are')+' not filled in</h2><p style="margin:0;color:var(--muted)">'+esc(txt)+(uf.length===1?' is':' are')+' in this report but nothing has been answered. Open the report to finish '+(uf.length===1?'it':'them')+', or send anyway (for example if '+(uf.length===1?'it was ticked':'they were ticked')+' by mistake).</p><div class="row"><button class="btn primary" id="unfOpen" type="button">Open the report</button><button class="btn" id="unfGo" type="button">Send anyway</button></div>',function(){
+/* 9ba: a report is not finished when a ticked form is not completely answered (Form 13 is left out), or the data plate question / Form 20 is still open */
+function f2notFull(rec){return f2fstat(rec).filter(function(x){return !x.full&&x.n!==13})}
+function f2incomplete(rec){return !rec.plate||!f20done(rec)||f2notFull(rec).length>0}
+function f2ready(){return f2unsent().filter(function(r){return !f2incomplete(r)})}
+function f2unfin(){return f2unsent().filter(f2incomplete)}
+function f2unfAsk(rec,uf,go,again){
+  var names=uf.map(function(x){return 'Form '+x.n+(x.a===0?' (nothing answered)':' ('+x.a+' of '+x.t+(x.u?' '+x.u:'')+' answered)')}),txt=names.length>1?names.slice(0,-1).join(', ')+' and '+names[names.length-1]:names[0];
+  openSheet('<h2>'+(uf.length===1?'A form is':'Forms are')+' not finished</h2><p style="margin:0;color:var(--muted)">'+esc(txt)+(uf.length===1?' is':' are')+' in this report. You can go back and finish '+(uf.length===1?'it':'them')+', remove a form you do not need, or send anyway and let the office finish it.</p><div class="row"><button class="btn primary" id="unfOpen" type="button">Open the report</button></div>'+uf.map(function(x,i){return '<div class="row"><button class="btn" data-unfrm="'+i+'" type="button">Remove Form '+esc(String(x.n))+' from this report</button></div>'}).join('')+'<div class="row"><button class="btn" id="unfGo" type="button">Send anyway</button></div>',function(w){
     $('#unfOpen').onclick=function(){closeSheet();S.f2v=f2state(rec,rec.v,rec.serial,rec.id,rec.key);window.scrollTo(0,0);render()};
-    $('#unfGo').onclick=function(){closeSheet();go()}});
+    $('#unfGo').onclick=function(){closeSheet();go()};
+    Array.prototype.forEach.call(w.querySelectorAll('[data-unfrm]'),function(b){b.onclick=function(){var x=uf[+b.getAttribute('data-unfrm')];rec.forms=rec.forms||{};rec.forms[x.n]=0;lsSet('ebp_f2',S.f2);closeSheet();render();toast('Form '+x.n+' removed from this report.');if(again)setTimeout(again,250)}})});
 }
 function f2row(rec){
   var d=new Date(rec.ts),its=f2items(rec);
   return '<div class="ent"><div><div class="tag" style="font-family:var(--mono);font-weight:700">'+esc(rec.v.D||'(no number)')+' <span class="badge '+(rec.sent?'good':'warn')+'">Report'+(rec.sent?' - sent':'')+'</span></div><div class="count">'+esc([rec.v.A,rec.v.C].filter(Boolean).join(' - '))+' - '+(rec.tdu?'DU '+unitDef(rec.unit).t.toLowerCase()+' unit - data plate '+(rec.plate==='Y'?'yes':(rec.plate==='N'?'no, out of service':'not answered'))+f2fstatHtml(rec)+(rec.f20&&rec.f20.res?' - Form 20 '+(rec.f20.res==='P'?'pass':'fail'):' - Form 20 open')+f10tag(rec)+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})):unitDef(rec.unit).t.toLowerCase()+' unit - '+(formOn(rec,2)?'':'no Form 2')+f2fstatHtml(rec).replace(/^ - /,formOn(rec,2)?'':' - ')+(rec.f20&&rec.f20.res?' - Form 20 '+(rec.f20.res==='P'?'pass':'fail'):' - Form 20 open')+f10tag(rec)+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})))+'</div></div><div class="row">'+
-    (rec.sent?'':'<button class="btn sm primary" data-f2send="'+esc(rec.id)+'" type="button">Send</button>')+(f10pending(rec)?'<button class="btn sm" data-f10go="'+esc(rec.id)+'" type="button">Pictures</button>':'')+'<button class="btn sm" data-f2edit="'+esc(rec.id)+'" type="button">Open</button>'+(rec.sent?'<button class="btn sm" data-f2unsend="'+esc(rec.id)+'" type="button">Send again</button>':'')+'<button class="btn sm danger" data-f2del="'+esc(rec.id)+'" type="button">Delete</button></div></div>';
+    (rec.sent?'':'<button class="btn sm'+(f2incomplete(rec)?'':' primary')+'" data-f2send="'+esc(rec.id)+'" type="button">Send</button>')+(f10pending(rec)?'<button class="btn sm" data-f10go="'+esc(rec.id)+'" type="button">Pictures</button>':'')+'<button class="btn sm'+(!rec.sent&&f2incomplete(rec)?' primary':'')+'" data-f2edit="'+esc(rec.id)+'" type="button">Open</button>'+(rec.sent?'<button class="btn sm" data-f2unsend="'+esc(rec.id)+'" type="button">Send again</button>':'')+'<button class="btn sm danger" data-f2del="'+esc(rec.id)+'" type="button">Delete</button></div></div>';
 }
 /* ---------- 9aa: Send all reports, one email after the other ---------- */
 var CH=lsGet('ebp_chain',null);
@@ -2205,7 +2211,7 @@ function chSave(){lsSet('ebp_chain',CH)}
 function chRec(id){return S.f2.filter(function(r){return r.id===id})[0]}
 function chName(r){return esc((r&&r.v&&r.v.D)||'(no number)')+(r&&r.v&&r.v.A?' - '+esc(r.v.A):'')}
 function chAllOpen(){
-  var u=f2unsent();if(!u.length)return;
+  var u=f2ready();if(!u.length)return;
   openSheet('<h2>Send all '+u.length+' reports</h2><p style="margin:0;color:var(--muted);font-size:.92rem">Each report goes in its own email. Mail opens with the first one; tap Send in Mail, come back here, and tap Yes to open the next one.</p>'+(u.some(f10pending)?'<p style="margin:.5rem 0 0;font-size:.92rem"><b>Reports with Form 10:</b> when Mail opens, add the data plate pictures to that same email with the photo button before you tap Send. The email shows the picture order.</p>':'')+'<label for="chMail" style="display:block;margin-top:.7rem;font-weight:600;font-size:.9rem">Office email address</label><input id="chMail" type="email" inputmode="email" autocomplete="email" style="width:100%;box-sizing:border-box"><div class="row"><button class="btn primary" id="chGo" type="button">Open report 1 of '+u.length+'</button><button class="btn" id="chNo" type="button">Cancel</button></div>',function(){
     $('#chMail').value=lsGet('ebp_office','');
     $('#chNo').onclick=closeSheet;
@@ -2260,10 +2266,11 @@ function chResume(){
 document.addEventListener('visibilitychange',function(){if(!document.hidden)chResume()});
 window.addEventListener('pageshow',function(){chResume()});
 function f2sendPanel(){
-  var u=f2unsent(),s=S.f2.filter(function(r){return r.sent});
+  var u=f2ready(),nf=f2unfin(),s=S.f2.filter(function(r){return r.sent});
   if(!S.f2.length)return '';
-  var h='<div class="panel"><h2>Inspection reports</h2><p>'+(u.length?u.length+(u.length===1?' report is':' reports are')+' waiting to send. Tap Send on each one'+(u.length>1?', or Send all reports to go through them one after another':'')+'; every report goes in its own email and the office imports them one at a time.':'Nothing waiting to send.')+'</p>'+(u.length>1?'<button class="btn primary block" id="f2SendAll" type="button">Send all '+u.length+' reports</button>':'')+'</div>';
-  h+=f2unsent().map(f2row).join('');
+  var h='<div class="panel"><h2>Inspection reports</h2><p>'+(u.length?u.length+(u.length===1?' report is':' reports are')+' ready to send. Tap Send on each one'+(u.length>1?', or Send all reports to go through them one after another':'')+'; every report goes in its own email and the office imports them one at a time.':'No report is ready to send.')+'</p>'+(u.length>1?'<button class="btn primary block" id="f2SendAll" type="button">Send all '+u.length+' reports</button>':'')+'</div>';
+  h+=u.map(f2row).join('');
+  if(nf.length)h+='<div class="panel"><h2>Not finished ('+nf.length+')</h2><p>These reports have a form that is not completely filled in (shown in colour). Open a report to finish it. If you send one as it is, the app asks first; the office can finish or remove the form.</p></div>'+nf.map(f2row).join('');
   if(s.length)h+='<h2 style="margin:.6rem 0 0;font-size:.95rem;color:var(--muted)">Reports already sent</h2>'+s.map(f2row).join('');
   return h;
 }
@@ -2282,7 +2289,7 @@ function sendF2(id,ok,chain,uk){
   else{var nc=0;list.forEach(function(r){nc=Math.max(nc,f2maxRefs(r))});
   if(nc>f2def(list[0]).comments.length){toast('A Form 2 has more comments than the form has lines. Shorten them first.');return}}
   if(!ok&&f3dueList(list[0]).length){f3dueAsk(list[0],function(){sendF2(id,ok,chain,uk)},function(){f3dueAdd(id)});return}
-  if(!uk){var uf=f2unfilled(list[0]);if(uf.length){f2unfAsk(list[0],uf,function(){sendF2(id,ok,chain,true)});return}}
+  if(!uk){var uf=f2notFull(list[0]);if(uf.length){f2unfAsk(list[0],uf,function(){sendF2(id,ok,chain,true)},function(){sendF2(id,ok,chain,false)});return}}
   if(!ok){var nn=0;list.forEach(function(r){nn+=noCmAll(r)});if(nn){f2noCmAsk(list[0],'send',function(){sendF2(id,true,chain,true)},nn);return}}
   var text=buildF2(list),name='eB620_form2_'+String(list[0].v.D||'tank').replace(/[^A-Za-z0-9_-]+/g,'')+'_'+stamp()+'.txt',ids=list.map(function(r){return r.id});
   var r0=list[0],sj='eB620 app - '+[r0.v.D||'tank',r0.v.A,new Date(r0.ts).toISOString().slice(0,10)].filter(Boolean).join(' - ');
