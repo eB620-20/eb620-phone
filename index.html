@@ -91,7 +91,7 @@ main{padding-top:1rem;display:flex;flex-direction:column;gap:.9rem;min-width:0}
 .tabs button{flex:1;min-height:3.4rem;border:0;background:transparent;font-weight:600;color:var(--muted);border-top:3px solid transparent}
 .tabs button{white-space:nowrap}.tabs button:nth-child(2){flex:1.7}
 .tabs button[aria-current="page"]{color:var(--accent);border-top-color:var(--accent)}
-.tabs .n{display:inline-block;min-width:1.4rem;padding:0 .35rem;margin-left:.3rem;border-radius:1rem;background:var(--warn);color:var(--surface);font-size:.78rem;line-height:1.4rem}
+.tabs .n{display:inline-block;min-width:1.4rem;padding:0 .35rem;margin-left:.3rem;border-radius:1rem;background:var(--good);color:var(--surface);font-size:.78rem;line-height:1.4rem}
 .fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(4.4rem + env(safe-area-inset-bottom,0px));z-index:19;min-height:3.4rem;border-radius:2rem;border:0;background:var(--accent);color:var(--accent-ink);font-weight:700;padding:0 1.4rem;box-shadow:var(--shadow)}
 .steps{position:sticky;top:calc(env(safe-area-inset-top,0px) + 3.9rem);z-index:15;display:flex;gap:.35rem;background:var(--bg);padding:.6rem 0;margin-top:-.2rem}
 .steps button{flex:1;min-height:2.7rem;border-radius:.6rem;border:1.5px solid var(--line);background:var(--surface);font-weight:600;font-size:.88rem;position:relative}
@@ -224,7 +224,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 9bb (To send is split in two: Ready to send, and Not finished. Send all and the number on the tab count only the ready reports. Tapping Send on an unfinished report asks: open the report, remove a form that is not needed, or send anyway.';
+var VERSION='prototype 9bc (To send is split in two: Ready to send, and Not finished. Send all and the number on the tab count only the ready reports. Tapping Send on an unfinished report asks: open the report, remove a form that is not needed, or send anyway.';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -482,7 +482,7 @@ function render(){
   var n=unsent().length+f2ready().length+tduUnsent().length,nfin=f2unfin().length;
   var tabs=$('#tabs');tabs.hidden=false;
   tabs.innerHTML=[['tanks','Tanks',0],['send','To send',n],['data','Data',0]].map(function(t){
-    return '<button type="button" data-tab="'+t[0]+'"'+(S.tab===t[0]?' aria-current="page"':'')+'>'+t[1]+(t[2]?'<span class="n">'+t[2]+'</span>':'')+(t[0]==='send'&&nfin?'<span class="n" style="background:var(--muted);margin-left:.2rem" title="Not finished">'+nfin+'</span>':'')+'</button>'}).join('');
+    return '<button type="button" data-tab="'+t[0]+'"'+(S.tab===t[0]?' aria-current="page"':'')+'>'+t[1]+(t[2]?'<span class="n">'+t[2]+'</span>':'')+(t[0]==='send'&&nfin?'<span class="n" style="background:var(--warn);margin-left:.2rem" title="Not finished">'+nfin+'</span>':'')+'</button>'}).join('');
   var fabT=S.kind==='tdu'&&(tduRows().length||tduFields().length);
   $('#fab').hidden=S.tab!=='tanks'||(fabT&&!tduFields().length);
   $('#fab').textContent=fabT?'+ New DU':'+ New tank';
