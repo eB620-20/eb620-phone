@@ -114,6 +114,9 @@ input[data-f3v]:placeholder-shown,input[data-f4v]:placeholder-shown,input[data-f
 .field .note{font-size:.84rem;color:var(--warn)}
 .field.warn input{background:#ffd0d0;border-color:#d11a1a;color:#13242c}
 .field.warn .note{color:var(--bad);font-weight:600}
+.field.amber input{background:#fff0c2;border-color:#d99a00;color:#13242c}
+.field.amber .note{color:#8a5a00;font-weight:600}
+.f3lock{margin:.4rem 0 0;padding:.5rem .65rem;border:1.5px solid var(--bad);border-radius:.6rem;background:var(--bad-soft);color:var(--bad);font-weight:600;font-size:.88rem}
 .field .hint{font-size:.78rem;color:var(--muted)}
 .f4drop{margin-top:.45rem;padding:.5rem .6rem;border:1.5px solid var(--warn);border-radius:8px;font-size:.88rem;color:var(--warn)}
 .f4drop button{margin-top:.4rem}
@@ -220,7 +223,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 9ay (Form 20 SPEC statements now have a short help text: what a SPEC tank is, and the build date for TC331 / TC51. The Form 10 picture note says to add the picture anywhere in the report email, below the text is safest. Pictures go in the report email as in 9ax.';
+var VERSION='prototype 9az (Unit 384 fix: a report now finds its tanks by location as well, so the two 384 twins are twins. Form 10 wording says the pictures go in the same email. Form 3: a relief rating, start or end pressure at or above 110% of the minimum test pressure sets the last line to No and Form 20 to Fail; amber warning between the maximum test pressure and 110%. The three tanks of a unit always show left, centre, right. The To send tile lists every ticked form, and Send asks when a ticked form is empty. SPEC date for TC331 is July 1, 1998.';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -580,8 +583,9 @@ function unitTile(g){
   var n=g.all.length,v0=g.show[0].v;
   if(n===1)return tankRow(g.show[0]);
   var typ=n===2?'Twin':(n===3?'Triple':n+' tanks'),pos=n===2?['L','R']:(n===3?['L','C','R']:[]);
-  var rows=g.show.map(function(t){
-    var i=g.all.map(tid).indexOf(tid(t)),v=t.v,info=[v.AD,v.AF,v.AE].filter(Boolean).join(' \u00b7 ');
+  var ids=g.all.map(tid),show=g.show.slice().sort(function(x,y){return ids.indexOf(tid(x))-ids.indexOf(tid(y))});   /* 9az: rows always in tank order (left, centre, right), not in the sorted-list order */
+  var rows=show.map(function(t){
+    var i=ids.indexOf(tid(t)),v=t.v,info=[v.AD,v.AF,v.AE].filter(Boolean).join(' \u00b7 ');
     var dd=dueAny(t,false);
     return '<button type="button" class="trow'+dueCls(dd)+'" data-open="'+tankOpenKey(t)+'"><span class="pos">'+esc(pos[i]||String(i+1))+'</span><span class="tinfo"><span>'+esc(info||'-')+'</span>'+(v.AB?'<span class="sn">S/N '+esc(v.AB)+'</span>':'')+dueNote(t,false,dd)+'</span>'+(tankBadge(t,true)||'<span class="chev">&#8250;</span>')+'</button>';
   }).join('');
@@ -1267,8 +1271,8 @@ var TUNITS=[{k:'ds',t:'Single',names:['']},{k:'dd',t:'Double',names:['Left','Rig
 var FORMS_ALL=[{n:2,t:'Form 2 - Visual inspection (external)',def:1},{n:3,t:'Form 3 - Pressure test (3 or 5 yr)',s:'Pressure test'},{n:4,t:'Form 4 - Leakage (K)',def:1},{n:5,t:'Form 5 - Hose test and inspection',s:'Hose test'},{n:8,t:'Form 8 - Thickness',s:'Thickness'},{n:10,t:'Form 10 - Data plate pictures',s:'Data plate pictures'},{n:13,t:'Form 13 - Additional comments',s:'Additional comments'},{n:'2a',t:'Form 2a - Discharge control devices and rear end protection',def:1,du:1},{n:6,t:'Form 6 - Metered DU (on/off truck) EDCA test',s:'Metered EDCA',du:1},{n:7,t:'Form 7 - Non-metered DU (on/off truck) EDCA test',s:'Non-metered EDCA',du:1}];
 function formOn(v,n){var f=v.forms||{};if(n===1||n===20)return true;if(n===2||n===4||n==='2a')return f[n]!==0;return !!f[n]}
 function unitTanks(v){
-  var c=norm(v.C),d=norm(v.D);
-  return S.data.tanks.filter(function(t){return norm(t.v.C)===c&&norm(t.v.D)===d}).sort(function(a,b){return a.row-b.row});
+  var a=norm(v.A),c=norm(v.C),d=norm(v.D);   /* location too: the same unit number can be at two locations (9az, unit 384) */
+  return S.data.tanks.filter(function(t){return norm(t.v.A)===a&&norm(t.v.C)===c&&norm(t.v.D)===d}).sort(function(a,b){return a.row-b.row});
 }
 function unitGuess(v){var n=unitTanks(v).length;return n>=3?'3':(n===2?'T':'S')}
 function unitDef(k){return UNITS.concat(TUNITS).filter(function(u){return u.k===k})[0]||UNITS[0]}
@@ -1334,9 +1338,9 @@ function f20spTanks(v){if(!v)return [];var o=[];
   if(v.tdu){duTanks(v).forEach(function(t,k){if(t.bg==='TC331'||t.bg==='TC51')o.push({k:k,def:t.bg,nm:t.nm,sn:t.sn})});return o}
   f20unitTanks(v).forEach(function(t,k){var a=String(t.v.AJ||'').trim().toUpperCase();if(a==='TC331'||a==='TC51')o.push({k:k,def:a})});return o}
 function f20spVal(v,k,def){var s=(v.f20&&v.f20.sp&&v.f20.sp[k])||{};return {sp:s.sp!=null?s.sp:def,st:s.st||'',mf:s.mf||'',rp:s.rp||''}}
-/* 9ay: helper wording (the notes on the workbook's Form 1 Tank spec ticks: nurse TC331 built after July 1, 1996; nurse TC51 and DU TC331 / TC51 after July 1, 1998) */
+/* 9ay: helper wording (the notes on the workbook's Form 1 Tank spec ticks: all SPEC notes now say July 1, 1998 (9az)) */
 function f20spHelp(v,sp){var t=String(sp||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
-  if(t==='TC331')return 'TC331 is a SPEC tank built after July 1, '+(v.tdu?'1998':'1996')+'.';
+  if(t==='TC331')return 'TC331 is a SPEC tank built after July 1, 1998.';
   if(t==='TC51')return 'TC51 is a SPEC tank built after July 1, 1998.';
   return ''}
 function f20spUI(v){
@@ -1883,9 +1887,9 @@ function renderRepTdu(){
   h+='</div>';
   h+='<div class="panel"><h2 style="font-size:1.25rem;text-align:center">Form 1 - Tank Information</h2><div class="f2item"><p class="count" style="margin:.2rem 0 .4rem">Data plate: metal identification plate affixed and legible?</p><div class="chips"><button type="button" class="chip y'+(v.plate==='Y'?' on':'')+'" data-plate="Y">Yes</button><button type="button" class="chip n'+(v.plate==='N'?' on':'')+'" data-plate="N">No, out of service</button></div>'+(v.plate?'':'<p class="count" style="margin:.4rem 0 0;color:var(--bad)">Please choose Yes or No before sending.</p>')+'</div></div>';
   var on2=formOn(v,2),its2=f2items(v),n2=f2answered(v),nd2=0;for(var q2=1;q2<f2nt(v);q2++)nd2+=f2diffs(v,q2);
-  h+='<div class="panel"><h2 style="font-size:1.25rem;text-align:center">Forms in this report</h2><div class="f2item"><label class="check"><input type="checkbox" data-form="2"'+(on2?' checked':'')+'> Form 2 - Visual inspection (external)</label>'+(on2?'<p class="count" style="margin:.2rem 0 .5rem">'+n2+' of '+its2.length+' answered'+(f2nt(v)>1?(nd2?' - '+nd2+(nd2===1?' difference':' differences')+' on the other tanks':' - other tanks the same'):'')+'</p><button type="button" class="btn block'+(n2<its2.length?' primary':'')+'" id="repF2">'+(n2===0?'Start Form 2':(n2<its2.length?'Continue Form 2':'Edit Form 2'))+'</button>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="2a"'+(formOn(v,'2a')?' checked':'')+'> Form 2a - Discharge control devices and rear end protection</label>'+(formOn(v,'2a')?'<p class="count" style="margin:.2rem 0 .5rem">'+f2aAnswered(v)+' of '+f2aNeed(v).length+' answered</p><button type="button" class="btn block'+(f2aAnswered(v)<f2aNeed(v).length?' primary':'')+'" id="repF2a">'+(f2aAnswered(v)===0&&!f2aAny(v)?'Start Form 2a':(f2aAnswered(v)<f2aNeed(v).length?'Continue Form 2a':'Edit Form 2a'))+'</button>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="3"'+(formOn(v,3)?' checked':'')+'> Form 3 - Pressure test (3 or 5 yr)</label>'+(formOn(v,3)?duF3Block(v):'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="4"'+(formOn(v,4)?' checked':'')+'> Form 4 - Leakage (K)</label>'+(formOn(v,4)?duF4Block(v):'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="5"'+(formOn(v,5)?' checked':'')+'> Form 5 - Hose test and inspection</label>'+(formOn(v,5)?'<p class="count" style="margin:.2rem 0 .5rem">'+f5duAns(v)+' of '+f5duTot(v)+' hose'+(f5duTot(v)===1?'':'s')+' answered</p><button type="button" class="btn block'+(f5duAns(v)<f5duTot(v)?' primary':'')+'" id="repF5">'+(f5duAns(v)===0&&!f5any(v)?'Start Form 5':(f5duAns(v)<f5duTot(v)?'Continue Form 5':'Edit Form 5'))+'</button>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="6"'+(formOn(v,6)?' checked':'')+'> Form 6 - Metered DU (on/off truck) EDCA test</label>'+(formOn(v,6)?duF67Block(v,6):'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="7"'+(formOn(v,7)?' checked':'')+'> Form 7 - Non-metered DU (on/off truck) EDCA test</label>'+(formOn(v,7)?duF67Block(v,7):'<p class="count" style="margin:.2rem 0 0">Not in this report.'+(formOn(v,6)?' (Form 6 is ticked: a report has Form 6 or Form 7, not both.)':'')+'</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="8"'+(formOn(v,8)?' checked':'')+'> Form 8 - Thickness</label>'+(formOn(v,8)?duF8Block(v):'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="10"'+(formOn(v,10)?' checked':'')+'> Form 10 - Data plate pictures</label>'+(formOn(v,10)?'<p class="count" style="margin:.2rem 0 .5rem">The data plate pictures go in a separate email. After you send the report, the app will ask you to send the data plate pictures.</p>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="13"'+(formOn(v,13)?' checked':'')+'> Form 13 - Additional comments</label>'+(formOn(v,13)?'<p class="count" style="margin:.2rem 0 .5rem">'+(f13any(v)?esc(f13count(v)):'Nothing typed yet')+'</p><button type="button" class="btn block" id="repF13">'+(f13any(v)?'Edit Form 13':'Start Form 13')+'</button>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><p class="count" style="margin:.6rem 0 0">Any other DU form is not on the phone yet - the office fills it in. This report tells the office the unit type, the data plate answer and the forms above, so the import can open the right Form 1 sheets for this unit.</p></div>';
+  h+='<div class="panel"><h2 style="font-size:1.25rem;text-align:center">Forms in this report</h2><div class="f2item"><label class="check"><input type="checkbox" data-form="2"'+(on2?' checked':'')+'> Form 2 - Visual inspection (external)</label>'+(on2?'<p class="count" style="margin:.2rem 0 .5rem">'+n2+' of '+its2.length+' answered'+(f2nt(v)>1?(nd2?' - '+nd2+(nd2===1?' difference':' differences')+' on the other tanks':' - other tanks the same'):'')+'</p><button type="button" class="btn block'+(n2<its2.length?' primary':'')+'" id="repF2">'+(n2===0?'Start Form 2':(n2<its2.length?'Continue Form 2':'Edit Form 2'))+'</button>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="2a"'+(formOn(v,'2a')?' checked':'')+'> Form 2a - Discharge control devices and rear end protection</label>'+(formOn(v,'2a')?'<p class="count" style="margin:.2rem 0 .5rem">'+f2aAnswered(v)+' of '+f2aNeed(v).length+' answered</p><button type="button" class="btn block'+(f2aAnswered(v)<f2aNeed(v).length?' primary':'')+'" id="repF2a">'+(f2aAnswered(v)===0&&!f2aAny(v)?'Start Form 2a':(f2aAnswered(v)<f2aNeed(v).length?'Continue Form 2a':'Edit Form 2a'))+'</button>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="3"'+(formOn(v,3)?' checked':'')+'> Form 3 - Pressure test (3 or 5 yr)</label>'+(formOn(v,3)?duF3Block(v):'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="4"'+(formOn(v,4)?' checked':'')+'> Form 4 - Leakage (K)</label>'+(formOn(v,4)?duF4Block(v):'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="5"'+(formOn(v,5)?' checked':'')+'> Form 5 - Hose test and inspection</label>'+(formOn(v,5)?'<p class="count" style="margin:.2rem 0 .5rem">'+f5duAns(v)+' of '+f5duTot(v)+' hose'+(f5duTot(v)===1?'':'s')+' answered</p><button type="button" class="btn block'+(f5duAns(v)<f5duTot(v)?' primary':'')+'" id="repF5">'+(f5duAns(v)===0&&!f5any(v)?'Start Form 5':(f5duAns(v)<f5duTot(v)?'Continue Form 5':'Edit Form 5'))+'</button>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="6"'+(formOn(v,6)?' checked':'')+'> Form 6 - Metered DU (on/off truck) EDCA test</label>'+(formOn(v,6)?duF67Block(v,6):'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="7"'+(formOn(v,7)?' checked':'')+'> Form 7 - Non-metered DU (on/off truck) EDCA test</label>'+(formOn(v,7)?duF67Block(v,7):'<p class="count" style="margin:.2rem 0 0">Not in this report.'+(formOn(v,6)?' (Form 6 is ticked: a report has Form 6 or Form 7, not both.)':'')+'</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="8"'+(formOn(v,8)?' checked':'')+'> Form 8 - Thickness</label>'+(formOn(v,8)?duF8Block(v):'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="10"'+(formOn(v,10)?' checked':'')+'> Form 10 - Data plate pictures</label>'+(formOn(v,10)?'<p class="count" style="margin:.2rem 0 .5rem">The data plate pictures go in the same email as the report: before you tap Send, use the photo button in Mail to add them (twin or triple: in tank order, left tank first). Anywhere in the email works; below the report text is safest.</p>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><div class="f2item"><label class="check"><input type="checkbox" data-form="13"'+(formOn(v,13)?' checked':'')+'> Form 13 - Additional comments</label>'+(formOn(v,13)?'<p class="count" style="margin:.2rem 0 .5rem">'+(f13any(v)?esc(f13count(v)):'Nothing typed yet')+'</p><button type="button" class="btn block" id="repF13">'+(f13any(v)?'Edit Form 13':'Start Form 13')+'</button>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>')+'</div><p class="count" style="margin:.6rem 0 0">Any other DU form is not on the phone yet - the office fills it in. This report tells the office the unit type, the data plate answer and the forms above, so the import can open the right Form 1 sheets for this unit.</p></div>';
   h+='<div class="panel">'+f20Inline(v)+'</div>';
-  h+='<div class="panel"><h2>Send</h2><p>Sends the unit type, the data plate answer, the forms in the report (Form 2, Form 2a, Form 3, Form 4, Form 5, Form 6 or 7, Form 8, Form 13) and Form 20 to the office. Form 10 pictures go in their own email.</p><button type="button" class="btn primary block" id="repSend">Send report</button></div>';
+  h+='<div class="panel"><h2>Send</h2><p>Sends the unit type, the data plate answer, the forms in the report (Form 2, Form 2a, Form 3, Form 4, Form 5, Form 6 or 7, Form 8, Form 13) and Form 20 to the office. The Form 10 data plate pictures go in this same email: the app tells you when to add them.</p><button type="button" class="btn primary block" id="repSend">Send report</button></div>';
   $('#view').innerHTML=h;
 }
 function renderRep(){
@@ -1922,7 +1926,7 @@ function renderRep(){
       if(on){var n8=f8answered(v),t8=F8Q.length;row+='<p class="count" style="margin:.2rem 0 .5rem">'+n8+' of '+t8+' checklist questions answered'+(ud.names.length>1?(function(){var nd=0;for(var q=1;q<ud.names.length;q++)nd+=f8diffs(v,q);return nd?' - '+nd+(nd===1?' difference':' differences')+' on the other tank'+(ud.names.length>2?'s':''):''})():'')+'</p><button type="button" class="btn block'+(f8answered(v)<F8Q.length?' primary':'')+'" id="repF8">'+(n8===0&&!f8any(v)?'Start Form 8':(n8<t8?'Continue Form 8':'Edit Form 8'))+'</button>'}
       else row+='<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
     }else if(f.n===10){
-      if(on)row+='<p class="count" style="margin:.2rem 0 .5rem">The data plate pictures go in a separate email. After you send the report, the app will ask you to send the data plate pictures.</p>';
+      if(on)row+='<p class="count" style="margin:.2rem 0 .5rem">The data plate pictures go in the same email as the report: before you tap Send, use the photo button in Mail to add them (twin or triple: in tank order, left tank first). Anywhere in the email works; below the report text is safest.</p>';
       else row+='<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
     }else if(f.n===13){
       if(on){row+='<p class="count" style="margin:.2rem 0 .5rem">'+(f13any(v)?esc(f13count(v)):'Nothing typed yet')+'</p><button type="button" class="btn block" id="repF13">'+(f13any(v)?'Edit Form 13':'Start Form 13')+'</button>'}
@@ -1935,7 +1939,7 @@ function renderRep(){
   });
   h+=f20Inline(v);
   h+='</div>';
-  h+='<div class="panel"><h2>Send</h2><p>Sends this report to the office: unit, data plate, the forms in the report, Form 2, Form 3, Form 4, Form 5, Form 8, Form 13 and Form 20. Form 10 pictures go in their own email.</p><button type="button" class="btn primary block" id="repSend">Send report</button></div>';
+  h+='<div class="panel"><h2>Send</h2><p>Sends this report to the office: unit, data plate, the forms in the report, Form 2, Form 3, Form 4, Form 5, Form 8, Form 13 and Form 20. The Form 10 data plate pictures go in this same email: the app tells you when to add them.</p><button type="button" class="btn primary block" id="repSend">Send report</button></div>';
   $('#view').innerHTML=h;
 }
 function repKeep(){var y=window.scrollY;renderRep();window.scrollTo(0,y)}
@@ -2165,9 +2169,34 @@ function f10AskAfter(ids){
     $('#f10pnGo').onclick=function(){closeSheet();f10open(r)};
   });
 }
+/* 9az: every form that is ticked in the report, with how much of it is filled in (the To send tile and the check when Send is tapped) */
+function f2fstat(rec){
+  var o=[],its=f2items(rec);
+  function add(n,a,tt,u){o.push({n:n,a:a,t:tt,u:u||'',full:tt>0&&a>=tt,none:a===0})}
+  if(formOn(rec,2))add(2,f2answered(rec),its.length);
+  if(rec.tdu&&formOn(rec,'2a'))add('2a',f2aAnswered(rec),f2aNeed(rec).length);
+  if(formOn(rec,3))add(3,f3answered(rec),f3rows().length);
+  if(formOn(rec,4))add(4,f4answered(rec),f4rows().length);
+  if(formOn(rec,5)){var n5=f5need(rec);add(5,f5answered(rec),n5,n5===1?'hose':'hoses')}
+  if(rec.tdu){[6,7].forEach(function(n){if(formOn(rec,n))add(n,f67ans(rec,n),f67rows(n).length)})}
+  if(formOn(rec,8))add(8,f8answered(rec),F8Q.length);
+  if(formOn(rec,13)){var l13=f13lines(rec).length;o.push({n:13,a:l13,t:0,u:'',full:l13>0,none:l13===0,lines:l13})}
+  return o}
+function f2fstatHtml(rec){
+  return f2fstat(rec).map(function(x){
+    var s=x.lines!=null?('Form '+x.n+': '+(x.lines?x.lines+(x.lines===1?' line':' lines'):'nothing written')):('Form '+x.n+': '+x.a+' of '+x.t+(x.u?' '+x.u:'')+' answered');
+    return ' - '+(x.full?esc(s):'<span style="color:var(--warn);font-weight:600">'+esc(s)+'</span>')}).join('')}
+/* the forms ticked in the report with NOTHING answered (Form 13 is left out: an empty Form 13 sends nothing) */
+function f2unfilled(rec){return f2fstat(rec).filter(function(x){return x.none&&x.n!==13})}
+function f2unfAsk(rec,uf,go){
+  var names=uf.map(function(x){return 'Form '+x.n+' ('+x.a+' of '+x.t+(x.u?' '+x.u:'')+')'}),txt=names.length>1?names.slice(0,-1).join(', ')+' and '+names[names.length-1]:names[0];
+  openSheet('<h2>'+(uf.length===1?'A form is':'Forms are')+' not filled in</h2><p style="margin:0;color:var(--muted)">'+esc(txt)+(uf.length===1?' is':' are')+' in this report but nothing has been answered. Open the report to finish '+(uf.length===1?'it':'them')+', or send anyway (for example if '+(uf.length===1?'it was ticked':'they were ticked')+' by mistake).</p><div class="row"><button class="btn primary" id="unfOpen" type="button">Open the report</button><button class="btn" id="unfGo" type="button">Send anyway</button></div>',function(){
+    $('#unfOpen').onclick=function(){closeSheet();S.f2v=f2state(rec,rec.v,rec.serial,rec.id,rec.key);window.scrollTo(0,0);render()};
+    $('#unfGo').onclick=function(){closeSheet();go()}});
+}
 function f2row(rec){
   var d=new Date(rec.ts),its=f2items(rec);
-  return '<div class="ent"><div><div class="tag" style="font-family:var(--mono);font-weight:700">'+esc(rec.v.D||'(no number)')+' <span class="badge '+(rec.sent?'good':'warn')+'">Report'+(rec.sent?' - sent':'')+'</span></div><div class="count">'+esc([rec.v.A,rec.v.C].filter(Boolean).join(' - '))+' - '+(rec.tdu?'DU '+unitDef(rec.unit).t.toLowerCase()+' unit - data plate '+(rec.plate==='Y'?'yes':(rec.plate==='N'?'no, out of service':'not answered'))+(formOn(rec,2)?' - Form 2: '+f2answered(rec)+' of '+its.length+' answered':'')+(formOn(rec,'2a')&&f2aAny(rec)?' - Form 2a: '+f2aAnswered(rec)+' of '+f2aNeed(rec).length+' answered':'')+(formOn(rec,4)&&f4any(rec)?' - Form 4: '+f4answered(rec)+' of '+f4rows().length+' answered':'')+(formOn(rec,6)&&f67any(rec,6)?' - Form 6: '+f67ans(rec,6)+' of '+f67rows(6).length+' answered':'')+(formOn(rec,7)&&f67any(rec,7)?' - Form 7: '+f67ans(rec,7)+' of '+f67rows(7).length+' answered':'')+(formOn(rec,8)&&f8any(rec)?' - Form 8: '+f8answered(rec)+' of '+F8Q.length+' answered':'')+(rec.f20&&rec.f20.res?' - Form 20 '+(rec.f20.res==='P'?'pass':'fail'):' - Form 20 open')+f10tag(rec)+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})):unitDef(rec.unit).t.toLowerCase()+' unit - '+(formOn(rec,2)?'Form 2: '+f2answered(rec)+' of '+its.length+' answered':'no Form 2')+(formOn(rec,3)?' - Form 3: '+f3answered(rec)+' of '+f3rows().length+' answered':'')+(formOn(rec,4)&&f4any(rec)?' - Form 4: '+f4answered(rec)+' of '+f4rows().length+' answered':'')+(formOn(rec,5)&&f5any(rec)?' - Form 5: '+f5answered(rec)+' of '+f5need(rec)+(f5need(rec)===1?' hose':' hoses')+' answered':'')+(formOn(rec,8)&&f8any(rec)?' - Form 8: '+f8answered(rec)+' of '+F8Q.length+' answered':'')+(formOn(rec,13)&&f13any(rec)?' - Form 13: '+f13lines(rec).length+(f13lines(rec).length===1?' line':' lines'):'')+(rec.f20&&rec.f20.res?' - Form 20 '+(rec.f20.res==='P'?'pass':'fail'):' - Form 20 open')+f10tag(rec)+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})))+'</div></div><div class="row">'+
+  return '<div class="ent"><div><div class="tag" style="font-family:var(--mono);font-weight:700">'+esc(rec.v.D||'(no number)')+' <span class="badge '+(rec.sent?'good':'warn')+'">Report'+(rec.sent?' - sent':'')+'</span></div><div class="count">'+esc([rec.v.A,rec.v.C].filter(Boolean).join(' - '))+' - '+(rec.tdu?'DU '+unitDef(rec.unit).t.toLowerCase()+' unit - data plate '+(rec.plate==='Y'?'yes':(rec.plate==='N'?'no, out of service':'not answered'))+f2fstatHtml(rec)+(rec.f20&&rec.f20.res?' - Form 20 '+(rec.f20.res==='P'?'pass':'fail'):' - Form 20 open')+f10tag(rec)+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})):unitDef(rec.unit).t.toLowerCase()+' unit - '+(formOn(rec,2)?'':'no Form 2')+f2fstatHtml(rec).replace(/^ - /,formOn(rec,2)?'':' - ')+(rec.f20&&rec.f20.res?' - Form 20 '+(rec.f20.res==='P'?'pass':'fail'):' - Form 20 open')+f10tag(rec)+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})))+'</div></div><div class="row">'+
     (rec.sent?'':'<button class="btn sm primary" data-f2send="'+esc(rec.id)+'" type="button">Send</button>')+(f10pending(rec)?'<button class="btn sm" data-f10go="'+esc(rec.id)+'" type="button">Pictures</button>':'')+'<button class="btn sm" data-f2edit="'+esc(rec.id)+'" type="button">Open</button>'+(rec.sent?'<button class="btn sm" data-f2unsend="'+esc(rec.id)+'" type="button">Send again</button>':'')+'<button class="btn sm danger" data-f2del="'+esc(rec.id)+'" type="button">Delete</button></div></div>';
 }
 /* ---------- 9aa: Send all reports, one email after the other ---------- */
@@ -2238,7 +2267,7 @@ function f2sendPanel(){
   if(s.length)h+='<h2 style="margin:.6rem 0 0;font-size:.95rem;color:var(--muted)">Reports already sent</h2>'+s.map(f2row).join('');
   return h;
 }
-function sendF2(id,ok,chain){
+function sendF2(id,ok,chain,uk){
   var list=f2unsent().filter(function(r){return r.id===id});if(!list.length)return;
   if(!list[0].plate){toast('Answer the data plate question (Yes or No) on the report first.');return}
   if(!f20done(list[0])){toast('Answer Form 20 (date and Pass or Fail) on the report first.');return}
@@ -2252,8 +2281,9 @@ function sendF2(id,ok,chain){
   if(list[0].tdu){var bt=tduF2problems(list[0]);if(!bt&&formOn(list[0],5)){var p5=f5problems(list[0]);if(p5.length)bt='Form 5: '+p5[0]}if(bt){toast(bt);return}}
   else{var nc=0;list.forEach(function(r){nc=Math.max(nc,f2maxRefs(r))});
   if(nc>f2def(list[0]).comments.length){toast('A Form 2 has more comments than the form has lines. Shorten them first.');return}}
-  if(!ok&&f3dueList(list[0]).length){f3dueAsk(list[0],function(){sendF2(id,ok,chain)},function(){f3dueAdd(id)});return}
-  if(!ok){var nn=0;list.forEach(function(r){nn+=noCmAll(r)});if(nn){f2noCmAsk(list[0],'send',function(){sendF2(id,true,chain)},nn);return}}
+  if(!ok&&f3dueList(list[0]).length){f3dueAsk(list[0],function(){sendF2(id,ok,chain,uk)},function(){f3dueAdd(id)});return}
+  if(!uk){var uf=f2unfilled(list[0]);if(uf.length){f2unfAsk(list[0],uf,function(){sendF2(id,ok,chain,true)});return}}
+  if(!ok){var nn=0;list.forEach(function(r){nn+=noCmAll(r)});if(nn){f2noCmAsk(list[0],'send',function(){sendF2(id,true,chain,true)},nn);return}}
   var text=buildF2(list),name='eB620_form2_'+String(list[0].v.D||'tank').replace(/[^A-Za-z0-9_-]+/g,'')+'_'+stamp()+'.txt',ids=list.map(function(r){return r.id});
   var r0=list[0],sj='eB620 app - '+[r0.v.D||'tank',r0.v.A,new Date(r0.ts).toISOString().slice(0,10)].filter(Boolean).join(' - ');
   if(chain){chain(text,name,sj,ids);return}
@@ -2297,7 +2327,7 @@ function f3own(v,key,k){return String((f3d(v,k).vals||{})[key]||'')}
 function f3svpAuto(v){var s=String((v.v||{})[v.tdu?'BT':'S']||'').toLowerCase(),m=/\d+(\.\d+)?/.exec(s);if(!m)return '';var n=+m[0];if(/kpa/.test(s)){if(n===1723||n===1725||n===1825||n===1827)return n+' kpa';if(n>=1700&&n<=1750)return '1725 kpa';if(n>=1800&&n<=1850)return '1827 kpa';return ''}if(n===250)return '250 p.s.i.';if(n===265)return '265 p.s.i.';return ''}
 function f3val(v,key,k){k=k||0;var o=f3own(v,key,k);if(o||!k)return o||(key==='svp'?f3svpAuto(v):'');if(key==='ep'){var s=f3own(v,'sp',k);if(s)return s}return f3val(v,key,0)}
 function f3auto(v,k){return !!(f3val(v,'pd',k)&&f3val(v,'p1',k)&&f3val(v,'p2',k))}
-function f3r(it,v,k){k=k||0;var a=(f3d(v,k).items||{})[it.row]||{};if(a.r)return a.r;if(it.row===28&&f3auto(v,k))return 'Y';return k?f3r(it,v,0):''}
+function f3r(it,v,k){k=k||0;if(it.row===32&&f3over(v,k).length)return 'N';var a=(f3d(v,k).items||{})[it.row]||{};if(a.r)return a.r;if(it.row===28&&f3auto(v,k))return 'Y';return k?f3r(it,v,0):''}
 function f3answered(v,k){var n=0;f3rows().forEach(function(i){if(f3r(i,v,k||0))n++});return n}
 function f3anyd(f){return Object.keys(f.items||{}).some(function(r){var a=f.items[r];return a&&(a.r||(a.c&&a.c.trim()))})||Object.keys(f.vals||{}).some(function(k){return String(f.vals[k]||'').trim()})}
 function f3any(v){var f=f3o(v);if(f3anyd(f))return true;return Object.keys(f.t||{}).some(function(k){return f3anyd(f.t[k])})}
@@ -2376,7 +2406,7 @@ function buildF3(rec){
 function renderF3(){
   var v=S.f2v,def=f3def(),f=v.f3||(v.f3={items:{},vals:{}}),ud=unitDef(v.unit),nt=f3nt(v),k=f3tab(v),fd=f3dw(v,k),refs=f3refs(fd),n0=ud.names[0].toLowerCase();
   $('#tabs').hidden=true;$('#fab').hidden=true;
-  var rows=f3rows(),n=f3answered(v,k);
+  var rows=f3rows(),n=f3answered(v,k);F3LK=f3over(v,k).length>0;
   $('#top').innerHTML='<button class="hbtn icon" id="f3Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 3 - Unit '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f3Done" type="button">Back to list</button>';
   var h='';
   if(nt>1)h+='<div class="ttabs">'+ud.names.map(function(nm,i){var dn=f3diffs(v,i);return '<button type="button" class="ttab'+(i===k?' on':'')+'" data-f3tab="'+i+'">'+esc(nm)+(dn?'<span class="dn">'+dn+(dn===1?' difference':' differences')+'</span>':'')+'</button>'}).join('')+'</div>';
@@ -2385,11 +2415,13 @@ function renderF3(){
   h+='<div class="panel">';
   def.items.forEach(function(it){
     var a=fd.items[it.row]||{},cols=it.cols||'',r=f3r(it,v,k),df=f3isdiff(it,v,k);
-    function chip(col,lab,cls,val){return cols.indexOf(col)>=0?'<button type="button" class="chip '+cls+(rOn(k?r:a.r,val)?' on':'')+'" data-f3r="'+it.row+'" data-v="'+val+'">'+lab+'</button>':''}
+    function chip(col,lab,cls,val){return cols.indexOf(col)>=0?'<button type="button" class="chip '+cls+(rOn((k||it.row===32)?r:a.r,val)?' on':'')+'" data-f3r="'+it.row+'" data-v="'+val+'">'+lab+'</button>':''}
     var ch=(f3has(it,'W')||f3has(it,'X'))?chip('W','Yes','y','Y')+chip('X','No','n','N')+chip('Z','N/A','a','A'):'';
     var hasC=a.c!=null&&(a.c!==''||a.cOpen);
     h+='<div class="f2item'+(df?' df':'')+'"><p class="tx">'+esc(it.t)+(refs[it.row]?'<span class="rf">Ref '+refs[it.row]+'</span>':'')+(df?'<span class="rf df">Differs from '+esc(n0)+'</span>':'')+'</p>';
-    if(ch)h+='<div class="chips">'+ch+'</div>';
+    var lk32=(it.row===32)?f3over(v,k):[];
+    if(ch)h+='<div class="chips"'+(lk32.length?' style="opacity:.55"':'')+'>'+ch+'</div>';
+    if(lk32.length)h+='<p class="f3lock">Set to No automatically: '+lk32.map(esc).join(', ')+' at or above 110% of the minimum test pressure (7.2.7.4f). This line cannot be changed to Yes, and Form 20 is set to Fail (out of service). The tank must be reviewed by a design engineer before it goes back into service. If a number was a typing error, correct it above.</p>';
     if(it.row===28)h+='<p class="count" style="margin:.3rem 0 0" id="f3a28">'+(r==='Y'?'Yes: all three entries are filled in.':'Yes is set automatically when the three entries below are filled in.')+'</p>';
     (it.inp||[]).forEach(function(x){h+=f3inHTML(x,v,k)});
     if(f3has(it,'Y')){
@@ -2412,18 +2444,32 @@ function f3inHTML(x,v,k){
   }
   var c=f3chk(x,own),im=x.kind==='n'?'decimal':(x.kind==='i'?'numeric':(x.kind==='my'?'numeric':'text'));
   var ph=(k&&base)?base:' ';
-  var need=(x.k==='wt'&&!String(eff).trim()),tw=f3testWarn(v,k);return '<div class="field'+(c.msg?' bad':'')+(tw[x.k]?' warn':'')+(need?' need':'')+'" style="margin-top:.55rem"><label>'+esc(x.l)+(x.u?' ('+esc(x.u)+')':'')+(x.k==='wt'?' <span class="req">* required</span>':'')+'</label><input type="text" class="'+((k&&base)?'inh':'')+'" placeholder="'+esc(ph)+'" data-f3v="'+x.k+'" value="'+esc(own)+'" inputmode="'+im+'" autocomplete="off" autocapitalize="off"><div class="msg" data-f3m="'+x.k+'">'+esc(c.msg)+'</div><div class="note" data-f3n="'+x.k+'">'+esc(c.warn||tw[x.k]||'')+'</div>'+(x.hint?'<div class="hint">'+esc(x.hint)+'</div>':'')+'</div>';
+  var need=(x.k==='wt'&&!String(eff).trim()),tw=f3testWarn(v,k);return '<div class="field'+(c.msg?' bad':'')+f3fldCls(tw,x.k)+(need?' need':'')+'" style="margin-top:.55rem"><label>'+esc(x.l)+(x.u?' ('+esc(x.u)+')':'')+(x.k==='wt'?' <span class="req">* required</span>':'')+'</label><input type="text" class="'+((k&&base)?'inh':'')+'" placeholder="'+esc(ph)+'" data-f3v="'+x.k+'" value="'+esc(own)+'" inputmode="'+im+'" autocomplete="off" autocapitalize="off"><div class="msg" data-f3m="'+x.k+'">'+esc(c.msg)+'</div><div class="note" data-f3n="'+x.k+'">'+esc(c.warn||tw[x.k]||'')+'</div>'+(x.hint?'<div class="hint">'+esc(x.hint)+'</div>':'')+'</div>';
 }
 function f3design(v){var s=String((v.v||{})[v.tdu?'T':'AY']||'');if(!v.tdu&&!/\d/.test(s))s=String((v.v||{}).S||'');var m=/\d+(\.\d+)?/.exec(s);if(!m)return 0;var n=+m[0];if(/kpa/i.test(s))return n>1800?265:(n>1700?250:0);return n}
-function f3testWarn(v,k){var d=f3design(v),o={sp:'',ep:''},sp=parseFloat(f3val(v,'sp',k)),ep=parseFloat(f3val(v,'ep',k));
-  if(d&&!isNaN(sp)){var mn=Math.round(d*150)/100,mx=Math.round(d*153)/100,t110=Math.round(d*165)/100;
-    if(sp<mn)o.sp='Below the minimum test pressure, 1.5 x the design pressure ('+mn+' psi for a '+d+' psi tank) (7.2.7.4c).';
-    else if(sp>mx)o.sp='Above the maximum test pressure, 1.5 x the design pressure plus 2% ('+mx+' psi for a '+d+' psi tank). This exceeds 7.2.7.4e.'+(sp>t110?' It is also over 110% of the minimum: answer the last line of Form 3 (7.2.7.4f).':'')}
-  if(d&&!isNaN(ep)){var mn2=Math.round(d*150)/100,mx2=Math.round(d*153)/100;
-    if(ep<mn2)o.ep='Below the minimum test pressure at the end ('+mn2+' psi for a '+d+' psi tank). The pressure must be held for at least 10 minutes (7.2.7.4a, 7.2.7.4c).';
-    else if(ep>mx2)o.ep='Above the maximum test pressure, 1.5 x the design pressure plus 2% ('+mx2+' psi for a '+d+' psi tank). This exceeds 7.2.7.4e.'}
+/* 9az: the 110% rule (7.2.7.4f). The relief device rating, the start pressure or the end pressure at or above 110% of the minimum test pressure (1.65 x the design pressure)
+   sets the last line of Form 3 to No (it cannot be changed to Yes) and Form 20 to Fail (out of service, design engineer review). Between 1.53 x (maximum test pressure, 7.2.7.4e) and 1.65 x: amber warning only. */
+var F3LK=false;   /* was the locked last line on screen at the last draw */
+function f3over(v,k){var d=f3design(v);if(!d)return [];var lim=Math.round(d*165)/100,o=[];
+  [['prv','The relief device rating'],['sp','The start pressure'],['ep','The end pressure']].forEach(function(x){var n=parseFloat(f3val(v,x[0],k||0));if(!isNaN(n)&&n>=lim)o.push(x[1]+' ('+n+' psi)')});return o}
+function f3testWarn(v,k){var d=f3design(v),o={sp:'',ep:'',prv:'',lv:{}},sp=parseFloat(f3val(v,'sp',k)),ep=parseFloat(f3val(v,'ep',k)),pr=parseFloat(f3val(v,'prv',k));
+  if(!d)return o;
+  var mn=Math.round(d*150)/100,mx=Math.round(d*153)/100,t110=Math.round(d*165)/100,of=' at or above 110% of the minimum test pressure ('+t110+' psi for a '+d+' psi tank) (7.2.7.4f). The last line of Form 3 is set to No and Form 20 to Fail (out of service, review by a design engineer). Check the number.';
+  if(!isNaN(sp)){
+    if(sp<mn){o.sp='Below the minimum test pressure, 1.5 x the design pressure ('+mn+' psi for a '+d+' psi tank) (7.2.7.4c).';o.lv.sp='r'}
+    else if(sp>=t110){o.sp='The start pressure is'+of;o.lv.sp='r'}
+    else if(sp>mx){o.sp='Above the maximum test pressure, 1.5 x the design pressure plus 2% ('+mx+' psi for a '+d+' psi tank). This exceeds 7.2.7.4e.';o.lv.sp='a'}}
+  if(!isNaN(ep)){
+    if(ep<mn){o.ep='Below the minimum test pressure at the end ('+mn+' psi for a '+d+' psi tank). The pressure must be held for at least 10 minutes (7.2.7.4a, 7.2.7.4c).';o.lv.ep='r'}
+    else if(ep>=t110){o.ep='The end pressure is'+of;o.lv.ep='r'}
+    else if(ep>mx){o.ep='Above the maximum test pressure, 1.5 x the design pressure plus 2% ('+mx+' psi for a '+d+' psi tank). This exceeds 7.2.7.4e.';o.lv.ep='a'}}
+  if(!isNaN(pr)){
+    if(pr>=t110){o.prv='The relief device rating is'+of;o.lv.prv='r'}
+    else if(pr>mx){o.prv='The relief device rating is above the maximum test pressure, 1.5 x the design pressure plus 2% ('+mx+' psi for a '+d+' psi tank) (7.2.7.4e). A device set this high would let the test go over it. Confirm this is the rating on the device.';o.lv.prv='a'}}
   return o}
-function f3testShow(){var v=S.f2v,tw=f3testWarn(v,f3tab(v));['sp','ep'].forEach(function(k){var el=$('[data-f3v="'+k+'"]');if(!el)return;var fld=el.closest('.field');if(fld)fld.classList.toggle('warn',!!tw[k]);var w=$('[data-f3n="'+k+'"]');if(w)w.textContent=tw[k]})}
+function f3fldCls(tw,key){return tw[key]?(tw.lv[key]==='a'?' amber':' warn'):''}
+function f3testShow(){var v=S.f2v,tw=f3testWarn(v,f3tab(v));['sp','ep','prv'].forEach(function(k){var el=$('[data-f3v="'+k+'"]');if(!el)return;var fld=el.closest('.field');if(fld){fld.classList.toggle('warn',!!tw[k]&&tw.lv[k]!=='a');fld.classList.toggle('amber',tw.lv[k]==='a')}var w=$('[data-f3n="'+k+'"]');if(w)w.textContent=tw[k]})}
+function renderF3Keep(){var a=document.activeElement,y=window.scrollY;/* re-draw so the locked last line and the counts follow the numbers, without losing the scroll position */ if(S.f2v&&S.f2v.view==='f3'){renderF3();window.scrollTo(0,y)}}
 function f3blur(el,key){
   var v=S.f2v,k=f3tab(v),f=f3dw(v,k),x=f3inputs().filter(function(y){return y.k===key})[0];if(!x)return;
   var c=f3chk(x,el.value);
@@ -2432,7 +2478,7 @@ function f3blur(el,key){
   f2save();
   var fld=el.closest('.field');if(fld){fld.classList.toggle('bad',!!c.msg);if(key==='wt')fld.classList.toggle('need',!f3val(v,'wt',k).trim())}
   var m=$('[data-f3m="'+key+'"]'),w=$('[data-f3n="'+key+'"]');if(m)m.textContent=c.msg;if(w)w.textContent=c.warn;
-  if(key==='sp'||key==='ep')f3testShow();
+  if(key==='sp'||key==='ep'||key==='prv'){f3testShow();if((f3over(v,k).length>0)!==F3LK){f2save();renderF3Keep();return}}
   f3refresh();
 }
 function f3refresh(){
@@ -2441,6 +2487,7 @@ function f3refresh(){
 }
 function f3set(row,val){
   var v=S.f2v,k=f3tab(v),fd=f3dw(v,k),a=fd.items[row]||(fd.items[row]={});
+  if(row===32&&f3over(v,k).length){toast('This line is No automatically: a pressure is at or above 110% of the minimum test pressure (7.2.7.4f). Correct the number if it was a typing error.');return}
   var it=f3def().items.filter(function(i){return i.row===row})[0];
   rAsk(f3r(it,v,k),val,function(nw){
     if(!k)a.r=nw;else a.r=(nw===f3r(it,v,0))?'':nw;
@@ -3008,7 +3055,7 @@ function f5store(el){
   if((m=/^([dm])(\d)$/.exec(k))){f5h(v,+m[2])[m[1]==='d'?'dia':'mf']=el.value;return}
 }
 
-/* ---------- Form 10 (data plate pictures, sent in a separate email) ---------- */
+/* ---------- Form 10 (data plate pictures, added to the report email; 9az wording) ---------- */
 var F10={files:{},extra:[]};
 function f10subject(v){return 'eB620 pictures - '+[v.v.C||'',v.v.D||''].join(' - ')}
 function f10slots(v){var ud=unitDef(v.unit),n=ud.names.length||1,o=[],i;for(i=0;i<n;i++){var nm=ud.names[i]||'';o.push({k:i+1,l:nm?nm+(v.tdu?' data plate':' tank data plate'):'Data plate',nm:'plate'+(i+1)+(nm?'_'+nm.toLowerCase().replace(/\s+/g,'-'):''),lb:(n>1&&nm?nm.toUpperCase()+' TANK':'')})}return o}
