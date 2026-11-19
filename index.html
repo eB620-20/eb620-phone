@@ -224,7 +224,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 9be (Form 4: the "answered" count also includes the typed entries (12 on a normal tank). Form 3: the "answered" count now includes the typed entries (water temperature, relief rating, start pressure, duration, valve dates, set pressure), so it reads like 16 of 25. To send is split in two: Ready to send, and Not finished. Send all and the number on the tab count only the ready reports. Tapping Send on an unfinished report asks: open the report, remove a form that is not needed, or send anyway.';
+var VERSION='prototype 9bh (Form 20 SPEC: the copy comes from the left tank only. Form 20 SPEC: the other tanks copy the steel and stress relieved answers of the first tank, like the other forms. Form 20: the four SPEC statements must be answered for each SPEC tank before a report can be sent; until then it stays under Not finished. Form 4: the "answered" count also includes the typed entries (12 on a normal tank). Form 3: the "answered" count now includes the typed entries (water temperature, relief rating, start pressure, duration, valve dates, set pressure), so it reads like 16 of 25. To send is split in two: Ready to send, and Not finished. Send all and the number on the tab count only the ready reports. Tapping Send on an unfinished report asks: open the report, remove a form that is not needed, or send anyway.';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -1338,7 +1338,16 @@ function duTanks(v){/* 9au: the tanks of a DU in Form 1 sheet order: single = 1,
 function f20spTanks(v){if(!v)return [];var o=[];
   if(v.tdu){duTanks(v).forEach(function(t,k){if(t.bg==='TC331'||t.bg==='TC51')o.push({k:k,def:t.bg,nm:t.nm,sn:t.sn})});return o}
   f20unitTanks(v).forEach(function(t,k){var a=String(t.v.AJ||'').trim().toUpperCase();if(a==='TC331'||a==='TC51')o.push({k:k,def:a})});return o}
-function f20spVal(v,k,def){var s=(v.f20&&v.f20.sp&&v.f20.sp[k])||{};return {sp:s.sp!=null?s.sp:def,st:s.st||'',mf:s.mf||'',rp:s.rp||''}}
+/* 9bf: the four SPEC statements are required for every SPEC tank before the report can be sent. Returns the tanks that still have one blank. */
+function f20spMiss(v){var o=[];if(!v)return o;var nm=unitDef(v.unit).names;
+  f20spTanks(v).forEach(function(x){var s=f20spVal(v,x.k,x.def);if(!(s.sp&&s.st&&s.mf&&s.rp))o.push(f20ntk(v)>1?(v.tdu?(x.nm||('tank '+(x.k+1))):((nm[x.k]?nm[x.k]+' tank':'tank '+(x.k+1)))):'')});return o}
+function f20spMissMsg(v){var m=f20spMiss(v);if(!m.length)return '';var t=m.filter(Boolean);return 'Form 20: answer all four SPEC statements'+(t.length?' for the '+t.map(function(x){return x.toLowerCase()}).join(' and the '):'')+' (specification, steel, stress relieved after manufacture and after repair). Open the report and finish them.'}
+function f20tag(rec){var base=rec.f20&&rec.f20.res?' - Form 20 '+(rec.f20.res==='P'?'pass':'fail'):' - Form 20 open';return base+(f20spMiss(rec).length?' <span style="color:var(--warn);font-weight:600">- SPEC answers missing</span>':'')}
+/* 9bg: like the forms, the other SPEC tanks take the left tank's steel / stress relieved answers until they are changed on that tank (the specification itself stays the tank's own) */
+function f20spFirst(v){var L=f20spTanks(v);return (L.length&&L[0].k===0)?0:-1}   /* the source is the left tank (the left column on Form 20); when the left tank is not SPEC there is nothing to copy */
+function f20spOwn(v,k){return (v.f20&&v.f20.sp&&v.f20.sp[k])||{}}
+function f20spInh(v,k,key){var f=f20spFirst(v);return f>=0&&f!==k&&!f20spOwn(v,k)[key]&&!!f20spOwn(v,f)[key]}
+function f20spVal(v,k,def){var s=f20spOwn(v,k),f=f20spFirst(v),o=(f>=0&&f!==k)?f20spOwn(v,f):{};return {sp:s.sp!=null?s.sp:def,st:s.st||o.st||'',mf:s.mf||o.mf||'',rp:s.rp||o.rp||''}}
 /* 9ay: helper wording (the notes on the workbook's Form 1 Tank spec ticks: all SPEC notes now say July 1, 1998 (9az)) */
 function f20spHelp(v,sp){var t=String(sp||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   if(t==='TC331')return 'TC331 is a SPEC tank built after July 1, 1998.';
@@ -1349,12 +1358,12 @@ function f20spUI(v){
   var h='<p class="count" style="margin:.8rem 0 .3rem"><b>SPEC statements on Form 20</b> - '+(f20ntk(v)>1?'answer for each tank that is a SPEC tank (TC331 or TC51)':'this tank is a SPEC tank ('+esc(L[0].def)+')')+'</p><p class="count" style="margin:0 0 .4rem;font-size:.85rem;color:var(--muted)">These are the four SPEC statements printed on Form 20. They are for SPEC tanks only (TC331 or TC51). A tank that is not SPEC is not asked; the office form shows N/A for it.'+(f20ntk(v)>1?'':' '+esc(f20spHelp(v,L[0].def)))+'</p>',miss=false;
   L.forEach(function(x){
     var s=f20spVal(v,x.k,x.def);
-    if(f20ntk(v)>1)h+=(v.tdu?'<p class="count" style="margin:.1rem 0 .5rem"><b>'+esc(x.nm)+'</b> - S/N '+esc(x.sn)+'</p>':tankTag(v,x.k))+'<p class="count" style="margin:0 0 .3rem;font-size:.85rem;color:var(--muted)">'+esc(f20spHelp(v,x.def))+'</p>';
+    if(f20ntk(v)>1)h+=(v.tdu?'<p class="count" style="margin:.1rem 0 .5rem"><b>'+esc(x.nm)+'</b> - S/N '+esc(x.sn)+'</p>':tankTag(v,x.k))+'<p class="count" style="margin:0 0 .3rem;font-size:.85rem;color:var(--muted)">'+esc(f20spHelp(v,x.def))+'</p>'+(['st','mf','rp'].some(function(key){return f20spInh(v,x.k,key)})?'<p class="count" style="margin:0 0 .3rem;font-size:.85rem;color:var(--muted)">Steel and stress relieved answers are copied from the left tank. Change them here if this tank is different.</p>':'');
     F20SP_Q.forEach(function(q,j){
       var cur=s[q[0]];if(!cur)miss=true;
       h+='<p class="count" style="margin:.3rem 0 .15rem">'+esc(q[1])+'</p><div class="field" style="margin:0 0 .3rem"><select data-f20sp="'+x.k+':'+q[0]+'"><option value="">Choose...</option>'+q[2].map(function(o){return '<option value="'+esc(o)+'"'+(o===cur?' selected':'')+'>'+esc(o)+'</option>'}).join('')+'</select></div>'});
   });
-  if(miss)h+='<p class="count" style="margin:.3rem 0 .3rem;color:var(--bad)">Please answer all four for each SPEC tank. The office form prints blank answers as blank.</p>';
+  if(miss)h+='<p class="count" style="margin:.3rem 0 .3rem;color:var(--bad)">Please answer all four for each SPEC tank. The report cannot be sent until they are answered.</p>';
   return h;
 }
 function f20ntk(v){return v.tdu?duTanks(v).length:f20unitTanks(v).length}
@@ -1453,7 +1462,7 @@ function nextForm(v){
   if(formOn(v,4)&&f4answered(v)<f4need(v))return 'f4';
   if(formOn(v,5)&&f5answered(v)<f5need(v))return 'f5';
   if(formOn(v,8)&&f8answered(v)<F8Q.length)return 'f8';
-  if(!f20done(v))return 'f20';
+  if(!f20done(v)||f20spMiss(v).length)return 'f20';
   return '';
 }
 
@@ -2191,7 +2200,7 @@ function f2fstatHtml(rec){
 function f2unfilled(rec){return f2fstat(rec).filter(function(x){return x.none&&x.n!==13})}
 /* 9ba: a report is not finished when a ticked form is not completely answered (Form 13 is left out), or the data plate question / Form 20 is still open */
 function f2notFull(rec){return f2fstat(rec).filter(function(x){return !x.full&&x.n!==13})}
-function f2incomplete(rec){return !rec.plate||!f20done(rec)||f2notFull(rec).length>0}
+function f2incomplete(rec){return !rec.plate||!f20done(rec)||f20spMiss(rec).length>0||f2notFull(rec).length>0}
 function f2ready(){return f2unsent().filter(function(r){return !f2incomplete(r)})}
 function f2unfin(){return f2unsent().filter(f2incomplete)}
 function f2unfAsk(rec,uf,go,again){
@@ -2203,7 +2212,7 @@ function f2unfAsk(rec,uf,go,again){
 }
 function f2row(rec){
   var d=new Date(rec.ts),its=f2items(rec);
-  return '<div class="ent"><div><div class="tag" style="font-family:var(--mono);font-weight:700">'+esc(rec.v.D||'(no number)')+' <span class="badge '+(rec.sent?'good':'warn')+'">Report'+(rec.sent?' - sent':'')+'</span></div><div class="count">'+esc([rec.v.A,rec.v.C].filter(Boolean).join(' - '))+' - '+(rec.tdu?'DU '+unitDef(rec.unit).t.toLowerCase()+' unit - data plate '+(rec.plate==='Y'?'yes':(rec.plate==='N'?'no, out of service':'not answered'))+f2fstatHtml(rec)+(rec.f20&&rec.f20.res?' - Form 20 '+(rec.f20.res==='P'?'pass':'fail'):' - Form 20 open')+f10tag(rec)+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})):unitDef(rec.unit).t.toLowerCase()+' unit - '+(formOn(rec,2)?'':'no Form 2')+f2fstatHtml(rec).replace(/^ - /,formOn(rec,2)?'':' - ')+(rec.f20&&rec.f20.res?' - Form 20 '+(rec.f20.res==='P'?'pass':'fail'):' - Form 20 open')+f10tag(rec)+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})))+'</div></div><div class="row">'+
+  return '<div class="ent"><div><div class="tag" style="font-family:var(--mono);font-weight:700">'+esc(rec.v.D||'(no number)')+' <span class="badge '+(rec.sent?'good':'warn')+'">Report'+(rec.sent?' - sent':'')+'</span></div><div class="count">'+esc([rec.v.A,rec.v.C].filter(Boolean).join(' - '))+' - '+(rec.tdu?'DU '+unitDef(rec.unit).t.toLowerCase()+' unit - data plate '+(rec.plate==='Y'?'yes':(rec.plate==='N'?'no, out of service':'not answered'))+f2fstatHtml(rec)+f20tag(rec)+f10tag(rec)+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})):unitDef(rec.unit).t.toLowerCase()+' unit - '+(formOn(rec,2)?'':'no Form 2')+f2fstatHtml(rec).replace(/^ - /,formOn(rec,2)?'':' - ')+f20tag(rec)+f10tag(rec)+' - saved '+esc(d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})))+'</div></div><div class="row">'+
     (rec.sent?'':'<button class="btn sm'+(f2incomplete(rec)?'':' primary')+'" data-f2send="'+esc(rec.id)+'" type="button">Send</button>')+(f10pending(rec)?'<button class="btn sm" data-f10go="'+esc(rec.id)+'" type="button">Pictures</button>':'')+'<button class="btn sm'+(!rec.sent&&f2incomplete(rec)?' primary':'')+'" data-f2edit="'+esc(rec.id)+'" type="button">Open</button>'+(rec.sent?'<button class="btn sm" data-f2unsend="'+esc(rec.id)+'" type="button">Send again</button>':'')+'<button class="btn sm danger" data-f2del="'+esc(rec.id)+'" type="button">Delete</button></div></div>';
 }
 /* ---------- 9aa: Send all reports, one email after the other ---------- */
@@ -2279,6 +2288,7 @@ function sendF2(id,ok,chain,uk){
   var list=f2unsent().filter(function(r){return r.id===id});if(!list.length)return;
   if(!list[0].plate){toast('Answer the data plate question (Yes or No) on the report first.');return}
   if(!f20done(list[0])){toast('Answer Form 20 (date and Pass or Fail) on the report first.');return}
+  if(f20spMiss(list[0]).length){toast(f20spMissMsg(list[0]));return}
   if(formOn(list[0],3)){var bad3=f3problems(list[0]);if(bad3.length){toast('Form 3: '+bad3[0]+' Open Form 3 and fix it first.');return}}
   if(formOn(list[0],4)){var bad4=f4problems(list[0]);if(bad4.length){toast('Form 4: '+bad4[0]+' Open Form 4 and fix it first.');return}}
   if(formOn(list[0],5)){var bad5=f5problems(list[0]);if(bad5.length){toast('Form 5: '+bad5[0]+' Open Form 5 and fix it first.');return}}
@@ -3330,7 +3340,7 @@ document.addEventListener('input',function(e){
   var spk=e.target.getAttribute&&e.target.getAttribute('data-f20sp');
   if(spk&&S.f2v){var spp=spk.split(':'),sf=S.f2v.f20||(S.f2v.f20={date:'',res:'',auto:0});sf.sp=sf.sp||{};var sk=+spp[0],so=sf.sp[sk];
     if(!so){var dd='';f20spTanks(S.f2v).forEach(function(x){if(x.k===sk)dd=x.def});so=sf.sp[sk]={sp:dd,st:'',mf:'',rp:''}}
-    so[spp[1]]=e.target.value;f2save();return}
+    so[spp[1]]=e.target.value;f2save();if(sk===f20spFirst(S.f2v)&&f20spTanks(S.f2v).length>1){var y20=window.scrollY;render();window.scrollTo(0,y20)}return}
   var cmk=e.target.getAttribute&&e.target.getAttribute('data-f20cm');
   if(cmk!==null&&cmk!==undefined&&S.f2v){var cf=S.f2v.f20||(S.f2v.f20={date:'',res:'',auto:0});cf.cm=cf.cm||['','',''];cf.cm[+cmk]=e.target.value;f2save();return}
   var f3k=e.target.getAttribute&&e.target.getAttribute('data-f3v');
