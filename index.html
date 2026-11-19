@@ -52,6 +52,9 @@ main{padding-top:1rem;display:flex;flex-direction:column;gap:.9rem;min-width:0}
 .btn{min-height:3rem;border-radius:.7rem;border:1.5px solid var(--line);background:var(--surface);padding:0 1rem;font-weight:600}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.attn{background:#e8590c;color:#fff;border-color:#e8590c;animation:attnPulse 1.1s ease-in-out infinite}
+@keyframes attnPulse{50%{box-shadow:0 0 0 .4rem rgba(232,89,12,.35)}}
+@media (prefers-reduced-motion:reduce){.btn.attn{animation:none}}
 .btn.sm{min-height:2.4rem;padding:0 .8rem;font-size:.9rem}
 .btn.block{width:100%}
 .search{position:relative}
@@ -225,7 +228,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 9bm (The email text starts one line down so the data plate pictures can go at the top. A hose whose expiry year is before this year is set to Fail on Form 5 and Pass is locked; the way out is Correct the details on file. After Mark as sent the open report closes by itself: it goes to To send when other reports are waiting, otherwise to the tank list, so Done does not have to be tapped. Dates for something that already happened (Form 3: hydrostatic relief valves replaced, 1st and 2nd PRV date; Form 20: date of inspection) can be at most 30 days ahead, like the last visual and last hydro dates on the tank list; a date a year ahead is refused. Expiry dates stay open to the future. Nurse tanks: a warning line shows on the tank list and on the tank form when a tank built in 2018 or later is not TC51, or when a non-spec tank over 3000 USG has no permit noted in Comments. It is a warning only. Form 2: Mark the rest Yes now sets Manholes secure to N/A on nurse tanks. The Inspections due list is grouped by location, then unit number, instead of most overdue first. Form 20 SPEC: the copy comes from the left tank only. Form 20 SPEC: the other tanks copy the steel and stress relieved answers of the first tank, like the other forms. Form 20: the four SPEC statements must be answered for each SPEC tank before a report can be sent; until then it stays under Not finished. Form 4: the "answered" count also includes the typed entries (12 on a normal tank). Form 3: the "answered" count now includes the typed entries (water temperature, relief rating, start pressure, duration, valve dates, set pressure), so it reads like 16 of 25. To send is split in two: Ready to send, and Not finished. Send all and the number on the tab count only the ready reports. Tapping Send on an unfinished report asks: open the report, remove a form that is not needed, or send anyway.';
+var VERSION='prototype 9bn (Once you tap Email to office, Share file or Copy text, the Mark as sent button turns orange and pulses so it is not forgotten, and Close asks you to tap it first (tap Close a second time to leave it unsent). The email text starts one line down so the data plate pictures can go at the top. A hose whose expiry year is before this year is set to Fail on Form 5 and Pass is locked; the way out is Correct the details on file. After Mark as sent the open report closes by itself: it goes to To send when other reports are waiting, otherwise to the tank list, so Done does not have to be tapped. Dates for something that already happened (Form 3: hydrostatic relief valves replaced, 1st and 2nd PRV date; Form 20: date of inspection) can be at most 30 days ahead, like the last visual and last hydro dates on the tank list; a date a year ahead is refused. Expiry dates stay open to the future. Nurse tanks: a warning line shows on the tank list and on the tank form when a tank built in 2018 or later is not TC51, or when a non-spec tank over 3000 USG has no permit noted in Comments. It is a warning only. Form 2: Mark the rest Yes now sets Manholes secure to N/A on nurse tanks. The Inspections due list is grouped by location, then unit number, instead of most overdue first. Form 20 SPEC: the copy comes from the left tank only. Form 20 SPEC: the other tanks copy the steel and stress relieved answers of the first tank, like the other forms. Form 20: the four SPEC statements must be answered for each SPEC tank before a report can be sent; until then it stays under Not finished. Form 4: the "answered" count also includes the typed entries (12 on a normal tank). Form 3: the "answered" count now includes the typed entries (water temperature, relief rating, start pressure, duration, valve dates, set pressure), so it reads like 16 of 25. To send is split in two: Ready to send, and Not finished. Send all and the number on the tab count only the ready reports. Tapping Send on an unfinished report asks: open the report, remove a form that is not needed, or send anyway.';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -1158,6 +1161,9 @@ function shareFile(text,name,title,countLabel,onSent,subject,f10recs){
   var DL=window.__dl||null,pdfBytes=null,pdfName=String(name).replace(/\.txt$/i,'.pdf');
   try{if(pdfName!==name)pdfBytes=mkPdf(text,title)}catch(e){pdfBytes=null}
   var shown=(pdfBytes&&!DL)?pdfName:name;
+  /* 9bn: once the email was opened / the file shared / the text copied, Mark as sent turns orange so it is not forgotten; Close then asks to tap it first (a second Close tap leaves it unsent) */
+  var mailed=false,marked=false,closeArmed=false;
+  function flagSent(){mailed=true;var b=$('#okBtn');if(b){b.classList.add('attn');b.textContent='Mark as sent - tap now';try{b.scrollIntoView({block:'nearest'})}catch(e){}}}
   function doShare(){
     try{
       var file=pdfBytes?new File([pdfBytes],pdfName,{type:'application/pdf'}):new File([text],name,{type:'text/plain'});
@@ -1179,18 +1185,19 @@ function shareFile(text,name,title,countLabel,onSent,subject,f10recs){
       var sj=subject||('eB620 app - '+title);
       var url='mailto:'+encodeURIComponent(a).replace(/%40/g,'@')+'?subject='+encodeURIComponent(sj)+'&body='+encodeURIComponent('\r\n'+(f10mailLine(f10recs)?'eB620 phone app: data for the office import. '+f10mailLine(f10recs):'eB620 phone app: data for the office import. Nothing to read or change here, just send it.')+'\r\n\r\n'+(/^eB620-(phone|tdu)-/.test(text)?text.replace(/\t/g,'~~'):text));
       try{window.location.href=url}catch(e){toast('Could not open the mail app. Use Copy text below.')}
-      toast('Mail is opening. Send it, then come back and tap Mark as sent.');
+      toast('Mail is opening. Send it, then come back and tap the orange Mark as sent button.');
+      flagSent();
     };
     if(DL){
       $('#shBtn').textContent='Save file';$('#dlBtn').style.display='none';
       $('#shBtn').onclick=function(){DL.save({filename:name,data:text}).then(function(){toast('File handed to your phone. Choose where to put it (for example OneDrive).')},function(e){var c=e&&e.code;if(c==='declined')toast('Not saved.');else if(c==='rate_limited')toast('Wait a moment and try again.');else toast('Saving is not available here. Use Copy text below.')})};
     }else
-    $('#shBtn').onclick=function(){doShare().then(function(r){if(r===null){doDownload();toast('Sharing is not available here. The file was saved instead, or copy the text below.')}})};
+    $('#shBtn').onclick=function(){doShare().then(function(r){if(r===null){doDownload();toast('Sharing is not available here. The file was saved instead, or copy the text below.')}else if(r===true)flagSent()})};
     $('#dlBtn').onclick=function(){doDownload();toast('Saving the file. If nothing downloads, use Copy text.')};
-    $('#cpBtn').onclick=function(){var box=$('#tsvBox');var done=function(){toast('Copied. Paste it into an email or a text file ending in .txt.')};
+    $('#cpBtn').onclick=function(){var box=$('#tsvBox');var done=function(){toast('Copied. Paste it into an email or a text file ending in .txt.');flagSent()};
       try{navigator.clipboard.writeText(text).then(done,function(){box.select();document.execCommand&&document.execCommand('copy');done()})}catch(e){box.select();try{document.execCommand('copy')}catch(_){}done()}};
-    $('#okBtn').onclick=function(){onSent(!!($('#f10With')&&$('#f10With').checked));closeSheet();render();toast('Marked as sent.')};
-    $('#clBtn').onclick=closeSheet;
+    $('#okBtn').onclick=function(){marked=true;onSent(!!($('#f10With')&&$('#f10With').checked));closeSheet();render();toast('Marked as sent.')};
+    $('#clBtn').onclick=function(){if(mailed&&!marked&&!closeArmed){closeArmed=true;toast('You opened the email. Tap the orange Mark as sent button first, or tap Close again to leave it unsent.');return}closeSheet()};
   });
 }
 
