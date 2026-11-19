@@ -224,7 +224,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 9bc (To send is split in two: Ready to send, and Not finished. Send all and the number on the tab count only the ready reports. Tapping Send on an unfinished report asks: open the report, remove a form that is not needed, or send anyway.';
+var VERSION='prototype 9be (Form 4: the "answered" count also includes the typed entries (12 on a normal tank). Form 3: the "answered" count now includes the typed entries (water temperature, relief rating, start pressure, duration, valve dates, set pressure), so it reads like 16 of 25. To send is split in two: Ready to send, and Not finished. Send all and the number on the tab count only the ready reports. Tapping Send on an unfinished report asks: open the report, remove a form that is not needed, or send anyway.';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -529,7 +529,7 @@ function recDone(r){
   o={v:false,h:false};
   try{
     if(formOn(r,2)){var its=f2items(r);o.v=its.length>0&&f2answered(r)>=its.length}
-    if(formOn(r,3)){var t3=f3rows().length;o.h=t3>0&&f3answered(r)>=t3}
+    if(formOn(r,3)){var t3=f3need(r);o.h=t3>0&&f3answered(r)>=t3}
   }catch(e){}
   DONEC[k]=o;return o;
 }
@@ -1390,8 +1390,8 @@ function fwdOn(v,k){return formOn(v,k==='2a'?'2a':+k)}
 function fwdFinished(v,k){
   if(k==='2')return f2answered(v)>=f2items(v).length;
   if(k==='2a')return f2aAnswered(v)>=f2aNeed(v).length;
-  if(k==='3')return f3answered(v)>=f3rows().length;
-  if(k==='4')return f4answered(v)>=f4rows().length;
+  if(k==='3')return f3answered(v)>=f3need(v);
+  if(k==='4')return f4answered(v)>=f4need(v);
   if(k==='5')return v.tdu?(f5duTot(v)>0&&f5duAns(v)>=f5duTot(v)):f5answered(v)>=f5need(v);
   if(k==='6'||k==='7')return f67ans(v,+k)>=f67rows(+k).length;
   if(k==='8')return f8answered(v)>=F8Q.length;
@@ -1449,8 +1449,8 @@ function leaveForm(v){
 function nextForm(v){
   var its=f2items(v);
   if(formOn(v,2)&&f2answered(v)<its.length)return 'f2';
-  if(formOn(v,3)&&f3answered(v)<f3rows().length)return 'f3';
-  if(formOn(v,4)&&f4answered(v)<f4rows().length)return 'f4';
+  if(formOn(v,3)&&f3answered(v)<f3need(v))return 'f3';
+  if(formOn(v,4)&&f4answered(v)<f4need(v))return 'f4';
   if(formOn(v,5)&&f5answered(v)<f5need(v))return 'f5';
   if(formOn(v,8)&&f8answered(v)<F8Q.length)return 'f8';
   if(!f20done(v))return 'f20';
@@ -1867,13 +1867,13 @@ function f20Inline(v){
   return '<div class="f2item"><p class="tx" style="font-weight:700;font-size:1rem;color:var(--ink)">Form 20 - Statement of certification</p><p class="count" style="margin:.2rem 0 .2rem">Date of inspection</p><div class="field" style="margin:0 0 .5rem"><input type="date" id="f20date" value="'+esc(f20.date||todayISO())+'"></div>'+f20spUI(v)+'<p class="count" style="margin:0 0 .3rem">Result (Pass: returned to service. Fail: out of service.)</p><div class="chips"><button type="button" class="chip y'+(f20.res==='P'?' on':'')+'" data-f20res="P"'+(f20noOnly(v).length?' style="opacity:.4"':'')+'>Pass</button><button type="button" class="chip n'+(f20.res==='F'?' on':'')+'" data-f20res="F">Fail</button></div>'+(v.plate==='N'&&f20.res==='F'&&f20.auto?'<p class="count" style="margin:.4rem 0 0">Set to Fail because the data plate answer is No, out of service.</p>':'')+(f20lockMsg(v)?'<p class="count" style="margin:.4rem 0 0;color:var(--bad)">'+esc(f20lockMsg(v))+'</p>':'')+f20stUI(v)+f20cmUI(v)+(f20done(v)?'':'<p class="count" style="margin:.4rem 0 0;color:var(--bad)">Choose Pass or Fail before sending.</p>')+'</div>';
 }
 function duF4Block(v){
-  var ud=unitDef(v.unit),n4=f4answered(v),t4=f4rows().length,miss4=[];
+  var ud=unitDef(v.unit),n4=f4answered(v),t4=f4need(v),miss4=[];
   if(!String(f4val(v,'mdm')).trim())miss4.push('test medium');if(!String(f4val(v,'sp')).trim())miss4.push('start pressure');
   var nd=0;for(var q=1;q<ud.names.length;q++)nd+=f4diffs(v,q);
   return '<p class="count" style="margin:.2rem 0 .5rem">'+n4+' of '+t4+' answered'+(ud.names.length>1?(nd?' - '+nd+(nd===1?' difference':' differences')+' on the other tank'+(ud.names.length>2?'s':''):' - other tank'+(ud.names.length>2?'s the same':' the same')):'')+'</p>'+(miss4.length&&f4any(v)?'<p class="count" style="margin:0 0 .5rem;color:var(--bad)">Still to be filled in: '+miss4.join(' and ')+'.</p>':'')+'<button type="button" class="btn block'+(n4<t4?' primary':'')+'" id="repF4">'+(n4===0&&!f4any(v)?'Start Form 4':(n4<t4?'Continue Form 4':'Edit Form 4'))+'</button>';
 }
 function duF3Block(v){
-  var ud=unitDef(v.unit),n3=f3answered(v),t3=f3rows().length,nd=0;
+  var ud=unitDef(v.unit),n3=f3answered(v),t3=f3need(v),nd=0;
   for(var q=1;q<ud.names.length;q++)nd+=f3diffs(v,q);
   var noWt=f3any(v)&&!(f3o(v).vals&&String(f3o(v).vals.wt||'').trim());var noSv=f3any(v)&&!String(f3val(v,'svp',0)).trim();
   return '<p class="count" style="margin:.2rem 0 .5rem">'+n3+' of '+t3+' answered'+(ud.names.length>1?(nd?' - '+nd+(nd===1?' difference':' differences')+' on the other tank'+(ud.names.length>2?'s':''):' - other tank'+(ud.names.length>2?'s the same':' the same')):'')+'</p>'+(noWt?'<p class="count" style="margin:0 0 .5rem;color:var(--bad)">Water temperature still to be filled in.</p>':'')+(noSv?'<p class="count" style="margin:0 0 .5rem;color:var(--bad)">Safety valve set pressure still to be chosen.</p>':'')+'<button type="button" class="btn block'+(n3<t3?' primary':'')+'" id="repF3">'+(n3===0&&!f3any(v)?'Start Form 3':(n3<t3?'Continue Form 3':'Edit Form 3'))+'</button>';
@@ -1915,10 +1915,10 @@ function renderRep(){
     if(f.n===2){
       row+=on?'<p class="count" style="margin:.2rem 0 .5rem">'+n+' of '+its.length+' answered'+(ud.names.length>1?(function(){var nd=0;for(var q=1;q<ud.names.length;q++)nd+=f2diffs(v,q);return nd?' - '+nd+(nd===1?' difference':' differences')+' on the other tank'+(ud.names.length>2?'s':''):' - other tank'+(ud.names.length>2?'s the same':' the same')})():'')+'</p><button type="button" class="btn block'+(f2answered(v)<f2items(v).length?' primary':'')+'" id="repF2">'+(n===0?'Start Form 2':(n<its.length?'Continue Form 2':'Edit Form 2'))+'</button>':'<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
     }else if(f.n===3){
-      if(on){var n3=f3answered(v),t3=f3rows().length;row+='<p class="count" style="margin:.2rem 0 .5rem">'+n3+' of '+t3+' answered'+(ud.names.length>1?(function(){var nd=0;for(var q=1;q<ud.names.length;q++)nd+=f3diffs(v,q);return nd?' - '+nd+(nd===1?' difference':' differences')+' on the other tank'+(ud.names.length>2?'s':''):' - other tank'+(ud.names.length>2?'s the same':' the same')})():'')+'</p>'+(!f3any(v)||(f3o(v).vals&&String(f3o(v).vals.wt||'').trim())?'':'<p class="count" style="margin:0 0 .5rem;color:var(--bad)">Water temperature still to be filled in.</p>')+'<button type="button" class="btn block'+(f3answered(v)<f3rows().length?' primary':'')+'" id="repF3">'+(n3===0&&!f3any(v)?'Start Form 3':(n3<t3?'Continue Form 3':'Edit Form 3'))+'</button>'}
+      if(on){var n3=f3answered(v),t3=f3need(v);row+='<p class="count" style="margin:.2rem 0 .5rem">'+n3+' of '+t3+' answered'+(ud.names.length>1?(function(){var nd=0;for(var q=1;q<ud.names.length;q++)nd+=f3diffs(v,q);return nd?' - '+nd+(nd===1?' difference':' differences')+' on the other tank'+(ud.names.length>2?'s':''):' - other tank'+(ud.names.length>2?'s the same':' the same')})():'')+'</p>'+(!f3any(v)||(f3o(v).vals&&String(f3o(v).vals.wt||'').trim())?'':'<p class="count" style="margin:0 0 .5rem;color:var(--bad)">Water temperature still to be filled in.</p>')+'<button type="button" class="btn block'+(f3answered(v)<f3need(v)?' primary':'')+'" id="repF3">'+(n3===0&&!f3any(v)?'Start Form 3':(n3<t3?'Continue Form 3':'Edit Form 3'))+'</button>'}
       else row+='<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
     }else if(f.n===4){
-      if(on){var n4=f4answered(v),t4=f4rows().length,miss4=[];if(!String(f4val(v,'mdm')).trim())miss4.push('test medium');if(!String(f4val(v,'sp')).trim())miss4.push('start pressure');row+='<p class="count" style="margin:.2rem 0 .5rem">'+n4+' of '+t4+' answered'+(ud.names.length>1?(function(){var nd=0;for(var q=1;q<ud.names.length;q++)nd+=f4diffs(v,q);return nd?' - '+nd+(nd===1?' difference':' differences')+' on the other tank'+(ud.names.length>2?'s':''):' - other tank'+(ud.names.length>2?'s the same':' the same')})():'')+'</p>'+(miss4.length&&f4any(v)?'<p class="count" style="margin:0 0 .5rem;color:var(--bad)">Still to be filled in: '+miss4.join(' and ')+'.</p>':'')+'<button type="button" class="btn block'+(f4answered(v)<f4rows().length?' primary':'')+'" id="repF4">'+(n4===0&&!f4any(v)?'Start Form 4':(n4<t4?'Continue Form 4':'Edit Form 4'))+'</button>'}
+      if(on){var n4=f4answered(v),t4=f4need(v),miss4=[];if(!String(f4val(v,'mdm')).trim())miss4.push('test medium');if(!String(f4val(v,'sp')).trim())miss4.push('start pressure');row+='<p class="count" style="margin:.2rem 0 .5rem">'+n4+' of '+t4+' answered'+(ud.names.length>1?(function(){var nd=0;for(var q=1;q<ud.names.length;q++)nd+=f4diffs(v,q);return nd?' - '+nd+(nd===1?' difference':' differences')+' on the other tank'+(ud.names.length>2?'s':''):' - other tank'+(ud.names.length>2?'s the same':' the same')})():'')+'</p>'+(miss4.length&&f4any(v)?'<p class="count" style="margin:0 0 .5rem;color:var(--bad)">Still to be filled in: '+miss4.join(' and ')+'.</p>':'')+'<button type="button" class="btn block'+(f4answered(v)<f4need(v)?' primary':'')+'" id="repF4">'+(n4===0&&!f4any(v)?'Start Form 4':(n4<t4?'Continue Form 4':'Edit Form 4'))+'</button>'}
       else row+='<p class="count" style="margin:.2rem 0 0">Not in this report.</p>';
     }else if(f.n===5){
       if(on){var n5=f5answered(v),t5=f5need(v);row+='<p class="count" style="margin:.2rem 0 .5rem">'+n5+' of '+t5+(t5===1?' hose':' hoses')+' answered</p><button type="button" class="btn block'+(f5answered(v)<f5need(v)?' primary':'')+'" id="repF5">'+(n5===0&&!f5any(v)?'Start Form 5':(n5<t5?'Continue Form 5':'Edit Form 5'))+'</button>'}
@@ -2057,7 +2057,7 @@ function f3dueAdd(id){
 function f2closeCheck(){
   var v=S.f2v;f2save();S.f2v=null;S.tab='tanks';render();
   var rec=S.f2.filter(function(r){return r.id===v.id})[0],its=f2items(rec||v);
-  toast(rec?('Report saved'+(formOn(rec,2)||formOn(rec,3)||formOn(rec,4)?' ('+[formOn(rec,2)?'Form 2: '+f2answered(rec)+' of '+its.length:'',formOn(rec,3)?'Form 3: '+f3answered(rec)+' of '+f3rows().length:'',formOn(rec,4)?'Form 4: '+f4answered(rec)+' of '+f4rows().length:''].filter(Boolean).join(', ')+' answered)':'')+'. It is on the To send tab.'):'Nothing entered, so nothing was saved.');
+  toast(rec?('Report saved'+(formOn(rec,2)||formOn(rec,3)||formOn(rec,4)?' ('+[formOn(rec,2)?'Form 2: '+f2answered(rec)+' of '+its.length:'',formOn(rec,3)?'Form 3: '+f3answered(rec)+' of '+f3need(rec):'',formOn(rec,4)?'Form 4: '+f4answered(rec)+' of '+f4need(rec):''].filter(Boolean).join(', ')+' answered)':'')+'. It is on the To send tab.'):'Nothing entered, so nothing was saved.');
 }
 function f2set(row,val){
   var v=S.f2v,fd=f2dw(v,f2tab(v)),a=fd.items[row]||(fd.items[row]={});
@@ -2176,8 +2176,8 @@ function f2fstat(rec){
   function add(n,a,tt,u){o.push({n:n,a:a,t:tt,u:u||'',full:tt>0&&a>=tt,none:a===0})}
   if(formOn(rec,2))add(2,f2answered(rec),its.length);
   if(rec.tdu&&formOn(rec,'2a'))add('2a',f2aAnswered(rec),f2aNeed(rec).length);
-  if(formOn(rec,3))add(3,f3answered(rec),f3rows().length);
-  if(formOn(rec,4))add(4,f4answered(rec),f4rows().length);
+  if(formOn(rec,3))add(3,f3answered(rec),f3need(rec));
+  if(formOn(rec,4))add(4,f4answered(rec),f4need(rec));
   if(formOn(rec,5)){var n5=f5need(rec);add(5,f5answered(rec),n5,n5===1?'hose':'hoses')}
   if(rec.tdu){[6,7].forEach(function(n){if(formOn(rec,n))add(n,f67ans(rec,n),f67rows(n).length)})}
   if(formOn(rec,8))add(8,f8answered(rec),F8Q.length);
@@ -2336,7 +2336,22 @@ function f3svpAuto(v){var s=String((v.v||{})[v.tdu?'BT':'S']||'').toLowerCase(),
 function f3val(v,key,k){k=k||0;var o=f3own(v,key,k);if(o||!k)return o||(key==='svp'?f3svpAuto(v):'');if(key==='ep'){var s=f3own(v,'sp',k);if(s)return s}return f3val(v,key,0)}
 function f3auto(v,k){return !!(f3val(v,'pd',k)&&f3val(v,'p1',k)&&f3val(v,'p2',k))}
 function f3r(it,v,k){k=k||0;if(it.row===32&&f3over(v,k).length)return 'N';var a=(f3d(v,k).items||{})[it.row]||{};if(a.r)return a.r;if(it.row===28&&f3auto(v,k))return 'Y';return k?f3r(it,v,0):''}
-function f3answered(v,k){var n=0;f3rows().forEach(function(i){if(f3r(i,v,k||0))n++});return n}
+/* 9bd: the Form 3 count includes the typed entries, not only the Yes / No / N/A lines. Needed: every line except 28, then for line 28 its three blanks (Date type, 1st PRV, 2nd PRV; just the line itself when it was answered No or N/A),
+   plus water temperature, relief device rating (first tab only), start pressure, duration, safety valve set pressure, and the hydrostatic relief valve date (not when line 27 is No or N/A). End pressure is optional (same as the start if left empty). */
+function f3cnt(v,k){k=k||0;var n=0,t=0,it27=null,it28=null;
+  f3rows().forEach(function(it){
+    if(it.row===28){it28=it;var a=(f3d(v,k).items||{})[28]||{},man=a.r||(k?(((f3d(v,0).items||{})[28]||{}).r||''):'');
+      if(man==='N'||man==='A'){t++;n++}else{['pd','p1','p2'].forEach(function(key){t++;if(String(f3val(v,key,k)).trim())n++})}return}
+    if(it.row===27)it27=it;
+    t++;if(f3r(it,v,k))n++});
+  var r27=it27?f3r(it27,v,k):'';
+  ['wt','prv','sp','dur','svp','hrv'].forEach(function(key){
+    if(key==='prv'&&k)return;
+    if(key==='hrv'&&(r27==='N'||r27==='A'))return;
+    t++;if(String(f3val(v,key,k)).trim())n++});
+  return [n,t]}
+function f3answered(v,k){return f3cnt(v,k)[0]}
+function f3need(v,k){return f3cnt(v,k)[1]}
 function f3anyd(f){return Object.keys(f.items||{}).some(function(r){var a=f.items[r];return a&&(a.r||(a.c&&a.c.trim()))})||Object.keys(f.vals||{}).some(function(k){return String(f.vals[k]||'').trim()})}
 function f3any(v){var f=f3o(v);if(f3anyd(f))return true;return Object.keys(f.t||{}).some(function(k){return f3anyd(f.t[k])})}
 function f3isdiff(it,v,k){if(!k)return false;var a=(f3d(v,k).items||{})[it.row]||{};return !!a.r&&a.r!==f3r(it,v,0)}
@@ -2414,12 +2429,12 @@ function buildF3(rec){
 function renderF3(){
   var v=S.f2v,def=f3def(),f=v.f3||(v.f3={items:{},vals:{}}),ud=unitDef(v.unit),nt=f3nt(v),k=f3tab(v),fd=f3dw(v,k),refs=f3refs(fd),n0=ud.names[0].toLowerCase();
   $('#tabs').hidden=true;$('#fab').hidden=true;
-  var rows=f3rows(),n=f3answered(v,k);F3LK=f3over(v,k).length>0;
+  var rows=f3rows(),n=f3answered(v,k),nn=f3need(v,k);F3LK=f3over(v,k).length>0;
   $('#top').innerHTML='<button class="hbtn icon" id="f3Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 3 - Unit '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f3Done" type="button">Back to list</button>';
   var h='';
   if(nt>1)h+='<div class="ttabs">'+ud.names.map(function(nm,i){var dn=f3diffs(v,i);return '<button type="button" class="ttab'+(i===k?' on':'')+'" data-f3tab="'+i+'">'+esc(nm)+(dn?'<span class="dn">'+dn+(dn===1?' difference':' differences')+'</span>':'')+'</button>'}).join('')+'</div>';
   h+='<div class="panel"><h2>Pressure test'+(nt>1?' - '+esc(ud.names[k].toLowerCase())+' tank':'')+'</h2>'+tankTag(v,k)+'<p>Tap Yes, No or N/A for each item and type the numbers where they are asked for. A comment gets the next Ref # and is printed on the form beside the item. Changes are saved on this phone as you go.</p>'+(nt>1?(k?'<p style="margin:0">This tank is the same as the '+esc(n0)+' tank unless you change an answer or a number here. Anything you change is marked as a difference. Numbers left empty are the same as the '+esc(n0)+' tank (shown in grey).</p>':'<p style="margin:0">The other tank'+(nt>2?'s start':' starts')+' the same as this one. Open the other tab'+(nt>2?'s':'')+' only to record anything that is different on that tank.</p>'):'')+'<p style="margin:0">The tank design pressure is taken from the data plate on Form 1 at the office.</p></div>';
-  h+='<div class="f2bar"><span class="count" style="flex:1;margin:0" id="f3cnt">'+n+' of '+rows.length+' answered</span><button class="btn sm" id="f3AllYes" type="button">Mark the rest Yes</button></div>';
+  h+='<div class="f2bar"><span class="count" style="flex:1;margin:0" id="f3cnt">'+n+' of '+nn+' answered</span><button class="btn sm" id="f3AllYes" type="button">Mark the rest Yes</button></div>';
   h+='<div class="panel">';
   def.items.forEach(function(it){
     var a=fd.items[it.row]||{},cols=it.cols||'',r=f3r(it,v,k),df=f3isdiff(it,v,k);
@@ -2490,7 +2505,7 @@ function f3blur(el,key){
   f3refresh();
 }
 function f3refresh(){
-  var v=S.f2v,k=f3tab(v),cn=$('#f3cnt');if(cn)cn.textContent=f3answered(v,k)+' of '+f3rows().length+' answered';
+  var v=S.f2v,k=f3tab(v),cn=$('#f3cnt');if(cn)cn.textContent=f3answered(v,k)+' of '+f3need(v,k)+' answered';
   var a=$('#f3a28');if(a)a.textContent=f3auto(v,k)&&!((f3d(v,k).items[28]||{}).r)?'Yes: all three entries are filled in.':'Yes is set automatically when the three entries below are filled in.';
 }
 function f3set(row,val){
@@ -2553,7 +2568,16 @@ function f4tab(v){var k=+v.f4tab||0;return k>=f4nt(v)?0:k}
 function f4own(v,key,k){return String((f4d(v,k).vals||{})[key]||'')}
 function f4val(v,key,k){k=k||0;var o=f4own(v,key,k);if(o||!k)return o;if(key==='ep'){var s=f4own(v,'sp',k);if(s)return s}return f4val(v,key,0)}
 function f4r(it,v,k){k=k||0;var a=(f4d(v,k).items||{})[it.row]||{};if(a.r)return a.r;return k?f4r(it,v,0):''}
-function f4answered(v,k){var n=0;f4rows().forEach(function(i){if(f4r(i,v,k||0))n++});return n}
+/* 9be: the Form 4 count includes the typed entries (12 on a normal tank): the 6 Yes / No / N/A lines, relief valves removed / inoperative (not needed when line 16 is No or N/A),
+   pressure basis, record pressure, test medium, pressure units and the start pressure. The finish pressure is optional (same as the start if left empty). */
+function f4cnt(v,k){k=k||0;var n=0,t=0,r16='';
+  f4rows().forEach(function(it){if(it.row===16)r16=f4r(it,v,k);t++;if(f4r(it,v,k))n++});
+  ['rvt','dm','rp','mdm','un','sp'].forEach(function(key){
+    if(key==='rvt'&&(r16==='N'||r16==='A'))return;
+    t++;if(String(f4val(v,key,k)).trim())n++});
+  return [n,t]}
+function f4answered(v,k){return f4cnt(v,k)[0]}
+function f4need(v,k){return f4cnt(v,k)[1]}
 function f4anyd(f,t0){return Object.keys(f.items||{}).some(function(r){var a=f.items[r];return a&&(a.r||(a.c&&a.c.trim()))})||Object.keys(f.vals||{}).some(function(k){if(t0&&k==='rp'&&f.rpAuto&&f.vals.rp===f.rpAuto)return false;return String(f.vals[k]||'').trim()})}
 function f4any(v){var f=f4o(v);if(f4anyd(f,true))return true;return Object.keys(f.t||{}).some(function(k){return f4anyd(f.t[k],false)})}
 function f4isdiff(it,v,k){if(!k)return false;var a=(f4d(v,k).items||{})[it.row]||{};return !!a.r&&a.r!==f4r(it,v,0)}
@@ -2631,12 +2655,12 @@ function renderF4(){
   var v=S.f2v,def=f4def(),f=v.f4||(v.f4={items:{},vals:{}}),ud=unitDef(v.unit),nt=f4nt(v),k=f4tab(v),fd=f4dw(v,k),refs=f4refs(fd),n0=ud.names[0].toLowerCase();
   f.vals=f.vals||{};if(!f.rpDone){f.rpDone=1;var rm=/\d+(\.\d+)?/.exec(String((v.v||{}).AY||(v.v||{}).S||''));if(rm&&!String(f.vals.rp||'').trim()){f.vals.rp=rm[0];f.rpAuto=rm[0]}f2save()}
   $('#tabs').hidden=true;$('#fab').hidden=true;
-  var rows=f4rows(),n=f4answered(v,k);
+  var rows=f4rows(),n=f4answered(v,k),nn4=f4need(v,k);
   $('#top').innerHTML='<button class="hbtn icon" id="f4Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 4 - '+(v.tdu?'DU ':'Unit ')+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f4Done" type="button">Back to list</button>';
   var h='';
   if(nt>1)h+='<div class="ttabs">'+ud.names.map(function(nm,i){var dn=f4diffs(v,i);return '<button type="button" class="ttab'+(i===k?' on':'')+'" data-f4tab="'+i+'">'+esc(nm)+(dn?'<span class="dn">'+dn+(dn===1?' difference':' differences')+'</span>':'')+'</button>'}).join('')+'</div>';
   h+='<div class="panel"><h2>Leakage test'+(nt>1?' - '+esc(ud.names[k].toLowerCase())+' tank':'')+'</h2>'+tankTag(v,k)+'<p>Tap Yes, No or N/A for each item and type the numbers where they are asked for. A comment gets the next Ref # and is printed on the form beside the item. Changes are saved on this phone as you go.</p>'+(nt>1?(k?'<p style="margin:0">This tank is the same as the '+esc(n0)+' tank unless you change an answer or a number here. Anything you change is marked as a difference. Numbers left empty are the same as the '+esc(n0)+' tank (shown in grey).</p>':'<p style="margin:0">The other tank'+(nt>2?'s start':' starts')+' the same as this one. Open the other tab'+(nt>2?'s':'')+' only to record anything that is different on that tank.</p>'):'')+'</div>';
-  h+='<div class="f2bar"><span class="count" style="flex:1;margin:0" id="f4cnt">'+n+' of '+rows.length+' answered</span><button class="btn sm" id="f4AllYes" type="button">Mark the rest Yes</button></div>';
+  h+='<div class="f2bar"><span class="count" style="flex:1;margin:0" id="f4cnt">'+n+' of '+nn4+' answered</span><button class="btn sm" id="f4AllYes" type="button">Mark the rest Yes</button></div>';
   h+='<div class="panel">';
   def.items.forEach(function(it){
     var a=fd.items[it.row]||{},cols=it.cols||'',r=f4r(it,v,k),df=f4isdiff(it,v,k);
@@ -2702,7 +2726,7 @@ function f4blur(el,key){
   f4refresh();
 }
 function f4refresh(){
-  var v=S.f2v,cn=$('#f4cnt');if(cn)cn.textContent=f4answered(v,f4tab(v))+' of '+f4rows().length+' answered';
+  var v=S.f2v,cn=$('#f4cnt');if(cn)cn.textContent=f4answered(v,f4tab(v))+' of '+f4need(v,f4tab(v))+' answered';
 }
 function f4set(row,val){
   var v=S.f2v,k=f4tab(v),fd=f4dw(v,k),a=fd.items[row]||(fd.items[row]={});
