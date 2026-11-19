@@ -225,7 +225,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 9bj (Nurse tanks: a warning line shows on the tank list and on the tank form when a tank built in 2018 or later is not TC51, or when a non-spec tank over 3000 USG has no permit noted in Comments. It is a warning only. Form 2: Mark the rest Yes now sets Manholes secure to N/A on nurse tanks. The Inspections due list is grouped by location, then unit number, instead of most overdue first. Form 20 SPEC: the copy comes from the left tank only. Form 20 SPEC: the other tanks copy the steel and stress relieved answers of the first tank, like the other forms. Form 20: the four SPEC statements must be answered for each SPEC tank before a report can be sent; until then it stays under Not finished. Form 4: the "answered" count also includes the typed entries (12 on a normal tank). Form 3: the "answered" count now includes the typed entries (water temperature, relief rating, start pressure, duration, valve dates, set pressure), so it reads like 16 of 25. To send is split in two: Ready to send, and Not finished. Send all and the number on the tab count only the ready reports. Tapping Send on an unfinished report asks: open the report, remove a form that is not needed, or send anyway.';
+var VERSION='prototype 9bk (Dates for something that already happened (Form 3: hydrostatic relief valves replaced, 1st and 2nd PRV date; Form 20: date of inspection) can be at most 30 days ahead, like the last visual and last hydro dates on the tank list; a date a year ahead is refused. Expiry dates stay open to the future. Nurse tanks: a warning line shows on the tank list and on the tank form when a tank built in 2018 or later is not TC51, or when a non-spec tank over 3000 USG has no permit noted in Comments. It is a warning only. Form 2: Mark the rest Yes now sets Manholes secure to N/A on nurse tanks. The Inspections due list is grouped by location, then unit number, instead of most overdue first. Form 20 SPEC: the copy comes from the left tank only. Form 20 SPEC: the other tanks copy the steel and stress relieved answers of the first tank, like the other forms. Form 20: the four SPEC statements must be answered for each SPEC tank before a report can be sent; until then it stays under Not finished. Form 4: the "answered" count also includes the typed entries (12 on a normal tank). Form 3: the "answered" count now includes the typed entries (water temperature, relief rating, start pressure, duration, valve dates, set pressure), so it reads like 16 of 25. To send is split in two: Ready to send, and Not finished. Send all and the number on the tab count only the ready reports. Tapping Send on an unfinished report asks: open the report, remove a form that is not needed, or send anyway.';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -269,6 +269,7 @@ var MONTHS='janfebmaraprmayjunjulaugsepoctnovdec';
 function monthFromName(t){t=String(t).toLowerCase().slice(0,3);if(t.length<3)return 0;var p=MONTHS.indexOf(t);return(p>=0&&p%3===0)?p/3+1:0}
 function yearOf(v,d){if(d>2)return v;return v<=69?2000+v:1900+v}
 function isNum(s){return /^\d+$/.test(s)}
+function myFuture(o){var n=new Date(),lim=new Date(n.getFullYear(),n.getMonth(),n.getDate()+30);return !!o&&new Date(o.y,o.m-1,1)>lim}   /* 9bk: the same rule as the workbook's last visual / last hydro cells: a month is accepted while its first day is no more than 30 days ahead; a year ahead is not */
 function parseMY(s){
   var t=String(s).trim();if(!t)return null;
   t=t.replace(/[.\/\-,]/g,' ').replace(/\s+/g,' ').trim();
@@ -1410,6 +1411,7 @@ function f20stUI(v){
   var now=f20stNow(v).filter(function(x,i,a){return a.indexOf(x)===i}).map(function(x){return x||'blank'}).join(', ');
   var o='<option value="">Leave the status as it is</option>'+f20stOpts(f.res).map(function(x){return '<option value="'+esc(x)+'"'+(x===f.st?' selected':'')+'>'+esc(x)+'</option>'}).join('');
   return '<p class="count" style="margin:.6rem 0 .3rem">Status on file: <b>'+esc(now)+'</b>. '+(f20stMis(v,f.res)?(f.res==='P'?'A passed unit is normally Active.':'A failed unit is normally out of service.'):(f.res==='P'?'This already matches the result. Change it only if something changed, for example an ISC was added.':'This already matches the result. Change it only if you want a different not-active status.'))+'</p><div class="field" style="margin:0"><label for="f20st">Set the status to</label><select id="f20st">'+o+'</select></div><p class="count" style="margin:.3rem 0 0">The office list is changed when the report is imported.</p>'}
+function todayPlusISO(n){var d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function todayISO(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function f2state(src,v,serial,id,key){
   return {id:id,key:key,v:v,serial:serial,items:src?JSON.parse(JSON.stringify(src.items)):{},f2t:src&&src.f2t?JSON.parse(JSON.stringify(src.f2t)):{},unit:(src&&src.unit)||unitGuess(v),plate:(src&&src.plate)||'',forms:src&&src.forms?JSON.parse(JSON.stringify(src.forms)):{},f20:src&&src.f20?JSON.parse(JSON.stringify(src.f20)):{date:'',res:'',auto:0},f2a:src&&src.f2a?JSON.parse(JSON.stringify(src.f2a)):{items:{}},f6:src&&src.f6?JSON.parse(JSON.stringify(src.f6)):{items:{}},f7:src&&src.f7?JSON.parse(JSON.stringify(src.f7)):{items:{}},f3:src&&src.f3?JSON.parse(JSON.stringify(src.f3)):{items:{},vals:{}},f4:src&&src.f4?JSON.parse(JSON.stringify(src.f4)):{items:{},vals:{}},f13:src&&src.f13?JSON.parse(JSON.stringify(src.f13)):{text:''},f8:src&&src.f8?JSON.parse(JSON.stringify(src.f8)):{q:{},vals:{},a:{},dg:0,rd:{},ex:[],cm:''},f5:src&&src.f5?JSON.parse(JSON.stringify(src.f5)):{h:[]},touched:src&&src.touched?1:0,tdu:src&&src.tdu?1:0,view:'rep'};
@@ -1904,7 +1906,7 @@ function duF8Block(v){
 }
 function f20Inline(v){
   var f20=v.f20||{};
-  return '<div class="f2item"><p class="tx" style="font-weight:700;font-size:1rem;color:var(--ink)">Form 20 - Statement of certification</p><p class="count" style="margin:.2rem 0 .2rem">Date of inspection</p><div class="field" style="margin:0 0 .5rem"><input type="date" id="f20date" value="'+esc(f20.date||todayISO())+'"></div>'+f20spUI(v)+'<p class="count" style="margin:0 0 .3rem">Result (Pass: returned to service. Fail: out of service.)</p><div class="chips"><button type="button" class="chip y'+(f20.res==='P'?' on':'')+'" data-f20res="P"'+(f20noOnly(v).length?' style="opacity:.4"':'')+'>Pass</button><button type="button" class="chip n'+(f20.res==='F'?' on':'')+'" data-f20res="F">Fail</button></div>'+(v.plate==='N'&&f20.res==='F'&&f20.auto?'<p class="count" style="margin:.4rem 0 0">Set to Fail because the data plate answer is No, out of service.</p>':'')+(f20lockMsg(v)?'<p class="count" style="margin:.4rem 0 0;color:var(--bad)">'+esc(f20lockMsg(v))+'</p>':'')+f20stUI(v)+f20cmUI(v)+(f20done(v)?'':'<p class="count" style="margin:.4rem 0 0;color:var(--bad)">Choose Pass or Fail before sending.</p>')+'</div>';
+  return '<div class="f2item"><p class="tx" style="font-weight:700;font-size:1rem;color:var(--ink)">Form 20 - Statement of certification</p><p class="count" style="margin:.2rem 0 .2rem">Date of inspection</p><div class="field" style="margin:0 0 .5rem"><input type="date" id="f20date" max="'+todayPlusISO(30)+'" value="'+esc(f20.date||todayISO())+'"></div>'+f20spUI(v)+'<p class="count" style="margin:0 0 .3rem">Result (Pass: returned to service. Fail: out of service.)</p><div class="chips"><button type="button" class="chip y'+(f20.res==='P'?' on':'')+'" data-f20res="P"'+(f20noOnly(v).length?' style="opacity:.4"':'')+'>Pass</button><button type="button" class="chip n'+(f20.res==='F'?' on':'')+'" data-f20res="F">Fail</button></div>'+(v.plate==='N'&&f20.res==='F'&&f20.auto?'<p class="count" style="margin:.4rem 0 0">Set to Fail because the data plate answer is No, out of service.</p>':'')+(f20lockMsg(v)?'<p class="count" style="margin:.4rem 0 0;color:var(--bad)">'+esc(f20lockMsg(v))+'</p>':'')+f20stUI(v)+f20cmUI(v)+(f20done(v)?'':'<p class="count" style="margin:.4rem 0 0;color:var(--bad)">Choose Pass or Fail before sending.</p>')+'</div>';
 }
 function duF4Block(v){
   var ud=unitDef(v.unit),n4=f4answered(v),t4=f4need(v),miss4=[];
@@ -2021,7 +2023,7 @@ function renderF20(){
   $('#tabs').hidden=true;$('#fab').hidden=true;
   $('#top').innerHTML='<button class="hbtn icon" id="f20Back" type="button" aria-label="Back">&#8249;</button><div class="grow"><h1>Form 20 - Unit '+esc(v.v.D||'')+'</h1><p>'+esc([v.v.A,v.v.C].filter(Boolean).join(' - '))+'</p></div><button class="hbtn solid" id="f20Done" type="button">Back to list</button>';
   var h='<div class="panel"><h2>Statement of certification</h2><p>Two questions. Signature and the rest of the form are done at the office.</p></div>';
-  h+='<div class="panel"><h2>Date of inspection</h2><div class="field"><input type="date" id="f20date" value="'+esc(f.date||'')+'"></div></div>';
+  h+='<div class="panel"><h2>Date of inspection</h2><div class="field"><input type="date" id="f20date" max="'+todayPlusISO(30)+'" value="'+esc(f.date||'')+'"></div></div>';
   if(f20spTanks(v).length)h+='<div class="panel">'+f20spUI(v)+'</div>';
   h+='<div class="panel"><h2>Result</h2><p>Pass: tank returned to service. Fail: tank out of service.</p><div class="chips"><button type="button" class="chip y'+(f.res==='P'?' on':'')+'" data-f20res="P"'+(f20noOnly(v).length?' style="opacity:.4"':'')+'>Pass</button><button type="button" class="chip n'+(f.res==='F'?' on':'')+'" data-f20res="F">Fail</button></div>'+(v.plate==='N'&&f.res==='F'&&f.auto?'<p style="margin:0">Set to Fail because the data plate answer is No, out of service.</p>':'')+(f20lockMsg(v)?'<p style="margin:.4rem 0 0;color:var(--bad)">'+esc(f20lockMsg(v))+'</p>':'')+f20stUI(v)+f20cmUI(v)+'</div>';
   $('#view').innerHTML=h;
@@ -2426,7 +2428,7 @@ function f3chk(inp,raw){
     if(inp.kind==='myn'&&/^n\/?a$/i.test(v)){r.value='N/A';return r}
     var o=parseMY(v);
     if(!o){r.msg='Could not read that date. Type it like 10-2026, 10/26 or 1026'+(inp.kind==='myn'?', or N/A':'')+'.';return r}
-    r.value=fmtMY(o);return r}
+    r.value=fmtMY(o);if(myFuture(o))r.msg='That date is too far ahead. The latest you can enter is about 30 days from today.';return r}
   return r;
 }
 function f3isreq(key,v,k){k=k||0;if(key==='svp')return true;if(key==='pd')return !!(String(f3val(v,'p1',k)).trim()||String(f3val(v,'p2',k)).trim());return false}
@@ -2651,7 +2653,7 @@ function f4chk(inp,raw){
     if(inp.kind==='myn'&&/^n\/?a$/i.test(v)){r.value='N/A';return r}
     var o=parseMY(v);
     if(!o){r.msg='Could not read that date. Type it like 10-2026, 10/26 or 1026'+(inp.kind==='myn'?', or N/A':'')+'.';return r}
-    r.value=fmtMY(o);return r}
+    r.value=fmtMY(o);if(myFuture(o))r.msg='That date is too far ahead. The latest you can enter is about 30 days from today.';return r}
   return r;
 }
 function f4problems(rec){
@@ -3356,7 +3358,7 @@ document.addEventListener('change',function(e){
   if(f3k&&S.f2v){f3blur(e.target,f3k);return}
   var f4k=e.target.getAttribute&&e.target.getAttribute('data-f4v');
   if(f4k&&S.f2v){f4blur(e.target,f4k);return}
-  if(e.target.id==='f20date'&&S.f2v){(S.f2v.f20||(S.f2v.f20={date:'',res:'',auto:0})).date=e.target.value;f2save();return}
+  if(e.target.id==='f20date'&&S.f2v){if(e.target.value>todayPlusISO(30)){e.target.value=todayISO();toast('The date of inspection cannot be more than 30 days ahead. It was set to today.')}(S.f2v.f20||(S.f2v.f20={date:'',res:'',auto:0})).date=e.target.value;f2save();return}
   if(e.target.id==='f20st'&&S.f2v){var f2=S.f2v.f20||(S.f2v.f20={date:'',res:'',auto:0});f2.st=e.target.value;f2.stFor=f2.res;f2save();return}
   if(e.target.id==='hoseNew'&&S.form){S.form.hose=e.target.checked;S.form.dirty=true;saveDraft();renderForm();return}
   if(e.target.id==='fileIn'&&e.target.files&&e.target.files[0]){
