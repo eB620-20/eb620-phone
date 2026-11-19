@@ -45,6 +45,7 @@ button{cursor:pointer}
 .hbtn.solid{background:var(--accent-ink);color:var(--accent);border-color:var(--accent-ink)}
 .hbtn.icon{padding:0;width:2.6rem;font-size:1.3rem;line-height:1}
 main{padding-top:1rem;display:flex;flex-direction:column;gap:.9rem;min-width:0}
+.specw{display:block;color:var(--warn);font-size:.82rem;font-weight:600;margin-top:.15rem;grid-column:1/-1}
 .banner{border-radius:.75rem;padding:.8rem .9rem;background:var(--warn-soft);color:var(--ink);border:1px solid var(--warn);font-size:.92rem}
 .banner b{color:var(--warn)}
 .banner .row{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem}
@@ -224,7 +225,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 9bi (The Inspections due list is grouped by location, then unit number, instead of most overdue first. Form 20 SPEC: the copy comes from the left tank only. Form 20 SPEC: the other tanks copy the steel and stress relieved answers of the first tank, like the other forms. Form 20: the four SPEC statements must be answered for each SPEC tank before a report can be sent; until then it stays under Not finished. Form 4: the "answered" count also includes the typed entries (12 on a normal tank). Form 3: the "answered" count now includes the typed entries (water temperature, relief rating, start pressure, duration, valve dates, set pressure), so it reads like 16 of 25. To send is split in two: Ready to send, and Not finished. Send all and the number on the tab count only the ready reports. Tapping Send on an unfinished report asks: open the report, remove a form that is not needed, or send anyway.';
+var VERSION='prototype 9bj (Nurse tanks: a warning line shows on the tank list and on the tank form when a tank built in 2018 or later is not TC51, or when a non-spec tank over 3000 USG has no permit noted in Comments. It is a warning only. Form 2: Mark the rest Yes now sets Manholes secure to N/A on nurse tanks. The Inspections due list is grouped by location, then unit number, instead of most overdue first. Form 20 SPEC: the copy comes from the left tank only. Form 20 SPEC: the other tanks copy the steel and stress relieved answers of the first tank, like the other forms. Form 20: the four SPEC statements must be answered for each SPEC tank before a report can be sent; until then it stays under Not finished. Form 4: the "answered" count also includes the typed entries (12 on a normal tank). Form 3: the "answered" count now includes the typed entries (water temperature, relief rating, start pressure, duration, valve dates, set pressure), so it reads like 16 of 25. To send is split in two: Ready to send, and Not finished. Send all and the number on the tab count only the ready reports. Tapping Send on an unfinished report asks: open the report, remove a form that is not needed, or send anyway.';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -580,6 +581,34 @@ function unitGroups(list,fullList){
   list.forEach(function(t){var g=map[keyOf(t.v)];if(g){if(!g.show.length)order.push(g);g.show.push(t)}});   /* tiles follow the sorted list: location, company, unit number */
   return order;
 }
+function specFlag(v){
+  if(!v)return null;
+  var spec=String(v.AJ||'').replace(/\s+/g,'').toUpperCase(),yr=parseInt(String(v.AE||'').trim(),10);
+  if(!spec||!yr||yr<1900)return null;
+  var ys=String(yr),sp=String(v.AJ||'').trim();
+  if(yr>=2018){
+    if(spec.indexOf('TC51')<0)return {s:'Built '+ys+' - must be TC51. Check the year and spec.',l:'Built in '+ys+', specification '+sp+'. A tank built on or after 12 January 2018 must be TC51 - check the year and the specification on the Nurse Tanks list.'};
+    return null;
+  }
+  if(spec.indexOf('NON')>=0){
+    var sz=String(v.AD||'').trim(),m=sz.match(/^[0-9][0-9,]*\.?[0-9]*/);
+    if(!m)return null;
+    var n=parseFloat(m[0].replace(/,/g,''));
+    if(!(n>0))return null;
+    var low=sz.toLowerCase();
+    if(/lit(re|er)/.test(low)||(/l$/.test(low)&&low.indexOf('gal')<0))n=n/3.785;
+    else if(!/usg|gal/.test(low)&&!/^[0-9][0-9,]*\.?[0-9]*$/.test(sz))return null;
+    if(n>3000&&String(v.AU||'').toLowerCase().indexOf('permit')<0)return {s:'Non-spec over 3000 USG. Check for a TC special permit.',l:'Non-spec tank built in '+ys+', size '+sz+'. SR55 does not cover a tank over 3000 USG - check for a TC special permit. If there is one, type it in the COMMENTS column of the list (with the word permit) and this reminder stops.'};
+  }
+  return null;
+}
+function specShort(v){var f=specFlag(v);return f?'<span class="specw">&#9888; '+esc(f.s)+'</span>':''}
+function specBannerHtml(v){var f=specFlag(v);return f?'<div class="banner">&#9888; '+esc(f.l)+'</div>':''}
+function refreshSpec(){
+  var f=S.form,b=document.getElementById('specBanner');
+  if(!f||!b||f.kind==='tdu')return;
+  b.innerHTML=specBannerHtml(f.v);
+}
 function unitTile(g){
   var n=g.all.length,v0=g.show[0].v;
   if(n===1)return tankRow(g.show[0]);
@@ -588,7 +617,7 @@ function unitTile(g){
   var rows=show.map(function(t){
     var i=ids.indexOf(tid(t)),v=t.v,info=[v.AD,v.AF,v.AE].filter(Boolean).join(' \u00b7 ');
     var dd=dueAny(t,false);
-    return '<button type="button" class="trow'+dueCls(dd)+'" data-open="'+tankOpenKey(t)+'"><span class="pos">'+esc(pos[i]||String(i+1))+'</span><span class="tinfo"><span>'+esc(info||'-')+'</span>'+(v.AB?'<span class="sn">S/N '+esc(v.AB)+'</span>':'')+dueNote(t,false,dd)+'</span>'+(tankBadge(t,true)||'<span class="chev">&#8250;</span>')+'</button>';
+    return '<button type="button" class="trow'+dueCls(dd)+'" data-open="'+tankOpenKey(t)+'"><span class="pos">'+esc(pos[i]||String(i+1))+'</span><span class="tinfo"><span>'+esc(info||'-')+'</span>'+(v.AB?'<span class="sn">S/N '+esc(v.AB)+'</span>':'')+dueNote(t,false,dd)+specShort(v)+'</span>'+(tankBadge(t,true)||'<span class="chev">&#8250;</span>')+'</button>';
   }).join('');
   var rb=repBadge(g.key);
   return '<li class="unit"><div class="uh"><span class="tag">'+esc(v0.D||'(no number)')+'</span><span style="display:flex;gap:.4rem;align-items:center">'+(rb?rb.h:'')+'<span class="utype">'+typ+'</span></span></div><div class="sub">'+esc([v0.A,v0.C].filter(Boolean).join(' - '))+'</div>'+rows+'</li>';
@@ -598,7 +627,7 @@ function tankRow(t){
   var sub=[v.A,v.C].filter(Boolean).join(' - ');
   var sub2=[v.AD,v.AF,v.AE].filter(Boolean).join(' - ')+(v.AB?((v.AD||v.AF||v.AE)?' \u00b7 ':'')+'S/N '+v.AB:'');
   var dd=dueAny(t,false);
-  return '<li><button type="button" class="tank'+dueCls(dd)+'" data-open="'+(t.row?'r:'+t.row:'e:'+esc(t.entry.id))+'"><span class="tag">'+esc(v.D||'(no number)')+'</span><span class="tr">'+(badge||'')+(v.E?'<span class="dsc">'+esc(v.E)+'</span>':'')+'</span><span class="sub" style="grid-column:1/-1">'+esc(sub)+'</span>'+(sub2?'<span class="sub" style="grid-column:1/-1">'+esc(sub2)+'</span>':'')+(dueNote(t,false,dd)?'<span class="sub" style="grid-column:1/-1">'+dueNote(t,false,dd)+'</span>':'')+'</button></li>';
+  return '<li><button type="button" class="tank'+dueCls(dd)+'" data-open="'+(t.row?'r:'+t.row:'e:'+esc(t.entry.id))+'"><span class="tag">'+esc(v.D||'(no number)')+'</span><span class="tr">'+(badge||'')+(v.E?'<span class="dsc">'+esc(v.E)+'</span>':'')+'</span><span class="sub" style="grid-column:1/-1">'+esc(sub)+'</span>'+(sub2?'<span class="sub" style="grid-column:1/-1">'+esc(sub2)+'</span>':'')+(dueNote(t,false,dd)?'<span class="sub" style="grid-column:1/-1">'+dueNote(t,false,dd)+'</span>':'')+specShort(v)+'</button></li>';
 }
 function srchHay(v,du){
   var f=S.sf;
@@ -732,7 +761,8 @@ function renderForm(){
     (last?'<button class="btn primary" id="saveBtn2" type="button">'+(tdu?'Save unit':'Save tank')+'</button>':'<button class="btn primary" data-go="'+(f.page+1)+'" type="button">'+PG()[f.page].t+' &#8594;</button>')+'</div>';
   if(tdu&&last&&!f.row)pager+='<div class="pager"><button class="btn block" id="saveRear" type="button">Save, then add the rear row (quad DU)</button></div>';
   var ronote=(f.row&&(f.page===2||f.page===3))?'<div class="banner" style="background:var(--surface);border-color:var(--line)">These dates, PRV and hose details are normally kept up to date by the inspection forms. Change one only to correct it (for example a wrong date or serial number). The office list shows the old and the new value.</div>':'';
-  $('#view').innerHTML=steps+ronote+'<div class="fields">'+fields+'</div>'+pager;
+  var spb=(!tdu&&(f.page===1||f.page===4))?'<div id="specBanner">'+specBannerHtml(f.v)+'</div>':'';
+  $('#view').innerHTML=steps+ronote+spb+'<div class="fields">'+fields+'</div>'+pager;
 }
 /* 8c: "see example" pictures for three nurse tank fields (the same pictures as on the workbook's Nurse Tanks header) */
 var EXAMPLES={
@@ -785,6 +815,7 @@ function workedOne(c,v){
 }
 function refreshWorked(){
   var f=S.form;if(!f||!f.v)return;
+  refreshSpec();
   ['L','BE','BF'].forEach(function(c){var el=document.getElementById('f_'+c);if(el&&el.className==='rov')el.textContent=workedOne(c,f.v)||'-'});
 }
 function setField(c,val,rerender){
@@ -1000,6 +1031,7 @@ function renderQuick(){
   var bt=S.data.tanks.filter(function(x){return x.row===f.row})[0];
   function drow(l,x){return x?'<p style="margin:.15rem 0"><span class="count">'+esc(l)+'</span><br>'+esc(x)+'</p>':''}
   function dlab(c){var ff=S.data.fields.filter(function(x){return x.c===c})[0];return ff?ff.label:c}
+  h+=specBannerHtml(Object.assign({},dv,{AJ:(dv.AJ!=null?dv.AJ:(bt&&bt.v&&bt.v.AJ)),AE:(dv.AE!=null?dv.AE:(bt&&bt.v&&bt.v.AE)),AD:(dv.AD!=null?dv.AD:(bt&&bt.v&&bt.v.AD)),AU:(dv.AU!=null?dv.AU:(bt&&bt.v&&bt.v.AU))}));
   h+='<div class="panel"><h2>Tank details</h2>'+['A','B','C','D','E','F','AB'].map(function(c){return drow(c==='A'?'Location':(c==='B'?'Province':(c==='C'?'Company/Owner':(c==='D'?'Unit number':dlab(c)))),dv[c])}).join('')+drow('Next annual visual',nextVis(bt&&bt.nv,dv.G))+drow('Next hydro',nextTxt(bt&&bt.due))+'<details style="margin-top:.7rem"><summary style="font-weight:600;cursor:pointer">All details (open for Edit button)</summary><p class="count" style="margin:.4rem 0 .5rem">Scroll to the bottom for the Edit button.</p>'+S.data.fields.map(function(x){return drow(x.label,dv[x.c])+(x.c==='G'?drow('Next annual visual',nextVis(bt&&bt.nv,dv.G)):(x.c==='M'?drow('Next hydro',nextTxt(bt&&bt.due)):''))}).join('')+'<div class="row" style="margin-top:.8rem"><button class="btn primary" id="editTankBtn" type="button">Edit this tank</button></div></details></div>';
   if(qo){
   h+='<div class="panel" id="quickPanel"><h2>Quick update</h2><p>Type only what you found or changed. The sheet keeps the old values for the inspection forms, and your entries are listed beside them in the workbook.</p></div>';
@@ -2009,7 +2041,7 @@ function renderF2(){
   var h='';
   if(nt>1)h+='<div class="ttabs">'+ud.names.map(function(nm,i){var dn=f2diffs(v,i);return '<button type="button" class="ttab'+(i===k?' on':'')+'" data-f2tab="'+i+'">'+esc(nm)+(dn?'<span class="dn">'+dn+(dn===1?' difference':' differences')+'</span>':'')+'</button>'}).join('')+'</div>';
   h+='<div class="panel"><h2>Visual inspection (external)'+(nt>1?' - '+esc(ud.names[k].toLowerCase())+' tank':'')+'</h2>'+tankTag(v,k)+'<p>Tap Yes, No or N/A for each item. If something did not conform but was fixed on site, tap No and then Yes as well, and say what was wrong and when it was fixed. Add a comment where something needs one; it gets the next Ref # and is printed on the form beside the item.'+(v.tdu?' The DU form has one comment line, so all the comments of a tank share it: keep them short.':'')+' Changes are saved on this phone as you go.</p>'+(nt>1?(k?'<p style="margin:0">This tank is the same as the '+esc(n0)+' tank unless you change an answer or add a comment. Tap an answer to change it; tap it again to go back to "same".</p>':'<p style="margin:0">Answer this first tank. The other tanks start the same; change them on their own tab only where they differ.</p>'):'')+'</div>';
-  h+='<div class="f2bar"><span class="count" style="flex:1;margin:0" id="f2cnt">'+n+' of '+its.length+' answered</span><button class="btn sm" id="f2AllYes" type="button">Mark the rest Yes</button></div>';
+  h+='<div class="f2bar"><span class="count" style="flex:1;margin:0" id="f2cnt">'+n+' of '+its.length+' answered</span><button class="btn sm" id="f2AllYes" type="button">Mark the rest Yes</button></div>'+(S.f2v.tdu?'':'<p class="count" style="margin:.1rem 0 .4rem">Mark the rest Yes sets Manholes secure to N/A, because nurse wagons rarely have a manhole. Change it if this one has.</p>');
   var open=false;
   def.items.forEach(function(it){
     if(it.h){if(open)h+='</div>';h+='<div class="panel"><div class="f2h">'+esc(it.t)+'</div>';open=true;return}
@@ -2084,7 +2116,7 @@ function f2click(t){
   if(ad){var row=+ad.getAttribute('data-f2add'),fda=f2dw(S.f2v,f2tab(S.f2v)),a=fda.items[row]||(fda.items[row]={});a.c=a.c||'';a.cOpen=1;renderF2KeepScroll();setTimeout(function(){var el=$('[data-f2c="'+row+'"]');if(el)el.focus()},30);return true}
   if(t.closest('#f2AllYes')){
     var kq=f2tab(S.f2v),fdq=f2dw(S.f2v,kq);
-    f2items().forEach(function(it){if(it.cols.indexOf('W')>=0&&!f2r(S.f2v,it.row,kq)){var a=fdq.items[it.row]||(fdq.items[it.row]={});a.r='Y'}});
+    f2items().forEach(function(it){if(it.cols.indexOf('W')>=0&&!f2r(S.f2v,it.row,kq)){var a=fdq.items[it.row]||(fdq.items[it.row]={});a.r=(!S.f2v.tdu&&/^manholes secure/i.test(String(it.t||'').trim())&&it.cols.indexOf('Z')>=0)?'A':'Y'}});
     f2save();renderF2KeepScroll();return true}
   if(t.closest('#f2Done')){f2save();var rd=S.f2v;f2noCmAsk(rd,'finish',function(){leaveForm(rd)});return true}
   if(t.closest('#f2Back')){f2save();S.f2v.view='rep';window.scrollTo(0,0);render();return true}
@@ -3362,7 +3394,7 @@ document.addEventListener('input',function(e){
   var fc=e.target.getAttribute&&e.target.getAttribute('data-f2c');
   if(fc&&S.f2v){var fdc=f2dw(S.f2v,f2tab(S.f2v)),a=fdc.items[+fc]||(fdc.items[+fc]={});a.c=e.target.value;f2save();if(S.f2v.tdu)tduLenUpd();return}
   var c=e.target.getAttribute&&e.target.getAttribute('data-in');
-  if(c&&S.form){S.form.v[c]=e.target.value;S.form.dirty=true;saveDraft()}
+  if(c&&S.form){S.form.v[c]=e.target.value;S.form.dirty=true;saveDraft();if(c==='AD'||c==='AE'||c==='AJ'||c==='AU')refreshSpec()}
 });
 document.addEventListener('focusout',function(e){
   var c=e.target.getAttribute&&e.target.getAttribute('data-in');
