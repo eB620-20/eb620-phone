@@ -224,7 +224,7 @@ input.inh:placeholder-shown{background:var(--surface);border-color:var(--line);c
 <script>
 (function(){
 'use strict';
-var VERSION='prototype 9bh (Form 20 SPEC: the copy comes from the left tank only. Form 20 SPEC: the other tanks copy the steel and stress relieved answers of the first tank, like the other forms. Form 20: the four SPEC statements must be answered for each SPEC tank before a report can be sent; until then it stays under Not finished. Form 4: the "answered" count also includes the typed entries (12 on a normal tank). Form 3: the "answered" count now includes the typed entries (water temperature, relief rating, start pressure, duration, valve dates, set pressure), so it reads like 16 of 25. To send is split in two: Ready to send, and Not finished. Send all and the number on the tab count only the ready reports. Tapping Send on an unfinished report asks: open the report, remove a form that is not needed, or send anyway.';
+var VERSION='prototype 9bi (The Inspections due list is grouped by location, then unit number, instead of most overdue first. Form 20 SPEC: the copy comes from the left tank only. Form 20 SPEC: the other tanks copy the steel and stress relieved answers of the first tank, like the other forms. Form 20: the four SPEC statements must be answered for each SPEC tank before a report can be sent; until then it stays under Not finished. Form 4: the "answered" count also includes the typed entries (12 on a normal tank). Form 3: the "answered" count now includes the typed entries (water temperature, relief rating, start pressure, duration, valve dates, set pressure), so it reads like 16 of 25. To send is split in two: Ready to send, and Not finished. Send all and the number on the tab count only the ready reports. Tapping Send on an unfinished report asks: open the report, remove a form that is not needed, or send anyway.';
 var $=function(s,r){return (r||document).querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var MEM={};
@@ -638,7 +638,7 @@ function renderTanks(){
   h+='<button type="button" class="btn block" data-mh="1" style="margin:0 0 .6rem">Multi-Hose test</button>';
   h+='<div class="chips" style="margin:0 0 .6rem"><button type="button" class="chip s'+(S.dueOn?' on':'')+'" data-dueon="1"'+(S.dueOn?' style="flex:1.5"':'')+'>Inspections due</button>'+(S.dueOn?[30,60,90].map(function(d){return '<button type="button" class="chip s'+(dueDays()===d?' on':'')+'" data-duedays="'+d+'" style="flex:.7">'+d+' days</button>'}).join(''):'')+'</div>';
   if(S.dueOn)h+='<div class="chips" style="margin:0 0 .6rem">'+[['H','Hydro'],['V','VK'],['B','Both']].map(function(x){return '<button type="button" class="chip s'+(S.dueKind===x[0]?' on':'')+'" data-duekind="'+x[0]+'">'+x[1]+'</button>'}).join('')+'</div>';
-  if(S.dueOn)h+='<p class="count" style="margin:-.2rem 0 .6rem">Tanks due now or within '+dueDays()+' days, most overdue first'+(S.data&&S.data.made?' (dates from the workbook export of '+esc(S.data.made)+'; a tank you finish on this phone drops off)':'')+'. <span style="color:var(--duebl);font-weight:700">Blue</span> = coming due, <span style="color:var(--duered);font-weight:700">red</span> = DUE or overdue.</p>';
+  if(S.dueOn)h+='<p class="count" style="margin:-.2rem 0 .6rem">Tanks due now or within '+dueDays()+' days, by location and unit number'+(S.data&&S.data.made?' (dates from the workbook export of '+esc(S.data.made)+'; a tank you finish on this phone drops off)':'')+'. <span style="color:var(--duebl);font-weight:700">Blue</span> = coming due, <span style="color:var(--duered);font-weight:700">red</span> = DUE or overdue.</p>';
   h+=(S.sf==='A'?'<div class="search"><select id="qloc" aria-label="Location"><option value="">All locations</option>'+locChoices().map(function(a){return '<option value="'+esc(a)+'"'+(locNorm(a)===locNorm(S.locF)?' selected':'')+'>'+esc(a)+'</option>'}).join('')+'</select></div>':'<div class="search"><input id="q" type="search" placeholder="'+srchPh()+'" value="'+esc(S.q)+'" autocomplete="off" aria-label="Search tanks"></div>')+'<div class="sfc" role="group" aria-label="Search in">'+[['D','Unit'],['S','Serial'],['A','Location'],['C','Company'],['all','Any']].map(function(x){return '<button type="button" class="sf'+(S.sf===x[0]?' on':'')+'" data-sf="'+x[0]+'">'+x[1]+'</button>'}).join('')+'</div><div class="count" id="cnt"></div><ul class="list" id="tl"></ul>';
   $('#view').innerHTML=h;
   fillTankList();
@@ -653,9 +653,8 @@ function fillTankList(){
     tl.sort(function(a,b){return natural(a.v.A||'',b.v.A||'')||natural(String(a.v.D||'').replace(/\s+/g,''),String(b.v.D||'').replace(/\s+/g,''))||natural(a.v.C||'',b.v.C||'')});
     if(S.dueOn){
       var td=tl.map(function(t){return {t:t,d:dueUnit(t)}}).filter(function(x){return x.d});
-      td.sort(function(a,b){return dueSort(a.d,b.d)});
       $('#cnt').textContent=td.length+(td.length===1?' DU':' DUs')+' due'+(tl0.length>tl.length?' - '+(tl0.length-tl.length)+' hidden by the status filter':'');
-      $('#tl').innerHTML=td.length?td.slice(0,150).map(function(x){return tduRowHtml(x.t)}).join(''):'<li class="empty">No DU is due within '+dueDays()+' days.</li>';
+      $('#tl').innerHTML=td.length?withLocs(td.slice(0,150).map(function(x){return x.t}),function(t){return t.v.A},tduRowHtml):'<li class="empty">No DU is due within '+dueDays()+' days.</li>';
       return;
     }
     $('#cnt').textContent=tl.length+(tl.length===1?' DU':' DUs')+(tl0.length>tl.length?' - '+(tl0.length-tl.length)+' hidden by the status filter':'');
@@ -666,11 +665,11 @@ function fillTankList(){
   all.sort(function(a,b){return natural(a.v.A||'',b.v.A||'')||natural(String(a.v.D||'').replace(/\s+/g,''),String(b.v.D||'').replace(/\s+/g,''))||natural(a.v.C||'',b.v.C||'')});   /* spaces ignored: Pro1521 sorts with Pro 1521 */
   if(S.dueOn){
     var dm=all.map(function(t){return {t:t,d:dueAny(t,false)}}).filter(function(x){return x.d});
-    dm.sort(function(a,b){return dueSort(a.d,b.d)});
+    /* 9bi: the due list keeps the normal order (location, unit number, company) with the location headings; the due dates only decide which tanks are in it */
     var dall=dm.map(function(x){return x.t}),dg=unitGroups(dall,allTanks()),dsh=[],dc=0;
     dg.forEach(function(g){if(dc<150){dsh.push(g);dc+=g.show.length}});
     $('#cnt').textContent=dall.length+(dall.length===1?' tank':' tanks')+' due'+(all0.length>all.length?' - '+(all0.length-all.length)+' hidden by the status filter':'');
-    $('#tl').innerHTML=dsh.length?dsh.map(unitTile).join(''):'<li class="empty">No tank is due within '+dueDays()+' days.</li>';
+    $('#tl').innerHTML=dsh.length?withLocs(dsh,function(g){return g.show[0].v.A},unitTile):'<li class="empty">No tank is due within '+dueDays()+' days.</li>';
     return;
   }
   var cap=150,grp=unitGroups(all,allTanks()),shown=[],cnt=0;
